@@ -1,15 +1,20 @@
 // powerTable.jsx
 import React, { useState } from 'react';
 import { Box, TableContainer, Table, Paper } from '@mui/material';
+
 import useAutoColumns from './hooks/useAutoColumns';
 import useColumnSchema from './hooks/useColumnSchema';
 import useTableSettings from './hooks/useTableSettings';
+
+import { sortData } from './utils';
+
 import SettingsModal from './settingsModal';
 import PowerTableHead from './powerTableHead';
 import PowerTableBody from './powerTableBody';
 import PowerTableFooter from './powerTableFooter';
 import PowerSidebar from './powerSidebar';
 import PowerTableControl from './powerTableControl';
+
 
 const PowerTable = ({
   data = [],
@@ -47,6 +52,8 @@ const PowerTable = ({
     }
   };
 
+  const sortedData = sortData(data, columnsSchema.sortModel, columnsSchema.columns);
+
   return (
     <>
       <Box
@@ -76,8 +83,8 @@ const PowerTable = ({
             <TableContainer component={Paper} sx={{ maxHeight: '100%', width: '100%', maxWidth: '100%' }}>
               <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
                 <PowerTableHead columnsSchema={columnsSchema} settings={settings} />
-                <PowerTableBody data={data} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
-                <PowerTableFooter data={data} columnsSchema={columnsSchema} config={footerConfig} settings={settings} />
+                <PowerTableBody data={sortedData} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
+                <PowerTableFooter data={sortedData} columnsSchema={columnsSchema} config={footerConfig} settings={settings} />
               </Table>
             </TableContainer>
           </Box>

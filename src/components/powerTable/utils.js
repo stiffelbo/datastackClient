@@ -1,9 +1,36 @@
 const isEmpty = (val, type) => {
-    if (val == null) return true;
-    if (type === 'number') return val === 0;
-    if (type === 'string') return val.trim() === '';
-    if (type === 'date') return val === '0000-00-00' || isNaN(new Date(val).getTime());
+    if (val == null || val === '') return true;
+
+    if (type === 'number') {
+        const parsed = parseFloat(String(val).replace(',', '.'));
+        return isNaN(parsed) || parsed === 0;
+    }
+
+    if (type === 'string') {
+        return String(val).trim() === '';
+    }
+
+    if (type === 'date') {
+        if (val === '0000-00-00') return true;
+        const time = new Date(val).getTime();
+        return isNaN(time);
+    }
+
     return false;
+};
+
+const parseNumberSafe = (val) => {
+    const parsed = parseFloat(String(val).replace(',', '.'));
+    return isNaN(parsed) ? null : parsed;
+};
+
+export const formatNumberPL = (num, fractionDigits = 2) => {
+  if (typeof num !== 'number' || isNaN(num)) return '';
+  return num
+    .toLocaleString('pl-PL', {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    });
 };
 
 
@@ -18,34 +45,44 @@ export const getAggregatedValues = (data, columns) => {
         const values = rawValues.filter(v => v != null);
 
         switch (aggregationFn) {
-            case 'sum':
-                result[field] = type === 'number'
-                    ? values.reduce((acc, v) => acc + (parseFloat(v) || 0), 0)
-                    : '-';
-                break;
-
-            case 'avg':
-                result[field] = type === 'number' && values.length
-                    ? values.reduce((acc, v) => acc + (parseFloat(v) || 0), 0) / values.length
-                    : '-';
-                break;
-
-            case 'min': {
+            case 'sum': {
                 if (type === 'number') {
-                    result[field] = Math.min(...values.map(v => +v));
-                } else if (type === 'date') {
-                    const dates = values.map(v => new Date(v)).filter(d => !isNaN(d));
-                    const minDate = new Date(Math.min(...dates));
-                    result[field] = isNaN(minDate) ? '-' : minDate.toISOString().split('T')[0];
+                    const nums = values.map(parseNumberSafe).filter(v => v !== null);
+                    result[field] = nums.reduce((acc, v) => acc + v, 0);
                 } else {
                     result[field] = '-';
                 }
                 break;
             }
 
+
+            case 'avg': {
+                if (type === 'number') {
+                    const nums = values.map(parseNumberSafe).filter(v => v !== null);
+                    result[field] = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : '-';
+                } else {
+                    result[field] = '-';
+                }
+                break;
+            }
+
+
+            case 'min':
+                if (type === 'number') {
+                    const nums = values.map(parseNumberSafe).filter(v => v !== null);
+                    result[field] = nums.length ? Math.min(...nums) : '-';
+                } else if (type === 'date') {
+                    const dates = values.map(v => new Date(v)).filter(d => !isNaN(d));
+                    result[field] = dates.length ? new Date(Math.min(...dates)).toISOString().split('T')[0] : '-';
+                } else {
+                    result[field] = '-';
+                }
+                break;
+
             case 'max': {
                 if (type === 'number') {
-                    result[field] = Math.max(...values.map(v => +v));
+                    const nums = values.map(parseNumberSafe).filter(v => v !== null);
+                    result[field] = nums.length ? Math.max(...nums) : '-';
                 } else if (type === 'date') {
                     const dates = values.map(v => new Date(v)).filter(d => !isNaN(d));
                     const maxDate = new Date(Math.max(...dates));
@@ -57,15 +94,17 @@ export const getAggregatedValues = (data, columns) => {
             }
 
             case 'median': {
-                if (type !== 'number' || values.length === 0) {
+                if (type === 'number') {
+                    const nums = values.map(parseNumberSafe).filter(v => v !== null).sort((a, b) => a - b);
+                    const mid = Math.floor(nums.length / 2);
+                    result[field] = nums.length === 0
+                        ? '-'
+                        : nums.length % 2 !== 0
+                            ? nums[mid]
+                            : (nums[mid - 1] + nums[mid]) / 2;
+                } else {
                     result[field] = '-';
-                    break;
                 }
-                const sorted = values.map(v => parseFloat(v)).sort((a, b) => a - b);
-                const mid = Math.floor(sorted.length / 2);
-                result[field] = sorted.length % 2 !== 0
-                    ? sorted[mid]
-                    : (sorted[mid - 1] + sorted[mid]) / 2;
                 break;
             }
 
@@ -104,3 +143,105 @@ export const getAggregatedValues = (data, columns) => {
 
     return result;
 };
+
+
+/**
+ * Hierarchiczna struktura grupowania danych z możliwością rozbudowy do widoku tabeli i eksportu.
+ * Każdy poziom zawiera węzeł `group` + `aggregates`, zagnieżdżone `children`.
+ *
+ * @param {Array<Object>} data - dane wejściowe
+ * @param {string[]} groupModel - pola grupujące (np. ['client', 'status'])
+ * @param {Array<Object>} columns - definicje kolumn (z aggregationFn)
+ * @returns {Array<Object>} - struktura drzewiasta do wizualizacji i eksportu
+ */
+export const groupDataHierarchical = (data, groupModel, columns) => {
+    if (!Array.isArray(groupModel) || groupModel.length === 0) return data.map(row => ({ type: 'row', row }));
+
+    const buildGroups = (rows, level = 0) => {
+        if (level >= groupModel.length) {
+            return rows.map(row => ({ type: 'row', row }));
+        }
+
+        const field = groupModel[level];
+        const grouped = {};
+
+        rows.forEach(row => {
+            const key = row[field] ?? '__null__';
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(row);
+        });
+
+        return Object.entries(grouped).map(([key, groupRows]) => {
+            const value = key === '__null__' ? null : key;
+            const children = buildGroups(groupRows, level + 1);
+            const aggregates = getAggregatedValues(groupRows, columns);
+
+            return {
+                type: 'group',
+                level,
+                field,
+                value,
+                aggregates,
+                rows: groupRows,
+                children,
+            };
+        });
+    };
+
+    return buildGroups(data);
+};
+
+export const sortData = (data = [], sortModel = [], columns = []) => {
+    if (!Array.isArray(data) || data.length === 0 || sortModel.length === 0) {
+        return data;
+    }
+
+    const getColumnType = (field) =>
+        columns.find(col => col.field === field)?.type || 'string';
+
+    return [...data].sort((a, b) => {
+        for (let sort of sortModel) {
+            const { field, direction } = sort;
+            const type = getColumnType(field);
+
+            let aValue = a[field];
+            let bValue = b[field];
+
+            // Null-safe fallback
+            if (aValue === null || aValue === undefined) aValue = '';
+            if (bValue === null || bValue === undefined) bValue = '';
+
+            // Type-aware casting
+            switch (type) {
+                case 'number':
+                    aValue = typeof aValue === 'number' ? aValue : parseFloat(String(aValue).replace(',', '.'));
+                    bValue = typeof bValue === 'number' ? bValue : parseFloat(String(bValue).replace(',', '.'));
+                    if (isNaN(aValue)) aValue = 0;
+                    if (isNaN(bValue)) bValue = 0;
+                    break;
+
+                case 'date':
+                    aValue = new Date(aValue).getTime() || 0;
+                    bValue = new Date(bValue).getTime() || 0;
+                    break;
+
+                case 'boolean':
+                    aValue = aValue ? 1 : 0;
+                    bValue = bValue ? 1 : 0;
+                    break;
+
+                default:
+                    aValue = String(aValue).toLowerCase();
+                    bValue = String(bValue).toLowerCase();
+            }
+
+            if (aValue === bValue) continue;
+
+            const result = aValue > bValue ? 1 : -1;
+            return direction === 'asc' ? result : -result;
+        }
+
+        return 0;
+    });
+};
+

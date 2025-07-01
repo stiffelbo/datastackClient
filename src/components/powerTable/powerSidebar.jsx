@@ -11,7 +11,7 @@ import LayersClearIcon from '@mui/icons-material/LayersClear';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
-const PowerSidebar = ({ config = [], onOpenSettings }) => {
+const PowerSidebar = ({ config = [], onOpenSettings, columnsSchema }) => {
 
   const renderRefreshControl = () => (
     <Tooltip title="Refresh Data">
