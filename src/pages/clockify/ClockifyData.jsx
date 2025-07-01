@@ -1,9 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import http from '../../http';
+import {formatDecimal} from '../../utils/numbers';
 
-import { Box, CircularProgress, Backdrop } from '@mui/material';
-import Crud from '../../components/crud/crud';
+import PowerTable from '../../components/powerTable/powerTable';
+
+const sanitizeData = data => {
+  if(!data || !data.length) return [];
+
+  return data.map(i => {
+    return {
+      ...i,
+      duration_decimal : formatDecimal(i.duration_decimal),
+      billable_rate_pln : formatDecimal(i.billable_rate_pln),
+      billable_amount : formatDecimal(i.billable_amount)
+    }
+
+  })
+}
 
 const ClockifyData = () => {
   const [rows, setRows] = useState([]);
@@ -13,7 +27,7 @@ const ClockifyData = () => {
     setLoading(true);
     try {
       const { data } = await http.get('clockify/get.php');
-      setRows(data);
+      setRows(sanitizeData(data));
       if(data.length){
         toast.success(`Pobrano ${data.length} wierszy danych.`);
       }else{
@@ -31,10 +45,13 @@ const ClockifyData = () => {
     populate();
   }, []);
 
-  return (
-   
-      <Crud
+  return (   
+      <PowerTable
+        entityName='clockifyData'
         data={rows}
+        height={window.innerHeight - 90}
+        width={window.innerWidth}
+        loading={loading}
       />
   );
 };

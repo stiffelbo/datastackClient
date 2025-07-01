@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 const isLocalhost = window.location.hostname === 'localhost';
 
 const apiEndpointBase = isLocalhost
-  ? 'http://localhost/datastack/api'
+  ? 'http://localhost/datastackServer/api'
   : 'http://192.168.1.135/datastack/api';
 
 const http = axios.create({

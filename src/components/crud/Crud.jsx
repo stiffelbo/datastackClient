@@ -9,38 +9,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
-import Sidebar from './Sidebar';
+import { Box, Drawer } from '@mui/material';
 import Mrt from './Mrt';
+import Controls from './Controls';
 
 import { generateColumns } from './utils';
-
-const defaultTableConfig = {
-    enableStickyHeader: true,
-    enableStickyFooter: false,
-    enableFullScreenToggle: false,
-    enableColumnVirtualization: false,
-    enableRowVirtualization: false,
-    enableGlobalFilter: true,
-    enableGrouping: true,
-
-    enableSorting: true,
-    enableMultiSort: true,
-    enableColumnOrdering: false,
-    enableColumnFilter: false,
-
-    enableColumnPinning: true,
-    enableColumnResizing: true,
-    enableColumnDragging: false,
-    enableColumnFilters: false,
-    enableColumnFilterModes: true,
-
-    enableRowSelection: false,
-    enableRowActions: false,
-    enableRowNumbers: false,
-    enableExpanding: false,
-};
-
 
 export default function Crud({
     crudConfig = {},
@@ -48,8 +21,8 @@ export default function Crud({
     onCreate,
     onUpdate,
     onDelete,
-    heightSpan = 128
-}){
+    heightSpan = 92
+}) {
     const {
         entity = 'unnamed',
         columns = [],
@@ -60,10 +33,14 @@ export default function Crud({
         defaultHiddenColumns = [],
     } = crudConfig;
 
+    const [drawerState, setDrawerState] = useState({
+        open: false,
+        view: null, // np. 'tableMenu
+    });
     const [tableData, setTableData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [columnsSchema, setColumnsSchema] = useState(crudConfig.columns || []);
-    const [tableOptions, setTableOptions] = useState(defaultTableConfig);
+    const [tableOptions, setTableOptions] = useState({});
 
     // Załaduj dane jeśli nie są podane bezpośrednio
     useEffect(() => {
@@ -89,7 +66,8 @@ export default function Crud({
     }, [tableData]);
 
     const { innerHeigth, innerWidth } = window;
-    const sidebarWidth = 88;
+    const sidebarWidth = 0;
+    const calcHeight = innerHeigth - heightSpan;
 
     const tableConfig = {
         ...tableOptions,
@@ -103,42 +81,76 @@ export default function Crud({
             grouping: defaultGrouping,
             pagination: { pageIndex: 0, pageSize: 100 },
         },
-        muiTableBodyProps: {
-            sx: {
-                width: '100%',
-                maxWidth: '100%',
-                height: '100%',
-                maxHeight: '100%',
-            },
-        },
+
         muiTableContainerProps: {
             sx: {
-                maxHeight: innerHeigth - 88,
-            },
+                width: innerWidth - sidebarWidth,
+                height: calcHeight,
+                overflow: 'auto',
+                position: 'relative', // ← ważne dla sticky
+            }
         },
         enableStickyHeader: true,
-        positionPagination: 'top',
+        enableBottomToolbar: false,
+        enableStickyHeader: true,
+        enableStickyFooter: true,
+        enableFullScreenToggle: false,
+
+        enableSorting: true,
+        enableGrouping: true,
+        enableMultiSort: true,
+        enableColumnFilter: true,
+        enableColumnOrdering: false,
+        
+
+        enableColumnPinning: true,
+        enableColumnResizing: true,
+        enableColumnDragging: false,
+        enableColumnFilters: false,
+        enableColumnFilterModes: true,
+
+        enableRowSelection: false,
+        enableExpanding: false,
     };
 
 
+    const openDrawer = (view) => setDrawerState({ open: true, view });
+    const closeDrawer = () => setDrawerState({ open: false, view: null });
+
+    const renderDrawerContent = () => {
+        switch (drawerState.view) {
+            case 'addForm':
+                return (
+                    <p>Add Form</p>
+                );
+            case 'filters':
+                return (
+                    <p>Filters</p>
+                );
+            // case 'export': return <ExportForm />
+            default:
+                return null;
+        }
+    };
 
     return (
-        <Box width="100%" sx={{ display: 'flex', flexDirection: 'row', height: innerHeigth - heightSpan, overflow: 'hidden' }}>
-            {/* Sidebar z przyciskami kontrolnymi */}
-            <Box sx={{ width: sidebarWidth }}>
-                <Sidebar
-                    tableOptions={tableOptions}
-                    setTableOptions={setTableOptions}
-                    columnsSchema={columnsSchema}
-                    setColumnsSchema={setColumnsSchema}
-                />
-            </Box>
-
+        <Box width="100%">
+            <Drawer
+                anchor="left"
+                open={drawerState.open}
+                onClose={closeDrawer}
+                PaperProps={{
+                    sx: {
+                        maxWidth: '80vw', // opcjonalnie limit max
+                    },
+                }}
+            >
+                {renderDrawerContent()}
+            </Drawer>
 
             {/* Główna część z tabelą */}
-            <Box sx={{ width: innerWidth - sidebarWidth, height: '100%', maxHeight: '100%'}}>
-                <Mrt data={tableData} columns={columnsSchema} config={tableConfig} />
-            </Box>
+            <Mrt data={tableData} columns={columnsSchema} config={tableConfig} openDrawer={openDrawer}/>
+
         </Box>
     );
 }

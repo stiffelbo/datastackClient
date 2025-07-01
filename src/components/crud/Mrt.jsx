@@ -1,72 +1,57 @@
+/*
+- paginacja tylko na górze, wyłączyć wyświetlania paginacji na dole,
+- tabela wraz zgórnym menu ma się wyświetlac tylko w zakresie zadanym przez CRUD, skrolować tylko zawartość tabeli tak jak to działa w fullscreen,
+obecnie przy wiekszej ilosci wierzy scroluje sie całe okno wraz nagłówkami tabeli, mimo ustawienia sticky header nie są one przytwierdzone.
+- nie pokazuje się globalna szukajka
+- przy grupowaniu wierszy zliczać id jako distinct count, oraz aktywować rozwijanie wierszy, deaktywować gdy dane nie są grupowane i nie ma danych strukturalnych wiersza.
+*/
+
+
 import React from 'react';
 import { Box } from '@mui/material';
 import {
   MaterialReactTable,
   useMaterialReactTable,
-  MRT_ToggleFiltersButton,
-  MRT_ShowHideColumnsButton,
-  MRT_ToggleDensePaddingButton,
   MRT_ToggleFullScreenButton,
   MRT_ToolbarAlertBanner,
   MRT_TablePagination,
-  MRT_GlobalFilterTextField,
 } from 'material-react-table';
 
+import Controls from './Controls';
 
-const Mrt = ({ data, columns, config, height = null, width = null }) => {
+
+const Mrt = ({ data, columns, config, openDrawer }) => {
+
   const table = useMaterialReactTable({
     data,
     columns,
     ...config,
-    paginationDisplayMode: 'custom', // 👈 wyłącza domyślną paginację
     renderTopToolbar: ({ table }) => (
       <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.5rem 1rem',
-                gap: 1,
-            }}
-            >
-            {/* LEFT side */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MRT_GlobalFilterTextField table={table} />
-                <MRT_ToggleFiltersButton table={table} />
-                <MRT_ShowHideColumnsButton table={table} />
-                <MRT_ToggleDensePaddingButton table={table} />
-                <MRT_ToggleFullScreenButton table={table} />
-            </Box>
-
-            {/* RIGHT side */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MRT_TablePagination table={table} />
-            </Box>
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '0.5rem 1rem',
+          gap: 1,
+        }}
+      >
+        {/* LEFT side */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <MRT_TablePagination table={table} />
+          <MRT_ToggleFullScreenButton table={table} />
+          <MRT_ToolbarAlertBanner table={table} />
         </Box>
+        {/* RIGHT side */}
+        <Controls openDrawer={openDrawer} />
+      </Box>
     ),
   });
 
   return (
-    <Box
-      sx={{
-        height: height ?? '100%',
-        maxHeight: height ?? '100%',
-        width: width ?? '100%',
-        maxWidth: width ?? '100%',
-        overflow: 'hidden',
-      }}
-    >
-      <MaterialReactTable
-        table={table}
-        muiTableContainerProps={{
-          sx: {
-            height: '100%',
-            maxHeight: '100%',
-            overflow: 'auto',
-          },
-        }}
-      />
-    </Box>
+    <MaterialReactTable
+      table={table}
+    />
   );
 };
 
