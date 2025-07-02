@@ -144,6 +144,16 @@ export const getAggregatedValues = (data, columns) => {
     return result;
 };
 
+export const generateCollapseKey = (field, groupIndex) => `collapse_${field}_${groupIndex}`;
+
+const nullValString = 'BrakDanych';
+
+const resolveGroupKey = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return nullValString;
+  }
+  return String(value);
+};
 
 /**
  * Hierarchiczna struktura grupowania danych z możliwością rozbudowy do widoku tabeli i eksportu.
@@ -154,7 +164,12 @@ export const getAggregatedValues = (data, columns) => {
  * @param {Array<Object>} columns - definicje kolumn (z aggregationFn)
  * @returns {Array<Object>} - struktura drzewiasta do wizualizacji i eksportu
  */
-export const groupDataHierarchical = (data, groupModel, columns) => {
+export const groupDataHierarchical = (data, columns) => {
+    const groupModel = columns.filter(c => c.groupBy).sort((a, b) => {
+      const aIndex = a.groupIndex ?? Infinity;
+      const bIndex = b.groupIndex ?? Infinity;
+      return aIndex - bIndex;
+    }).map(c => c.field);
     if (!Array.isArray(groupModel) || groupModel.length === 0) return data.map(row => ({ type: 'row', row }));
 
     const buildGroups = (rows, level = 0) => {
@@ -166,13 +181,13 @@ export const groupDataHierarchical = (data, groupModel, columns) => {
         const grouped = {};
 
         rows.forEach(row => {
-            const key = row[field] ?? '__null__';
+            const key = resolveGroupKey(row[field]);
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push(row);
         });
 
         return Object.entries(grouped).map(([key, groupRows]) => {
-            const value = key === '__null__' ? null : key;
+            const value = key === nullValString ? nullValString : key;
             const children = buildGroups(groupRows, level + 1);
             const aggregates = getAggregatedValues(groupRows, columns);
 

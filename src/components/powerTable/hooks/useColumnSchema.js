@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import {getAggregatedValues} from '../utils';
+import { getAggregatedValues } from '../utils';
 
 const getStorageKey = (entityName) => `powerTable_columns__${entityName}`;
 
@@ -11,12 +11,28 @@ const mergeColumns = (auto, user) => {
   return Array.from(map.values());
 };
 
+const reindexGroupBy = (columns) => {
+  const grouped = columns
+    .filter(col => col.groupBy)
+    .sort((a, b) => {
+      const aIndex = a.groupIndex ?? Infinity;
+      const bIndex = b.groupIndex ?? Infinity;
+      return aIndex - bIndex;
+    });
+
+  return columns.map(col => {
+    if (!col.groupBy) return { ...col, groupIndex: null };
+
+    const newIndex = grouped.findIndex(g => g.field === col.field);
+    return { ...col, groupIndex: newIndex };
+  });
+};
+
+
 const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') => {
   const storageKey = getStorageKey(entityName);
   const [columns, setColumns] = useState([]);
   const [sortModel, setSortModelState] = useState([]);
-  const [aggregationModel, setAggregationModelState] = useState([]);
-  const [groupModel, setGroupModelState] = useState([]);
 
   useEffect(() => {
     const merged = mergeColumns(autoColumns, userSchema);
@@ -54,6 +70,31 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
     );
   };
 
+  const toggleColumnHidden = (field) => {
+    const col = columns.find((c) => c.field === field);
+    if (!col) return;
+
+    if (!col.hidden) {
+      // Chowamy — usuń powiązane stany
+      const updated = { hidden: true };
+      if (col.groupBy) {
+        updated.groupBy = false;
+        updated.groupIndex = null;
+        const reindexed = reindexGroupBy(
+          columns.map(c =>
+            c.field === field ? { ...c, ...updated } : c
+          )
+        );
+        setColumns(reindexed); //to już updateuje pole
+      } else {
+        updateField(field, updated);
+      }
+    } else {
+      // Pokazujemy — tylko update hidden, nic poza tym nie trzeba robić.
+      updateField(field, { hidden: false });
+    }
+  };
+
   const reorderColumn = (fromIndex, toIndex) => {
     setColumns((prev) => {
       const updated = [...prev];
@@ -81,47 +122,55 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
   const clearSort = () => setSortModelState([]);
 
   const setAggregation = (field, fn) => {
-    setAggregationModelState((prev) => {
-      const existing = prev.find((a) => a.field === field);
-      if (existing) {
-        return prev.map((a) => a.field === field ? { ...a, fn } : a);
-      } else {
-        return [...prev, { field, fn }];
-      }
-    });
     updateField(field, { aggregationFn: fn });
   };
 
   const removeAggregation = (field) => {
-    setAggregationModelState((prev) => prev.filter((a) => a.field !== field));
     updateField(field, { aggregationFn: undefined });
   };
 
   const clearAggregation = () => {
-    setAggregationModelState([]);
     setColumns(prev =>
       prev.map(col => col.aggregationFn ? { ...col, aggregationFn: undefined } : col)
     );
   };
 
   const toggleGroupBy = (field) => {
-    setGroupModelState((prev) => {
-      if (prev.includes(field)) {
-        return prev.filter(f => f !== field);
-      } else {
-        return [...prev, field];
-      }
-    });
-    const col = columns.find((c) => c.field === field);
-    if (col) updateField(field, { groupBy: !col.groupBy });
+    const col = columns.find(c => c.field === field);
+    if (!col) return;
+
+    if (col.groupBy) {
+      const updated = columns.map(c =>
+        c.field === field
+          ? { ...c, groupBy: false, groupIndex: null }
+          : c
+      );
+      setColumns(reindexGroupBy(updated));
+    } else {
+      const updated = columns.map(c =>
+        c.field === field
+          ? { ...c, groupBy: true } // groupIndex zostanie nadany automatycznie
+          : c
+      );
+      setColumns(reindexGroupBy(updated));
+    }
   };
 
   const clearGroupBy = () => {
     setColumns(prev =>
-      prev.map(col => col.groupBy ? { ...col, groupBy: false } : col)
+      prev.map(col => col.groupBy ? { ...col, groupBy: false, groupIndex: null } : col)
     );
-    setGroupModelState([]);
   };
+
+  const getGroupedCols = () => {
+    return columns.filter(c => c.groupBy).sort((a, b) => {
+      const aIndex = a.groupIndex ?? Infinity;
+      const bIndex = b.groupIndex ?? Infinity;
+      return aIndex - bIndex;
+    });
+  };
+
+  const getGroupModel = () => getGroupedCols().map(c => c.field);
 
   //Getters
   const getVisibleColumns = () => columns.filter((col) => !col.hidden);
@@ -129,15 +178,16 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
   const getSortDirection = (field) =>
     sortModel.find((s) => s.field === field)?.direction ?? null;
 
-  const getGroupOrder = (field) => {
-    const groupFields = columns.filter(c => c.groupBy);
-    return groupFields.findIndex(c => c.field === field);
-  };
+
+  const getGroupedColumns = () => {
+    const groupCols = groupModel.map(field => getColumnByField(field)).filter(Boolean);
+    const restCols = columns.filter(c => !groupModel.includes(c.field) && !c.hidden);
+    return [...groupCols, { field: '__expander', headerName: '' }, ...restCols];
+  }
 
   const getAggregatedValuesForData = (data) => {
     return getAggregatedValues(data, getVisibleColumns());
   };
-
 
   return {
     columns,
@@ -153,6 +203,7 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
       const merged = mergeColumns(autoColumns, userSchema);
       setColumns(merged);
     },
+    toggleColumnHidden,
     setAllVisible,
     //Sorting
     sortModel,
@@ -162,7 +213,9 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
     clearSort,
 
     //Agregation
-    aggregationModel,
+    aggregationModel: columns
+      .filter(c => !!c.aggregationFn)
+      .map(c => ({ field: c.field, fn: c.aggregationFn })),
     setAggregation,
     removeAggregation,
     setAggregationFn: (field, fn) => {
@@ -171,20 +224,15 @@ const useColumnSchema = (autoColumns, userSchema = [], entityName = 'default') =
     },
     clearAggregation,
     //Grouping
-    groupModel,
     toggleGroupBy,
-    toggleColumnHidden: (field) => {
-      const col = columns.find((c) => c.field === field);
-      if (col) updateField(field, { hidden: !col.hidden });
-    },
     clearGroupBy,
-
+    getGroupedCols,
+    groupModel : getGroupModel(),
     //Getters
     getVisibleColumns,
+    getGroupedColumns,
     getSortDirection,
-    getGroupOrder,
-    getAggregatedValues: getAggregatedValuesForData
-
+    getAggregatedValues: getAggregatedValuesForData,
   };
 };
 

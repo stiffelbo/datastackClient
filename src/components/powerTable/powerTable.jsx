@@ -9,12 +9,10 @@ import useTableSettings from './hooks/useTableSettings';
 import { sortData } from './utils';
 
 import SettingsModal from './settingsModal';
-import PowerTableHead from './powerTableHead';
-import PowerTableBody from './powerTableBody';
-import PowerTableFooter from './powerTableFooter';
-import PowerSidebar from './powerSidebar';
-import PowerTableControl from './powerTableControl';
 
+import PowerSidebar from './powerSidebar';
+import FlatTable from './flatTable';
+import GroupedTable from './groupedTable';
 
 const PowerTable = ({
   data = [],
@@ -54,6 +52,29 @@ const PowerTable = ({
 
   const sortedData = sortData(data, columnsSchema.sortModel, columnsSchema.columns);
 
+  const { getGroupedCols} = columnsSchema;
+  const isGrouped = getGroupedCols().length;
+
+  const renderTable = () =>
+    isGrouped ? (
+      <GroupedTable
+        data={data}
+        columnsSchema={columnsSchema}
+        rowRules={rowRules}
+        settings={settings}
+        footerConfig={footerConfig}
+      />
+    ) : (
+      <FlatTable
+        data={sortedData}
+        columnsSchema={columnsSchema}
+        rowRules={rowRules}
+        footerConfig={footerConfig}
+        settings={settings}
+      />
+    );
+
+
   return (
     <>
       <Box
@@ -75,19 +96,9 @@ const PowerTable = ({
 
         {/* Table Section */}
         <Box sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          {/* Control bar: wysokość naturalna */}
-          <PowerTableControl columnsSchema={columnsSchema} />
 
           {/* Tabela: rośnie, scrolluje się */}
-          <Box sx={{ flex: '1 1 auto', overflow: 'auto' }}>
-            <TableContainer component={Paper} sx={{ maxHeight: '100%', width: '100%', maxWidth: '100%' }}>
-              <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-                <PowerTableHead columnsSchema={columnsSchema} settings={settings} />
-                <PowerTableBody data={sortedData} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
-                <PowerTableFooter data={sortedData} columnsSchema={columnsSchema} config={footerConfig} settings={settings} />
-              </Table>
-            </TableContainer>
-          </Box>
+          {renderTable()}
         </Box>
       </Box>
 

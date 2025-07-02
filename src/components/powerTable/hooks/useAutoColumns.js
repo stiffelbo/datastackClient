@@ -42,10 +42,13 @@ const useAutoColumns = (data = []) => {
       type,
       width,
       editable: false,
+      hidden: false,
       align: type === 'number' ? 'right' : 'left',
       sortable: true,
       filterable: true,
       aggregationFn: null,
+      groupBy: false,
+      groupIndex: null,
     };
   });
 };

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
   TableHead, TableRow, TableCell,
-  IconButton, Menu, MenuItem, Tooltip, Box, Typography, Chip
+  IconButton, Menu, Tooltip, Box, Chip
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
-//comp
 import ColumnConfigurator from './columnConfigurator';
+import { generateCollapseKey } from './utils';
 
-const PowerTableHead = ({ columnsSchema }) => {
+const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollapse = null }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [activeField, setActiveField] = useState(null);
 
@@ -32,11 +33,25 @@ const PowerTableHead = ({ columnsSchema }) => {
       <TableRow>
         {columnsSchema.getVisibleColumns().map((col) => {
           const sortDir = columnsSchema.getSortDirection(col.field);
-          const groupIndex = columnsSchema.getGroupOrder(col.field);
+
+          const groupIndex = col.groupIndex;
+          const isGrouped = typeof groupIndex === 'number';
+
+          let collapseKey = null;
+          let isCollapsed = false;
+
+          const pathsAtLevel = Object.keys(groupCollapseState).filter(p => p.split('/').length === groupIndex + 1);
+          const allCollapsed = pathsAtLevel.every(p => groupCollapseState[p] === true);
+
+          if (isGrouped) {
+            collapseKey = generateCollapseKey(col.field, groupIndex);
+            isCollapsed = groupCollapseState?.[collapseKey] === true;
+          }
           return (
             <TableCell
               key={col.field}
               sx={{
+                cursor: isGrouped && onToggleCollapse ? 'pointer' : 'default',
                 width: col.width,
                 maxWidth: col.maxWidth,
                 minWidth: col.minWidth,
@@ -46,7 +61,6 @@ const PowerTableHead = ({ columnsSchema }) => {
                 top: 0,
                 zIndex: 2,
                 whiteSpace: 'nowrap',
-                cursor: 'pointer',
               }}
             >
               <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 1, borderRight: '1px solid gray' }}>
@@ -59,13 +73,19 @@ const PowerTableHead = ({ columnsSchema }) => {
                 {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
                 {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
 
-                {groupIndex !== -1 && (
+                {isGrouped && (
                   <Chip
                     size="small"
-                    label={`#${groupIndex + 1}`}
+                    label={`#${groupIndex + 1}`} // 👈 zwiększamy wyświetlany numer
                     icon={<GroupWorkIcon fontSize="small" />}
                     sx={{ height: 20, fontSize: '0.75rem' }}
                   />
+                )}
+
+                {isGrouped && onToggleCollapse && (
+                  <IconButton onClick={() => onToggleCollapse(groupIndex)}>
+                    {allCollapsed ? <ExpandLess /> : <ExpandMore />}
+                  </IconButton>
                 )}
               </Box>
             </TableCell>
@@ -86,7 +106,6 @@ const PowerTableHead = ({ columnsSchema }) => {
           />
         )}
       </Menu>
-
     </TableHead>
   );
 };

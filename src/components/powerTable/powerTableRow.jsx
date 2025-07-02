@@ -2,7 +2,7 @@ import React from 'react';
 import { TableRow, TableCell } from '@mui/material';
 import useRowRules from './hooks/useRowRules';
 
-const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {} }) => {
+const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {sx: {}}}) => {
   const rowStyle = useRowRules(row, rowRules);
 
   const height = settings?.rowHeight || 48;
@@ -21,6 +21,7 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {} }) => 
             width: col.width, padding: densityPadding, whiteSpace: 'wrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            ...settings.sx
           }}
           title={row[col.field]}
         >

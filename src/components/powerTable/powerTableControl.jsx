@@ -6,13 +6,13 @@ import GroupOffIcon from '@mui/icons-material/GroupOff';
 import SortIcon from '@mui/icons-material/Sort';
 import CloseIcon from '@mui/icons-material/Close';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FunctionsIcon from '@mui/icons-material/Functions';
 
 const PowerTableControl = ({ columnsSchema }) => {
   const {
-    getVisibleColumns,
     setAllVisible,
     sortModel,
-    groupModel,
+    getGroupedCols,
     aggregationModel,
     toggleGroupBy,
     clearSort,
@@ -20,10 +20,13 @@ const PowerTableControl = ({ columnsSchema }) => {
     clearAggregation,
   } = columnsSchema;
 
-  const hasAnyActive =
-    sortModel.length > 0 || groupModel.length > 0 || aggregationModel.length > 0;
 
-  const hiddenCount = columnsSchema.columns.filter(col => col.hidden).length;
+  const groupModel = getGroupedCols();
+
+  const hasAnyActive =
+    sortModel?.length > 0 || groupModel?.length > 0 || aggregationModel?.length > 0;
+
+  const hiddenCount = columnsSchema?.columns?.filter(col => col.hidden).length;
 
   if (!hasAnyActive) return null;
 
@@ -34,8 +37,6 @@ const PowerTableControl = ({ columnsSchema }) => {
     setAllVisible();
   };
 
-  console.log(groupModel);
-
   return (
     <Box sx={{ px: 1, py: 0.5, backgroundColor: '#fafafa', borderBottom: '1px solid #ddd' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
@@ -43,14 +44,13 @@ const PowerTableControl = ({ columnsSchema }) => {
           {groupModel.length > 0 && (
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Grupowanie:</Typography>
-              {groupModel.map((field, i) => {
-                const col = columnsSchema.getColumnByField(field);
+              {groupModel.map((col) => {
                 return (
                   <Chip
-                    key={field}
-                    label={`#${i + 1} ${col?.headerName || field}`}
+                    key={col.field}
+                    label={`#${col.groupIndex + 1} ${col?.headerName || field}`}
                     size="small"
-                    onDelete={() => toggleGroupBy(field)}
+                    onDelete={() => toggleGroupBy(col.field)}
                     deleteIcon={<CloseIcon fontSize="small" />}
                   />
                 );
@@ -79,7 +79,7 @@ const PowerTableControl = ({ columnsSchema }) => {
           {aggregationModel.length > 0 && (
             <Tooltip title="Wyczyść agregacje">
               <IconButton color="primary" size="small" onClick={clearAggregation}>
-                <FilterAltOffIcon fontSize="small" />
+                <FunctionsIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
