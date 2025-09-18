@@ -49,6 +49,9 @@ const useAutoColumns = (data = []) => {
       aggregationFn: null,
       groupBy: false,
       groupIndex: null,
+      source: 'auto',
+      expresion: '',
+      isSelected: false
     };
   });
 };

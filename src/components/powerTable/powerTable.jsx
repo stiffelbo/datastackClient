@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Box, TableContainer, Table, Paper } from '@mui/material';
 
 import useAutoColumns from './hooks/useAutoColumns';
-import useColumnSchema from './hooks/useColumnSchema';
+import usePresets from './hooks/usePresets';
+import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
 
 import { sortData } from './utils';
@@ -13,6 +14,8 @@ import SettingsModal from './settingsModal';
 import PowerSidebar from './powerSidebar';
 import FlatTable from './flatTable';
 import GroupedTable from './groupedTable';
+import PresetsModal from './presetsModal';
+import FormulaModal from './formula/formulaModal';
 
 const PowerTable = ({
   data = [],
@@ -21,11 +24,12 @@ const PowerTable = ({
   sidebarConfig = [],
   footerConfig = {},
   entityName = 'default',
-  width = 500,
-  height = 500,
+  width = 1500,
+  height = 600,
 }) => {
+  const presets = usePresets({entityName: entityName});
   const autoColumns = useAutoColumns(data);
-  const columnsSchema = useColumnSchema(autoColumns, columnSchema, entityName);
+  const columnsSchema = useColumns({autoColumns, devSchema: columnSchema, presets, entityName});
 
   const { settings, updateSettings } = useTableSettings(entityName);
 
@@ -43,6 +47,23 @@ const PowerTable = ({
             onClose={closeModal}
             settings={settings}
             onSave={updateSettings}
+          />
+        );
+      case 'presets':
+        return (
+          <PresetsModal
+            open={modalState.open}
+            onClose={closeModal}
+            presets={presets}
+            columns={columnsSchema}
+          />
+        );
+      case 'custom':
+        return (
+          <FormulaModal
+            open={modalState.open}
+            onClose={closeModal}
+            columns={columnsSchema}
           />
         );
       default:
@@ -92,7 +113,7 @@ const PowerTable = ({
         }}
       >
         {/* Sidebar */}
-        <PowerSidebar config={sidebarConfig} onOpenSettings={() => openModal('settings')} columnsSchema={columnsSchema} />
+        <PowerSidebar config={sidebarConfig} onOpenSettings={openModal} columnsSchema={columnsSchema} />
 
         {/* Table Section */}
         <Box sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

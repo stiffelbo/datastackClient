@@ -15,6 +15,7 @@ const FlatTable = ({
   settings,
   footerConfig
 }) => {
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PowerTableControl columnsSchema={columnsSchema} />

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Chip, Stack, IconButton, Tooltip } from '@mui/material';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import GroupOffIcon from '@mui/icons-material/GroupOff';
+//import GroupOffIcon from '@mui/icons-material/GroupOff';
 import SortIcon from '@mui/icons-material/Sort';
 import CloseIcon from '@mui/icons-material/Close';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
@@ -45,10 +45,11 @@ const PowerTableControl = ({ columnsSchema }) => {
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Grupowanie:</Typography>
               {groupModel.map((col) => {
+                console.log(col);
                 return (
                   <Chip
                     key={col.field}
-                    label={`#${col.groupIndex + 1} ${col?.headerName || field}`}
+                    label={`#${col.groupIndex + 1} ${col.headerName || col.field}`}
                     size="small"
                     onDelete={() => toggleGroupBy(col.field)}
                     deleteIcon={<CloseIcon fontSize="small" />}
@@ -71,7 +72,7 @@ const PowerTableControl = ({ columnsSchema }) => {
           {groupModel.length > 0 && (
             <Tooltip title="Wyczyść grupowanie">
               <IconButton color="primary" size="small" onClick={clearGroupBy}>
-                <GroupOffIcon fontSize="small" />
+                {/*<GroupOffIcon fontSize="small" />*/}
               </IconButton>
             </Tooltip>
           )}

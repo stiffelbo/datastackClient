@@ -23,7 +23,7 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {sx: {}}}
             textOverflow: 'ellipsis',
             ...settings.sx
           }}
-          title={row[col.field]}
+          title={`${col.field}`}
         >
           {row[col.field]}
         </TableCell>

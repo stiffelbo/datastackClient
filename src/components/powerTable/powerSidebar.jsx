@@ -3,6 +3,7 @@ import React from 'react';
 import { Box, IconButton, Tooltip, Badge } from '@mui/material';
 
 // Placeholder icons
+import TuneIcon from '@mui/icons-material/Tune';
 import DownloadIcon from '@mui/icons-material/Download';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
@@ -10,8 +11,25 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import LayersClearIcon from '@mui/icons-material/LayersClear';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import CodeIcon from '@mui/icons-material/Code';
 
-const PowerSidebar = ({ config = [], onOpenSettings, columnsSchema }) => {
+const PowerSidebar = ({ onOpenSettings }) => {
+
+  const renderCustomControl = () => {
+    return <Tooltip title="Custom Field">
+      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={()=> onOpenSettings('custom')}>
+        <CodeIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  }
+
+  const renderPresetControl = () => {
+    return <Tooltip title="Preset">
+      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={()=> onOpenSettings('presets')}>
+        <TuneIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  }
 
   const renderRefreshControl = () => (
     <Tooltip title="Refresh Data">
@@ -49,7 +67,7 @@ const PowerSidebar = ({ config = [], onOpenSettings, columnsSchema }) => {
 
   const renderSettingsControl = () => (
     <Tooltip title="Table Settings">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={onOpenSettings}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={()=> onOpenSettings('settings')}>
         <SettingsIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -76,7 +94,9 @@ const PowerSidebar = ({ config = [], onOpenSettings, columnsSchema }) => {
         gap: 1,
       }}
     >
+      {renderCustomControl()}
       {renderRefreshControl()}
+      {renderPresetControl()}
       {renderDisplayModeControl()}
       {renderFilterModeControl()}
       {renderClearFiltersControl(2)}

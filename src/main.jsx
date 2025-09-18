@@ -10,6 +10,9 @@ import { AuthProvider } from './context/AuthContext';
 import { NavProvider } from './context/NavContext';
 import { CurrentProvider } from './context/CurrentContext';
 import { TabsProvider } from './context/TabsContext';
+import { FiltersProvider } from './context/FiltersContext';
+import { PresetsProvider } from './context/PresetsContext';
+
 
 
 const root = createRoot(document.getElementById('root'));
@@ -22,8 +25,12 @@ root.render(
       <NavProvider>
         <CurrentProvider>
           <TabsProvider>
-            <App />
-            <ToastContainer position="bottom-right" autoClose={3000} />
+            <FiltersProvider>
+              <PresetsProvider >
+                <App />
+                <ToastContainer position="bottom-right" autoClose={3000} />
+              </PresetsProvider>
+            </FiltersProvider>
           </TabsProvider>
         </CurrentProvider>
       </NavProvider>

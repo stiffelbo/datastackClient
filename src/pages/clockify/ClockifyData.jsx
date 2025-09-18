@@ -28,7 +28,7 @@ const ClockifyData = () => {
     try {
       const { data } = await http.get('clockify/get.php');
       setRows(sanitizeData(data));
-      if(data.length){
+      if(data && data.length){
         toast.success(`Pobrano ${data.length} wierszy danych.`);
       }else{
         toast.warning(`Pobrano ${data.length} wierszy danych!`);

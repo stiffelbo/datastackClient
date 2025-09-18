@@ -13,8 +13,8 @@ import {
   FormControl
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import useLocalStorage from "../../../hooks/useLocalStorage";
-import FieldButton from "../grouper/fieldButton";
+import useLocalStorage from "../../hooks/useLocalStorage";
+import FieldButton from "../common/fieldButton";
 import { mergeFiltersWithExtractedFields } from "./utils";
 
 const AVAILABLE_TYPES = {

@@ -47,6 +47,7 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
             collapseKey = generateCollapseKey(col.field, groupIndex);
             isCollapsed = groupCollapseState?.[collapseKey] === true;
           }
+          console.log(col);
           return (
             <TableCell
               key={col.field}
@@ -64,7 +65,7 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
               }}
             >
               <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 1, borderRight: '1px solid gray' }}>
-                <Tooltip title={col.title || col.headerName || col.field}>
+                <Tooltip title={`${col.headerName}` || `${col.field}`}>
                   <span onClick={(e) => openMenu(e, col.field)}>
                     {capitalize(col.headerName || col.field)}
                   </span>

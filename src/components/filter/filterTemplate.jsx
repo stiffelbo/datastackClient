@@ -20,10 +20,9 @@ import SlugInput from './slugInput';
 import FiltersConfigurator from './filtersConfigurator';  //we will use this as control component.
 import RangeDropdown from './rangeDropdown';
 
-import { initialState } from './../../../filtersConfig';
-import { useFilters } from '../../../hooks/useFilters';
-import useLocalStorage from './../../../hooks/useLocalStorage';
-import { extractFieldTypes } from '../../../utils/extractFieldTypes';
+import { useFilters } from '../../hooks/useFilters';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import { extractFieldTypes } from '../../utils/extractFieldTypes';
 import { mergeFiltersWithExtractedFields } from './utils';
 
 import {
@@ -38,6 +37,8 @@ import {
     filterDateRange
 } from "./filter";
 
+
+const initialState = {};
 
 //for now make state for filters
 const getDefaultFilters = (schema) => {
