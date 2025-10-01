@@ -17,9 +17,7 @@ const FlatTable = ({
 }) => {
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PowerTableControl columnsSchema={columnsSchema} />
-
+    <Box sx={{ height: '100%' }}>
       <TableContainer component={Paper} sx={{ maxHeight: '100%', width: '100%', maxWidth: '100%' }}>
         <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
           <PowerTableHead columnsSchema={columnsSchema} settings={settings} />

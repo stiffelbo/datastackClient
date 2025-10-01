@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { parseXLSX } from '../../utils/parseXLSX'
-import { toISODate, toISOTime } from '../../utils/toISO';
+import { toISODate } from '../../utils/toISO';
 import { uploadClockifyData } from './../../services/clockify/upload';
 //Mui
-import { Box, Button, Drawer, IconButton, Alert, Stack, Typography, CircularProgress } from '@mui/material';
+import { Box, Drawer, IconButton, Alert, Typography, CircularProgress } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -86,7 +86,6 @@ const Clockify = () => {
     setLoading(true);
     try {
       const data = await uploadClockifyData(rows);
-      console.log(data);
       setRows([]);
       toast.success('✅ Wysłano dane!');
     } catch (err) {
@@ -97,11 +96,13 @@ const Clockify = () => {
     }
   };
 
-  const handleEdit = (params) => {
-    const { id, field, value } = params;
+  const handleEdit = (params, event) => {
+    const { id, field } = params;
+    const value = event?.target?.value !== undefined ? event?.target?.value : params.value;
+    
     setRows((prevRows) =>
       prevRows.map((row) =>
-        row.id === id
+        +row.id === +id
           ? { ...row, [field]: value }
           : row
       )
@@ -132,7 +133,7 @@ const Clockify = () => {
       headerName: '',
       width: 40,
       renderCell: (params) => (
-        <IconButton size="small" onClick={() => handleDelete(params.id)}>
+        <IconButton size="small" color="error" onClick={() => handleDelete(params.id)}>
           <DeleteIcon fontSize="small" />
         </IconButton>
       ),
@@ -198,7 +199,7 @@ const Clockify = () => {
             rows={rows}
             columns={columns}
             disableRowSelectionOnClick
-            onCellEditCommit={handleEdit}
+            onCellEditStop={handleEdit}
             sx={{ height: '100%' }}
           />
         ) : (

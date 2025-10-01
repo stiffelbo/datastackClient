@@ -4,7 +4,214 @@
 // Rola: jedyne miejsce odpowiedzialne za pobieranie/zapis presetów,
 // wybór aktywnego, staging zmian (dirty) i zapisywanie/odrzucanie.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+
+// === CENTRALNY ZESTAW KLUCZY DO ŚLEDZENIA (łatwo rozszerzyć) ===
+// Klucze zgodne ze strukturą kolumny
+const DEFAULT_TRACKED_KEYS = [
+  'field',          // obowiązkowe
+  'headerName',     // etykieta
+  'type',           // 'string' | 'number' | 'date' | 'boolean'
+  'width',          // szerokość
+  'hidden',         // bool
+  'align',          // 'left' | 'center' | 'right'
+  'sortable',       // bool
+  'filterable',     // bool
+  'filters',        // object || null
+  'aggregationFn',  // np. 'sum'
+  'formatterKey',   // np. 'currency'
+  'groupBy',        // bool
+  'groupIndex',     // number|null
+  'order',          // kolejność
+  'expresion',      // string (custom formuła)
+  'isSelected',     // bool
+];
+
+
+const toNum = (v) => {
+  if (v === null || v === undefined || v === '') return undefined;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : undefined;
+};
+const toBool = (v) => !!v;
+const toTrimmed = (v) => {
+  if (v === null || v === undefined) return undefined;
+  const s = String(v).trim();
+  return s === '' ? undefined : s;
+};
+const toEnum = (v, allowed) => (allowed.includes(v) ? v : undefined);
+
+const stableVal = (v) => {
+  if (v === undefined) return null; // null i undefined traktujemy jako jedno
+  if (typeof v === 'object' && v !== null) {
+    try {
+      // sortowanie kluczy dla stabilności
+      return JSON.stringify(v, Object.keys(v).sort());
+    } catch {
+      return String(v);
+    }
+  }
+  return v;
+};
+
+// Specjalna normalizacja wybranych pól
+const NORMALIZE = {
+  headerName: (v) => {
+    if (v === null || v === undefined) return '';   // zamiast undefined
+    return v;
+  },
+  type: (v) => toEnum(v, ['string', 'number', 'date', 'boolean']),
+  align: (v) => toEnum(v, ['left', 'center', 'right']),
+
+  width: (v) => toNum(v),
+  order: (v) => toNum(v),
+  groupIndex: (v) => toNum(v),
+
+  hidden: (v) => toBool(v),
+  sortable: (v) => toBool(v),
+  filterable: (v) => toBool(v),
+  filters: (v) => Array.isArray(v) ? v.map(f => ({ ...f })) : null,
+  groupBy: (v) => toBool(v),
+  isSelected: (v) => toBool(v),
+
+  aggregationFn: (v) => (
+    typeof v === 'function'
+      ? '__fn__'
+      : (v ?? undefined)
+  ),
+  formatterKey: (v) => {
+    if (v === null || v === undefined) return null;   // zamiast undefined
+    const s = String(v).trim();
+    return s; // pozwól nawet na pusty string
+  },
+
+  expresion: (v) => toTrimmed(v),
+};
+
+// ===========================================================
+// normalizeOne – zawsze zwraca pełen zestaw pól z tracked keys
+// ===========================================================
+const normalizeOne = (col, tracked = DEFAULT_TRACKED_KEYS) => {
+  const out = {};
+
+  for (const key of tracked) {
+    let val = col?.[key];
+
+    if (Object.prototype.hasOwnProperty.call(NORMALIZE, key)) {
+      val = NORMALIZE[key](val);
+    }
+
+    switch (key) {
+      // stringowe
+      case 'headerName':
+      case 'formatterKey':
+      case 'expresion':
+        out[key] = val != null ? String(val) : '';
+        break;
+
+      // boolowskie
+      case 'hidden':
+      case 'sortable':
+      case 'filterable':
+      case 'groupBy':
+      case 'isSelected':
+        out[key] = !!val;
+        break;
+
+      // liczbowe
+      case 'width':
+      case 'order':
+      case 'groupIndex':
+        out[key] = Number.isFinite(val) ? Number(val) : null;
+        break;
+
+      // filters → zawsze tablica albo null
+      case 'filters':
+        out[key] = Array.isArray(val) ? val.map(f => ({ ...f })) : null;
+        break;
+
+      // domyślne
+      default:
+        out[key] = val != null ? val : null;
+        break;
+    }
+  }
+
+  return out;
+};
+
+// ===========================================================
+// normalizeOverrides – poprawka dla order i sortowania
+// ===========================================================
+
+export const normalizeOverrides = (overrides = [], tracked = DEFAULT_TRACKED_KEYS) =>
+  [...overrides]
+    .map((o, idx) => normalizeOne({ ...o, order: o.order ?? idx }, tracked))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+
+// Porównanie dwóch zbiorów override’ów
+export const equalOverrides = (a = [], b = [], tracked = DEFAULT_TRACKED_KEYS) => {
+  const aa = normalizeOverrides(a, tracked);
+  const bb = normalizeOverrides(b, tracked);
+
+  if (aa.length !== bb.length) return false;
+
+  for (let i = 0; i < aa.length; i++) {
+    const x = aa[i], y = bb[i];
+    for (const key of tracked) {
+      if (stableVal(x[key]) !== stableVal(y[key])) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+// Szczegółowy diff (dodane/usunięte/zmodyfikowane)
+export const diffOverrides = (prev = [], next = [], tracked = DEFAULT_TRACKED_KEYS) => {
+  const a = normalizeOverrides(prev, tracked);
+  const b = normalizeOverrides(next, tracked);
+
+  const mapA = new Map(a.map(x => [x.field, x]));
+  const mapB = new Map(b.map(x => [x.field, x]));
+
+  const added = [];
+  const removed = [];
+  const changed = [];
+
+  for (const [field, vA] of mapA) {
+    if (!mapB.has(field)) {
+      removed.push(field);
+      continue;
+    }
+
+    const vB = mapB.get(field);
+    const changes = {};
+
+    for (const key of tracked) {
+      const xv = stableVal(vA[key]);
+      const yv = stableVal(vB[key]);
+      if (xv !== yv) {
+        changes[key] = { from: vA[key], to: vB[key] };
+      }
+    }
+
+    if (Object.keys(changes).length) {
+      changed.push({ field, changes });
+    }
+  }
+
+  for (const [field] of mapB) {
+    if (!mapA.has(field)) {
+      added.push(field);
+    }
+  }
+
+  return { added, removed, changed };
+};
+
+
 
 /** @typedef {{ field:string, visible?:boolean, width?:number, order?:number, groupBy?:boolean, aggregationFn?:any, sort?:{field:string,direction:'asc'|'desc'}|null }} ColumnOverride */
 /** @typedef {{ columns: ColumnOverride[] }} PresetData */
@@ -37,47 +244,32 @@ const saveEnvelope = (ns, entity, env) => {
   localStorage.setItem(KEY(ns, entity), JSON.stringify(toSave));
 };
 
-const shallowEqualOverrides = (a = [], b = []) => {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    const aa = a[i], bb = b[i];
-    if (!aa || !bb) return false;
-    const keys = new Set([...Object.keys(aa), ...Object.keys(bb)]);
-    for (const k of keys) {
-      if (JSON.stringify(aa[k]) !== JSON.stringify(bb[k])) return false;
-    }
-  }
-  return true;
-};
-
 function usePresets({ entityName, storageNS = 'powerTable' }) {
-  // persisted envelope
   const [env, setEnv] = useState(() => loadEnvelope(storageNS, entityName) || createEnvelope('default'));
-
-  // staging (niedopuszczone jeszcze do zapisu w env)
-  const [staged, setStaged] = useState(/** @type {PresetData|null} */(null));
+  const [staged, setStaged] = useState(null);
   const [dirty, setDirty] = useState(false);
+  const [diff, setDiff] = useState(null);
 
-  // aktywne dane (staged > persisted)
   const activeName = env.activePreset;
   const persistedActive = env.presets[activeName] || { columns: [] };
   const effective = staged ?? persistedActive;
 
-  // API do stage’owania zmian z useColumns
-  const stage = useCallback((nextOverrides /**: ColumnOverride[] */) => {
-    const next = { columns: nextOverrides || [] };
-    setStaged(next);
-    const isDirty = !shallowEqualOverrides(next.columns, (env.presets[env.activePreset] || { columns: [] }).columns);
-    setDirty(isDirty);
-  }, [env]);
+  // 🚀 stage – bez useCallback, zawsze bierze aktualne dane
+  const stage = (nextOverrides) => {
+    const nextColumns = normalizeOverrides(nextOverrides || []);
+    setStaged({ columns: nextColumns });
 
-  // zapisz do obecnego presetu
-  // ZAMIANA: save – teraz przyjmuje opcjonalny snapshot override’ów
-  const save = useCallback((overrides /*?: ColumnOverride[] */) => {
+    const persistedCols = (env.presets[env.activePreset] || { columns: [] }).columns;
+    setDirty(!equalOverrides(nextColumns, persistedCols));
+    setDiff(diffOverrides(persistedCols, nextColumns));
+  };
+
+  // 🚀 save – bierze staged lub argument
+  const save = (overrides) => {
     setEnv(prev => {
       const base = prev.presets[prev.activePreset] || { columns: [] };
       const toWrite = overrides
-        ? { columns: overrides }
+        ? { columns: normalizeOverrides(overrides) }
         : (staged ?? base);
 
       const next = {
@@ -87,19 +279,19 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
           [prev.activePreset]: toWrite,
         },
       };
-
       saveEnvelope(storageNS, entityName, next);
       return next;
     });
     setDirty(false);
     setStaged(null);
-  }, [entityName, staged, storageNS]);
+    setDiff(null);
+  };
 
-  // ZAMIANA: saveAs – teraz przyjmuje nazwę i opcjonalny snapshot override’ów
-  const saveAs = useCallback((name, overrides /*?: ColumnOverride[] */) => {
+  // 🚀 saveAs – to samo
+  const saveAs = (name, overrides) => {
     setEnv(prev => {
       const snapshot = overrides
-        ? { columns: overrides }
+        ? { columns: normalizeOverrides(overrides) }
         : (staged ?? (prev.presets[prev.activePreset] || { columns: [] }));
 
       const next = {
@@ -110,77 +302,83 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
         },
         activePreset: name,
       };
-
       saveEnvelope(storageNS, entityName, next);
       return next;
     });
     setDirty(false);
     setStaged(null);
-  }, [entityName, staged, storageNS]);
+    setDiff(null);
+  };
 
+  const discard = () => { setStaged(null); setDirty(false); };
 
-  const discard = useCallback(() => { setStaged(null); setDirty(false); }, []);
-
-  const setActive = useCallback((name) => {
-    setEnv(prev => {
-      const next = { ...prev, activePreset: name };
-      saveEnvelope(storageNS, entityName, next);
-      return next;
-    });
+  const setActive = (name) => {
+    const next = { ...env, activePreset: name };
+    setEnv(next);
+    saveEnvelope(storageNS, entityName, next);
     setStaged(null);
     setDirty(false);
-  }, [entityName, storageNS]);
+  };
 
-  const remove = useCallback((name) => {
+  const remove = (name) => {
     setEnv(prev => {
       if (!prev.presets[name]) return prev;
       const { [name]: _, ...rest } = prev.presets;
       const fallback = prev.activePreset === name ? (Object.keys(rest)[0] || 'default') : prev.activePreset;
-      const next = { ...prev, presets: Object.keys(rest).length ? rest : createEnvelope('default').presets, activePreset: fallback };
+      const next = {
+        ...prev,
+        presets: Object.keys(rest).length ? rest : createEnvelope('default').presets,
+        activePreset: fallback,
+      };
       saveEnvelope(storageNS, entityName, next);
       return next;
     });
     if (env.activePreset === name) { setStaged(null); setDirty(false); }
-  }, [entityName, env.activePreset, storageNS]);
+  };
 
-  const rename = useCallback((oldName, newName) => {
+  const rename = (oldName, newName) => {
     setEnv(prev => {
       const data = prev.presets[oldName];
       if (!data || oldName === newName) return prev;
       const { [oldName]: __, ...rest } = prev.presets;
-      const next = { ...prev, presets: { ...rest, [newName]: data }, activePreset: prev.activePreset === oldName ? newName : prev.activePreset };
+      const next = {
+        ...prev,
+        presets: { ...rest, [newName]: data },
+        activePreset: prev.activePreset === oldName ? newName : prev.activePreset,
+      };
       saveEnvelope(storageNS, entityName, next);
       return next;
     });
-  }, [entityName, storageNS]);
+  };
 
-  const reset = useCallback(() => {
-    setEnv(createEnvelope('default'));
-    saveEnvelope(storageNS, entityName, createEnvelope('default'));
-    setStaged(null); setDirty(false);
-  }, [entityName, storageNS]);
+  const reset = () => {
+    const fresh = createEnvelope('default');
+    setEnv(fresh);
+    saveEnvelope(storageNS, entityName, fresh);
+    setStaged(null);
+    setDirty(false);
+  };
 
   const list = useMemo(() => Object.keys(env.presets), [env.presets]);
 
   return {
-    // odczyt
     activeName,
-    effective,            // {columns: [...] } – to podajesz do useColumns
-    persistedActive,      // pomocniczo gdy chcesz porównać
+    effective,
+    persistedActive,
     list,
     dirty,
-
-    // zapis / zarządzanie
-    stage,                // (overrides[]) – informacja z useColumns
+    diff,
+    stage,
     save,
-    saveAs,               // (name)
+    saveAs,
     discard,
-    setActive,            // (name)
-    remove,               // (name)
-    rename,               // (old, new)
+    setActive,
+    remove,
+    rename,
     reset,
   };
 }
+
 
 export default usePresets;
 

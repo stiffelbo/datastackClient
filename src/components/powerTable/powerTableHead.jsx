@@ -47,7 +47,6 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
             collapseKey = generateCollapseKey(col.field, groupIndex);
             isCollapsed = groupCollapseState?.[collapseKey] === true;
           }
-          console.log(col);
           return (
             <TableCell
               key={col.field}
@@ -56,39 +55,62 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
                 width: col.width,
                 maxWidth: col.maxWidth,
                 minWidth: col.minWidth,
-                backgroundColor: '#f0f0f0',
+                backgroundColor: '#f8f8f8ff',
                 fontWeight: 'bold',
+                fontSize: '0.8em',
                 position: 'sticky',
                 top: 0,
                 zIndex: 2,
                 whiteSpace: 'nowrap',
               }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 1, borderRight: '1px solid gray' }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 1,
+                  borderRight: '1px solid gray'
+                }}
+              >
                 <Tooltip title={`${col.headerName}` || `${col.field}`}>
                   <span onClick={(e) => openMenu(e, col.field)}>
                     {capitalize(col.headerName || col.field)}
                   </span>
                 </Tooltip>
 
+                {/* sort indicators */}
                 {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
                 {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
 
+                {/* group indicator */}
                 {isGrouped && (
                   <Chip
                     size="small"
-                    label={`#${groupIndex + 1}`} // 👈 zwiększamy wyświetlany numer
+                    label={`#${groupIndex + 1}`}
                     icon={<GroupWorkIcon fontSize="small" />}
                     sx={{ height: 20, fontSize: '0.75rem' }}
                   />
                 )}
 
+                {/* collapse button for groups */}
                 {isGrouped && onToggleCollapse && (
                   <IconButton onClick={() => onToggleCollapse(groupIndex)}>
                     {allCollapsed ? <ExpandLess /> : <ExpandMore />}
                   </IconButton>
                 )}
+
+                {/* 👇 NEW: active filters badge */}
+                {Array.isArray(col.filters) && col.filters.length > 0 && (
+                  <Chip
+                    size="small"
+                    color="warning"
+                    label={col.filters.length}
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                )}
               </Box>
+
             </TableCell>
           );
         })}

@@ -6,8 +6,8 @@ import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { groupDataHierarchical } from './utils';
 
 import PowerTableHead from './powerTableHead';
-import PowerTableControl from './powerTableControl';
 import PowerTableRow from './powerTableRow';
+import PowerTableCell from './powerTableCell';
 
 
 /**
@@ -66,22 +66,20 @@ const GroupedTable = ({ data, columnsSchema, settings, rowRules }) => {
 
   const toggleCollapseLevel = (level) => {
 
-  setGroupCollapseState(prev => {
-    const entries = Object.entries(prev);
-    const levelEntries = entries.filter(([path]) => path.split('/').length === level + 1);
+    setGroupCollapseState(prev => {
+      const entries = Object.entries(prev);
+      const levelEntries = entries.filter(([path]) => path.split('/').length === level + 1);
 
-    const collapsedCount = levelEntries.reduce((acc, [, val]) => acc + (val === true ? 1 : 0), 0);
-    const total = levelEntries.length;
-    const shouldCollapse = collapsedCount < total / 2; // większość rozwinięta → zwinąć
-    const updated = { ...prev };
-    levelEntries.forEach(([path]) => {
-      updated[path] = shouldCollapse;
+      const collapsedCount = levelEntries.reduce((acc, [, val]) => acc + (val === true ? 1 : 0), 0);
+      const total = levelEntries.length;
+      const shouldCollapse = collapsedCount < total / 2; // większość rozwinięta → zwinąć
+      const updated = { ...prev };
+      levelEntries.forEach(([path]) => {
+        updated[path] = shouldCollapse;
+      });
+      return updated;
     });
-    return updated;
-  });
-};
-
-
+  };
 
   const toggleCollapse = (path) => {
     setGroupCollapseState(prev =>
@@ -89,19 +87,16 @@ const GroupedTable = ({ data, columnsSchema, settings, rowRules }) => {
     );
   };
 
-
-
   const visibleColumns = columnsSchema.getVisibleColumns();
 
   return (
-    <Box sx={{ flex: '1 1 auto', overflow: 'auto' }}>
-      <PowerTableControl columnsSchema={columnsSchema} />
+    <Box sx={{ height: '100%', overflow: 'auto' }}>
       <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
         <PowerTableHead
           columnsSchema={columnsSchema}
           settings={settings}
           groupCollapseState={groupCollapseState}
-          onToggleCollapse={(level)=>toggleCollapseLevel(level)} // ← dla headera: poziom
+          onToggleCollapse={(level) => toggleCollapseLevel(level)} // ← dla headera: poziom
         />
         <TableBody>
           {groupedTree.map((node, i) => (
@@ -179,7 +174,7 @@ const GroupedNode = ({
           return <TableCell key={col.field} />;
         };
         const agg = node.aggregates?.[col.field];
-        return <TableCell key={col.field}>{agg ?? ''}</TableCell>;
+        return <PowerTableCell key={col.field} value={agg} column={col}/>;
       })}
     </TableRow>
   );

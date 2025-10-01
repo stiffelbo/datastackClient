@@ -21,29 +21,40 @@ import ClearIcon from '@mui/icons-material/Clear';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReorderIcon from '@mui/icons-material/Reorder';
 import DataObjectIcon from '@mui/icons-material/DataObject';
+import FormatSizeIcon from '@mui/icons-material/FormatSize';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+
+//Comp
+import FieldForm from './fieldForm';
+import FilterConfigurator from './filterConfigurator';
+
+//utils
+import { valueFormatters } from './valueFormatters';
 
 const ColumnConfigurator = ({ field, columnsSchema, close }) => {
   const col = columnsSchema.columns.find(c => c.field === field);
   if (!col) return null;
+  const headerNameInitial = col.headerName;
 
   const [typeAnchorEl, setTypeAnchorEl] = useState(null);
   const [aggregationAnchorEl, setAggregationAnchorEl] = useState(null);
   const [visibilityAnchorEl, setVisibilityAnchorEl] = useState(null);
+  const [formatterAnchorEl, setFormatterAnchorEl] = useState(null);
+
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+
   const [dragIndex, setDragIndex] = useState(null);
 
   const handleSort = (direction) => {
     columnsSchema.setSortModel([{ field, direction }]);
-    close();
   };
 
   const clearSort = () => {
     columnsSchema.setSortModel([]);
-    close();
   };
 
   const toggle = (fn) => {
     fn(field);
-    close();
   };
 
   const openTypeMenu = (e) => setTypeAnchorEl(e.currentTarget);
@@ -55,10 +66,15 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
   const openVisibilityMenu = (e) => setVisibilityAnchorEl(e.currentTarget);
   const closeVisibilityMenu = () => setVisibilityAnchorEl(null);
 
+  const openFormatterMenu = (e) => setFormatterAnchorEl(e.currentTarget);
+  const closeFormatterMenu = () => setFormatterAnchorEl(null);
+
+  const openFilterMenu = (e) => setFilterAnchorEl(e.currentTarget);
+  const closeFilterMenu = () => setFilterAnchorEl(null);
+
   const setAggregation = (fnName) => {
     columnsSchema.setAggregationFn(field, fnName);
     closeAggregationMenu();
-    close();
   };
 
   const handleDragStart = (index) => {
@@ -74,12 +90,18 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
       columnsSchema.reorderColumn(dragIndex, dropIndex);
     }
     setDragIndex(null);
-    close();
   };
+
+  const formattersList = Object.keys(valueFormatters);
 
   return (
     <Box sx={{ width: 250, px: 1 }}>
-      <Typography variant="subtitle2" sx={{ px: 1, pt: 1 }}>{col.headerName || col.field}</Typography>
+      <FieldForm
+        type="text"
+        value={headerNameInitial}
+        onCommit={val => columnsSchema.setHeaderName(field, val)}
+        textFieldProps={{ variant: "standard" }}
+      />
       {/* Side menu dla typu danych */}
       <MenuItem onClick={openTypeMenu}>
         <ListItemIcon><DataObjectIcon fontSize="small" /></ListItemIcon>
@@ -96,7 +118,7 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
         {['string', 'number', 'date', 'boolean'].map(type => (
           <MenuItem
             key={type}
-            onClick={() => { columnsSchema.setType(field, type); closeTypeMenu(); close(); }}
+            onClick={() => { columnsSchema.setType(field, type); closeTypeMenu(); }}
             selected={col.type === type}
           >
             <ListItemText primary={type} />
@@ -145,9 +167,21 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
         <ExpandMoreIcon fontSize="small" />
       </MenuItem>
 
+      <MenuItem onClick={openFormatterMenu}>
+        <ListItemIcon><FormatSizeIcon fontSize="small" /></ListItemIcon>
+        <ListItemText primary="Formatowanie" />
+        <ExpandMoreIcon fontSize="small" />
+      </MenuItem>
+
       <MenuItem onClick={openVisibilityMenu}>
         <ListItemIcon><ViewColumnIcon fontSize="small" /></ListItemIcon>
         <ListItemText primary="Pokaż / ukryj kolumny" />
+        <ExpandMoreIcon fontSize="small" />
+      </MenuItem>
+
+      <MenuItem onClick={openFilterMenu}>
+        <ListItemIcon><FilterAltIcon fontSize="small" /></ListItemIcon>
+        <ListItemText primary="Filtry" />
         <ExpandMoreIcon fontSize="small" />
       </MenuItem>
 
@@ -158,7 +192,7 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
-        <MenuItem onClick={() => { columnsSchema.removeAggregation(field); closeAggregationMenu(); close(); }}>
+        <MenuItem onClick={() => { columnsSchema.removeAggregation(field); closeAggregationMenu(); }}>
           <ListItemText primary="Wyczyść agregację" />
         </MenuItem>
         {['sum', 'avg', 'median', 'min', 'max', 'count', 'countDistinct', 'notEmpty', 'empty'].map(fn => (
@@ -190,7 +224,6 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
               checked={!c.hidden}
               onClick={() => {
                 columnsSchema.toggleColumnHidden(c.field);
-                close();
               }}
             />
             <ListItemText primary={c.headerName || c.field} />
@@ -199,6 +232,40 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
             </IconButton>
           </MenuItem>
         ))}
+      </Menu>
+      <Menu
+        anchorEl={formatterAnchorEl}
+        open={Boolean(formatterAnchorEl)}
+        onClose={closeFormatterMenu}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        <MenuItem onClick={() => { columnsSchema.setFormatterKey(field, null); closeFormatterMenu(); }}>
+          <ListItemText primary="Wyczyść formatowanie" />
+        </MenuItem>
+        {formattersList.map(fn => (
+          <MenuItem
+            key={fn}
+            onClick={() => columnsSchema.setFormatterKey(field, fn)}
+            selected={columnsSchema.columns.find(c => c.field === field).formatterKey === fn}
+          >
+            <ListItemText primary={fn} />
+          </MenuItem>
+        ))}
+      </Menu>
+      <Menu
+        anchorEl={filterAnchorEl}
+        open={Boolean(filterAnchorEl)}
+        onClose={closeFilterMenu}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        <FilterConfigurator
+          field={field}
+          column={col}
+          columnsSchema={columnsSchema}
+          onClose={closeFilterMenu}
+        />
       </Menu>
     </Box>
   );

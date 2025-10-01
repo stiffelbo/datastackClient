@@ -6,10 +6,10 @@
  */
 
 const detectType = (value) => {
-  if (value === null || value === undefined) return 'string';
+  if (typeof value === 'number' && !isNaN(value)) return 'number';
   if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'string' && !isNaN(Number(value))) return 'number';
   if (!isNaN(Date.parse(value))) return 'date';
-  if (typeof value === 'number') return 'number';
   return 'string';
 };
 
@@ -19,14 +19,13 @@ const detectWidth = (value) => {
   const str = String(value);
   const length = str.length;
 
-  if (length <= 4) return 60;
-  if (length <= 8) return 90;
-  if (length <= 15) return 120;
-  if (length <= 25) return 150;
-  if (length <= 40) return 200;
-  return 260;
+  if (length <= 4) return 80;
+  if (length <= 8) return 110;
+  if (length <= 15) return 160;
+  if (length <= 25) return 200;
+  if (length <= 40) return 260;
+  return 320;
 };
-
 
 const useAutoColumns = (data = []) => {
   if (!Array.isArray(data) || data.length === 0) return [];
@@ -46,7 +45,9 @@ const useAutoColumns = (data = []) => {
       align: type === 'number' ? 'right' : 'left',
       sortable: true,
       filterable: true,
+      filters: null,
       aggregationFn: null,
+      formatterKey : null,
       groupBy: false,
       groupIndex: null,
       source: 'auto',

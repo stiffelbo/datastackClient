@@ -1,5 +1,4 @@
-// PresetsModal.jsx
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal, Box, Stack, Typography, Divider, List, ListItem, ListItemButton,
   ListItemText, IconButton, TextField, Button, Chip, Tooltip,
@@ -12,72 +11,29 @@ import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 
-const normalizeOverrides = (overrides = []) =>
-  [...overrides]
-    .map(o => ({
-      field: o.field,
-      hidden: !!o.hidden,
-      width: o.width ?? undefined,
-      groupBy: !!o.groupBy,
-      // funkcje porównujemy „po prostu” jako znacznik
-      aggregationFn: typeof o.aggregationFn === 'function' ? '__fn__' : (o.aggregationFn ?? undefined),
-      order: typeof o.order === 'number' ? o.order : undefined,
-    }))
-    .sort((a, b) => a.field.localeCompare(b.field));
-
-const isSameOverrides = (a = [], b = []) => {
-  const aa = normalizeOverrides(a);
-  const bb = normalizeOverrides(b);
-  if (aa.length !== bb.length) return false;
-  for (let i = 0; i < aa.length; i++) {
-    const x = aa[i], y = bb[i];
-    if (
-      x.field !== y.field ||
-      x.hidden !== y.hidden ||
-      x.width !== y.width ||
-      x.groupBy !== y.groupBy ||
-      x.aggregationFn !== y.aggregationFn ||
-      x.order !== y.order
-    ) return false;
-  }
-  return true;
-};
-
-// próba pobrania snapshotu z hooka; fallback – z tablicy kolumn
-const getCurrentOverrides = (columnsCtl) => {
-  if (!columnsCtl) return [];
-  if (typeof columnsCtl.getOverrides === 'function') return columnsCtl.getOverrides();
-  const arr = columnsCtl.columns || []; // fallback dla starej wersji
-  return arr.map((c, idx) => ({
-    field: c.field,
-    hidden: !!c.hidden,
-    width: c.width,
-    groupBy: !!c.groupBy,
-    aggregationFn: c.aggregationFn ?? undefined,
-    order: typeof c.order === 'number' ? c.order : idx,
-  }));
-};
+// 👇 zamiast swoich funkcji, importujesz z usePresets.js
+import { normalizeOverrides, equalOverrides } from './hooks/usePresets';
 
 const PresetsModal = ({ open, onClose, presets, columns }) => {
   const {
     list = [],
     activeName,
-    dirty,         // dirty z hooka (jeśli gdzieś wcześniej zrobiłeś stage)
+    dirty,
     save,
     saveAs,
     discard,
     setActive,
     remove,
     rename,
-    stage,         // <- ważne: użyjemy tutaj, przed save/saveAs
+    stage,
     persistedActive,
   } = presets || {};
 
-  // lokalny diff: porównujemy bieżące kolumny z PERSISTED aktywnym presetem
+  // 🔑 lokalny diff – ale teraz na tych samych helperach
   const localDirty = useMemo(() => {
-    const current = getCurrentOverrides(columns);
-    const persisted = (persistedActive && persistedActive.columns) || [];
-    return !isSameOverrides(current, persisted);
+    const current = normalizeOverrides(columns?.columns || []);
+    const persisted = normalizeOverrides(persistedActive?.columns || []);
+    return !equalOverrides(current, persisted);
   }, [columns, persistedActive]);
 
   const canSave = dirty || localDirty;
@@ -99,39 +55,20 @@ const PresetsModal = ({ open, onClose, presets, columns }) => {
   // --- Delete confirm ---
   const [confirmDeleteName, setConfirmDeleteName] = useState(null);
 
-  const startRename = (name) => {
-    setRenaming(name);
-    setRenameValue(name);
-  };
-  const cancelRename = () => {
-    setRenaming(null);
-    setRenameValue('');
-  };
-  const confirmRename = () => {
-    const newName = renameValue.trim();
-    if (!newName || newName === renaming) return cancelRename();
-    if (list.includes(newName)) return;
-    rename(renaming, newName);
-    cancelRename();
+  const handleSave = () => {
+    const current = normalizeOverrides(columns?.columns || []);
+    stage(current);
+    save(current);
   };
 
-  // ZAMIANA: handleSave — zapis z bieżącym snapshotem (bez wyścigu setState)
-  const handleSave = React.useCallback(() => {
-    const current = getCurrentOverrides(columns); // pobierz aktualny układ kolumn
-    stage(current);   // opcjonalnie: żeby od razu mieć "dirty" odświeżone w UI
-    save(current);    // <-- PRZEKAZUJEMY SNAPSHOT DO save()
-  }, [columns, stage, save]);
-
-  // ZAMIANA: handleSaveAs — zapis jako nowy preset z bieżącym snapshotem
-  const handleSaveAs = React.useCallback(() => {
+  const handleSaveAs = () => {
     const name = saveAsName.trim();
     if (!name || saveAsError) return;
-
-    const current = getCurrentOverrides(columns); // bieżący układ
-    stage(current);           // opcjonalnie: aktualizacja "dirty" w UI
-    saveAs(name, current);    // <-- PRZEKAZUJEMY SNAPSHOT DO saveAs()
+    const current = normalizeOverrides(columns?.columns || []);
+    stage(current);
+    saveAs(name, current);
     setSaveAsName('');
-  }, [saveAsName, saveAsError, columns, stage, saveAs]);
+  };
   
   const handleKey = (e, action) => {
     if (e.key === 'Enter') action();

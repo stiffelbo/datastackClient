@@ -45,7 +45,6 @@ const PowerTableControl = ({ columnsSchema }) => {
             <Stack direction="row" spacing={1} alignItems="center">
               <Typography variant="body2">Grupowanie:</Typography>
               {groupModel.map((col) => {
-                console.log(col);
                 return (
                   <Chip
                     key={col.field}

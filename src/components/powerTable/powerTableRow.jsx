@@ -1,32 +1,32 @@
 import React from 'react';
-import { TableRow, TableCell } from '@mui/material';
+import { TableRow } from '@mui/material';
 import useRowRules from './hooks/useRowRules';
+import PowerTableCell from './powerTableCell';
 
-const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {sx: {}}}) => {
+const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {} }) => {
   const rowStyle = useRowRules(row, rowRules);
 
-  const height = settings?.rowHeight || 48;
   const densityPadding = {
-    compact: '4px 8px',
-    standard: '6px 12px',
-    comfortable: '10px 16px',
+    compact: '2px 6px',       // 👈 bardzo ciasno
+    standard: '4px 8px',      // 👈 domyślnie
+    comfortable: '8px 12px',  // 👈 więcej powietrza
   }[settings?.density || 'standard'];
 
+  const fontSize = settings.fontSize || '0.8rem';
+
   return (
-    <TableRow sx={{ ...rowStyle, height }}>
+    <TableRow sx={{ ...rowStyle, height: 'auto' }}>
       {columnsSchema.getVisibleColumns().map((col) => (
-        <TableCell           
-          key={col.field} 
-          sx={{
-            width: col.width, padding: densityPadding, whiteSpace: 'wrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            ...settings.sx
+        <PowerTableCell
+          key={col.field}
+          value={row[col.field]}
+          column={col}
+          settings={{
+            ...settings,
+            densityPadding,
+            fontSize,
           }}
-          title={`${col.field}`}
-        >
-          {row[col.field]}
-        </TableCell>
+        />
       ))}
     </TableRow>
   );

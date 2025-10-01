@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import http from '../../http';
-import {formatDecimal} from '../../utils/numbers';
+
+import { getEmployees } from '../../services/employees/getEmployees';
 
 import PowerTable from '../../components/powerTable/powerTable';
 
@@ -10,23 +10,20 @@ const sanitizeData = data => {
 
   return data.map(i => {
     return {
-      ...i,
-      duration_decimal : formatDecimal(i.duration_decimal),
-      billable_rate_pln : formatDecimal(i.billable_rate_pln),
-      billable_amount : formatDecimal(i.billable_amount)
+      ...i
     }
 
   })
 }
 
-const ClockifyData = () => {
+const Employees = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const populate = async () => {
     setLoading(true);
     try {
-      const { data } = await http.get('clockify/get.php');
+      const { data } = await getEmployees();
       setRows(sanitizeData(data));
       if(data && data.length){
         toast.success(`Pobrano ${data.length} wierszy danych.`);
@@ -47,7 +44,7 @@ const ClockifyData = () => {
 
   return (   
       <PowerTable
-        entityName='clockifyData'
+        entityName='employees'
         data={rows}
         height={window.innerHeight - 90}
         width={window.innerWidth}
@@ -57,4 +54,4 @@ const ClockifyData = () => {
   );
 };
 
-export default ClockifyData;
+export default Employees;

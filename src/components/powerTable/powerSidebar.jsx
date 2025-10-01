@@ -13,7 +13,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import CodeIcon from '@mui/icons-material/Code';
 
-const PowerSidebar = ({ onOpenSettings }) => {
+const PowerSidebar = ({ onOpenSettings, presets, onExport, onRefresh, loading }) => {
 
   const renderCustomControl = () => {
     return <Tooltip title="Custom Field">
@@ -33,7 +33,7 @@ const PowerSidebar = ({ onOpenSettings }) => {
 
   const renderRefreshControl = () => (
     <Tooltip title="Refresh Data">
-      <IconButton size="small" sx={{ width: 40, height: 40 }}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={onRefresh}>
         <RefreshIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -75,7 +75,7 @@ const PowerSidebar = ({ onOpenSettings }) => {
 
   const renderExportControl = () => (
     <Tooltip title="Export Data">
-      <IconButton size="small" sx={{ width: 40, height: 40 }}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color='primary' onClick={onExport}>
         <FileDownloadIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -97,9 +97,6 @@ const PowerSidebar = ({ onOpenSettings }) => {
       {renderCustomControl()}
       {renderRefreshControl()}
       {renderPresetControl()}
-      {renderDisplayModeControl()}
-      {renderFilterModeControl()}
-      {renderClearFiltersControl(2)}
       {renderSettingsControl()}
       {renderExportControl()}
     </Box>

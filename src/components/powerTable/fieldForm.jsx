@@ -73,7 +73,7 @@ const FieldForm = ({
         !error && value !== "" ? (
           <InputAdornment position="end">
             <Tooltip title="Zapisz">
-              <IconButton onClick={handleCommit} size="small">
+              <IconButton onClick={handleCommit} size="small" color="primary">
                 <SaveIcon fontSize="small" />
               </IconButton>
             </Tooltip>

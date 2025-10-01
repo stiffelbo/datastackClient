@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getAggregatedValues } from '../utils';
 
-// ZAMIANA: mergeColumns – respektuje 'order' z user overrides
+const extractSortModel = (overrides = []) =>
+  overrides
+    .map(o => (o?.sort?.direction ? { field: o.field, direction: o.sort.direction } : null))
+    .filter(Boolean);
+
+// ZAMIANA / UZUPEŁNIENIE: na końcu mergeColumns
 const mergeColumns = (auto, user) => {
   const map = new Map();
   auto?.forEach((col) => map.set(col.field, { ...col }));
@@ -9,9 +14,7 @@ const mergeColumns = (auto, user) => {
 
   const merged = Array.from(map.values());
 
-  // Jeżeli user ma jakiekolwiek wpisy, posortuj według 'order'
   if (user && user.length) {
-    // user.order lub indeks usera jako fallback
     const orderMap = new Map(
       user.map((u, idx) => [u.field, Number.isFinite(u?.order) ? u.order : idx])
     );
@@ -22,14 +25,14 @@ const mergeColumns = (auto, user) => {
 
       if (ao !== bo) return ao - bo;
 
-      // tie-breaker: zachowaj bazową kolejność z 'auto'
       const ai = auto ? auto.findIndex((c) => c.field === a.field) : 0;
       const bi = auto ? auto.findIndex((c) => c.field === b.field) : 0;
       return ai - bi;
     });
   }
 
-  return merged;
+  // 🔑 normalizacja: po finalnym ułożeniu przypisz order = aktualny index
+  return merged.map((c, idx) => ({ ...c, order: idx }));
 };
 
 const reindexGroupBy = (columns) => {
@@ -53,25 +56,32 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const [sortModel, setSortModelState] = useState([]);
 
   // ---- podpisy do deps (tanie porównanie) ----
-  const autoSig   = useMemo(() => fieldsSig(autoColumns), [autoColumns]);
-  const devSig    = useMemo(() => fieldsSig(devSchema),   [devSchema]);
+  const autoSig = useMemo(() => fieldsSig(autoColumns), [autoColumns]);
+  const devSig = useMemo(() => fieldsSig(devSchema), [devSchema]);
   const savedCols = presets?.effective?.columns || [];
-  const savedSig  = useMemo(() => fieldsSig(savedCols),   [savedCols]);
+  const savedSig = useMemo(() => fieldsSig(savedCols), [savedCols]);
+  const activeName = presets?.activeName;
 
   // ---- inicjalizacja / re-inicjalizacja, gdy mamy dane albo zmienił się preset/dev ----
   useEffect(() => {
-    // baza = auto + dev (dev nadpisuje auto)
     const base = mergeColumns(autoColumns, devSchema);
 
     if (savedCols.length > 0) {
-      // odtwórz preset nad bazą (nowe pola z auto wejdą automatycznie, bo merge startuje od auto)
-      const restored = mergeColumns(base, savedCols);
+      let restored = mergeColumns(base, savedCols); // tu już sort + order w środku
+      restored = reindexGroupBy(restored);
+      // (opcjonalnie) jeśli chcesz mieć pewność, że order jest ciągły:
+      restored = restored.map((c, idx) => ({ ...c, order: idx }));
       setColumns(restored);
+
+      const initialSort = extractSortModel(savedCols);
+      setSortModelState(initialSort.length ? initialSort : []);
     } else {
-      // brak zapisanego schematu -> seed z auto/dev, gdy tylko autoColumns gotowe
-      setColumns(base);
+      let restored = reindexGroupBy(base);
+      restored = restored.map((c, idx) => ({ ...c, order: idx })); // 🔑
+      setColumns(restored);
+      setSortModelState([]);
     }
-  }, [entityName, autoSig, devSig, savedSig]); // <- kluczowa zmiana: reagujemy też na auto/dev/saved
+  }, [entityName, autoSig, devSig, savedSig, activeName]);
 
   // ---- helpers ----
   const updateField = (field, changes) => {
@@ -106,11 +116,12 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   };
 
   const reorderColumn = (fromIndex, toIndex) => {
-    setColumns(prev => {
+    setColumns((prev) => {
       const updated = [...prev];
       const [moved] = updated.splice(fromIndex, 1);
       updated.splice(toIndex, 0, moved);
-      return updated;
+      // 🔑 po zmianie kolejności aktualizujemy order
+      return updated.map((c, idx) => ({ ...c, order: idx }));
     });
   };
 
@@ -125,8 +136,11 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   };
   const removeSort = (field) => setSortModelState(prev => prev.filter(s => s.field !== field));
   const clearSort = () => setSortModelState([]);
+  // ---- header name ----
+  const setHeaderName = (field, val) => updateField(field, { headerName: val });
 
   // ---- aggregation ----
+  const setFormatterKey = (field, fn) => updateField(field, { formatterKey: fn });
   const setAggregation = (field, fn) => updateField(field, { aggregationFn: fn });
   const removeAggregation = (field) => updateField(field, { aggregationFn: undefined });
   const clearAggregation = () => setColumns(prev =>
@@ -143,6 +157,66 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
       );
       return reindexGroupBy(updated);
     });
+  };
+
+  // ---- FILTERS ----
+  const getFilters = (field) => {
+    const col = columns.find(c => c.field === field);
+    return col?.filters || [];
+  };
+
+  const setFilters = (field, filters) => {
+    updateField(field, { filters });
+  };
+
+  const addFilter = (field, filter) => {
+    setColumns(prev =>
+      prev.map(col =>
+        col.field === field
+          ? { ...col, filters: [...(col.filters || []), filter] }
+          : col
+      )
+    );
+  };
+
+  const removeFilter = (field, index) => {
+    setColumns(prev =>
+      prev.map(col =>
+        col.field === field
+          ? {
+            ...col,
+            filters: (col.filters || []).filter((_, i) => i !== index),
+          }
+          : col
+      )
+    );
+  };
+
+  const clearFilters = (field) => {
+    updateField(field, { filters: [] });
+  };
+
+  const hasAnyFilters = () => {
+    return columns.some(c => Array.isArray(c.filters) && c.filters.length > 0);
+  };
+
+  // Zwróć listę wszystkich filtrów (np. do panelu aktywnych filtrów)
+  const getAllFilters = () => {
+    return columns.flatMap(c =>
+      (c.filters || []).map((f, idx) => ({
+        field: c.field,
+        headerName: c.headerName || c.field,
+        index: idx,
+        filter: f,
+      }))
+    );
+  };
+
+  // Wyczyść wszystkie filtry ze wszystkich kolumn
+  const clearAllFilters = () => {
+    setColumns(prev =>
+      prev.map(col => ({ ...col, filters: [] }))
+    );
   };
 
   const clearGroupBy = () => {
@@ -188,6 +262,20 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     },
     toggleColumnHidden,
     setAllVisible,
+
+    setHeaderName,
+    setFormatterKey,
+
+    // Filters
+    getFilters,
+    setFilters,
+    addFilter,
+    removeFilter,
+    clearFilters,
+    // ... (global tools)
+    hasAnyFilters,
+    getAllFilters,
+    clearAllFilters,
 
     // Sorting
     sortModel,

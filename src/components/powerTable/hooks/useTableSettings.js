@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 
 const defaultSettings = {
-  rowHeight: 48,
-  density: 'standard',
-  background: 'auto',
+  density: 'compact',
+    fontSize: '0.75rem',
+    wrap: true,
+    ellipsis: false,
 };
 
 const makeStorageKey = (entity, userId) => `powerTable-settings-${entity}-${userId}`;
@@ -28,7 +29,6 @@ const useTableSettings = (entity = 'default', userId = 'default') => {
   }, [storageKey]);
 
   const updateSettings = useCallback((newSettings) => {
-    console.log(newSettings);
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
