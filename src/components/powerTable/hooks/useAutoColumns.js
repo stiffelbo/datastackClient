@@ -1,9 +1,6 @@
 /**
  * useAutoColumns - automatyczne generowanie schematu kolumn na podstawie danych
- * 
- * @param {Object[]} data - Tablica rekordów (np. [{ id: 1, name: 'x' }])
- * @returns {ColumnDefinition[]} - Proponowany schemat kolumn
- */
+*/
 
 const detectType = (value) => {
   if (typeof value === 'number' && !isNaN(value)) return 'number';
@@ -27,6 +24,17 @@ const detectWidth = (value) => {
   return 320;
 };
 
+export const prettifyHeader = (str) => {
+  if (!str) return '';
+  
+  return String(str)
+    .trim()
+    .split(/[_\s-]+/)            // rozdziel po _, spacji, myślniku
+    .filter(Boolean)             // usuń puste
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const useAutoColumns = (data = []) => {
   if (!Array.isArray(data) || data.length === 0) return [];
 
@@ -37,7 +45,7 @@ const useAutoColumns = (data = []) => {
     const width = detectWidth(value);
     return {
       field: key,
-      headerName: key,
+      headerName: prettifyHeader(key),
       type,
       width,
       editable: false,

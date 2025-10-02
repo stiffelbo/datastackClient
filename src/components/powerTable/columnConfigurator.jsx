@@ -27,11 +27,13 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 //Comp
 import FieldForm from './fieldForm';
 import FilterConfigurator from './filterConfigurator';
+import Filter from './filter/filter';
 
 //utils
 import { valueFormatters } from './valueFormatters';
+import ColumnFilters from './filter/columnFilters';
 
-const ColumnConfigurator = ({ field, columnsSchema, close }) => {
+const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
   const col = columnsSchema.columns.find(c => c.field === field);
   if (!col) return null;
   const headerNameInitial = col.headerName;
@@ -93,6 +95,7 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
   };
 
   const formattersList = Object.keys(valueFormatters);
+
 
   return (
     <Box sx={{ width: 250, px: 1 }}>
@@ -162,13 +165,17 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
       </MenuItem>
 
       <MenuItem onClick={openAggregationMenu}>
-        <ListItemIcon><FunctionsIcon fontSize="small" /></ListItemIcon>
+        <ListItemIcon>
+          <FunctionsIcon fontSize="small" color={columnsSchema.hasAggregation(field) ? "warning" : "inherit"} />
+        </ListItemIcon>
         <ListItemText primary="Agregacja" />
         <ExpandMoreIcon fontSize="small" />
       </MenuItem>
 
       <MenuItem onClick={openFormatterMenu}>
-        <ListItemIcon><FormatSizeIcon fontSize="small" /></ListItemIcon>
+        <ListItemIcon>
+          <FormatSizeIcon fontSize="small" color={columnsSchema.hasFormatter(field) ? "warning" : "inherit"} />
+        </ListItemIcon>
         <ListItemText primary="Formatowanie" />
         <ExpandMoreIcon fontSize="small" />
       </MenuItem>
@@ -180,7 +187,9 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
       </MenuItem>
 
       <MenuItem onClick={openFilterMenu}>
-        <ListItemIcon><FilterAltIcon fontSize="small" /></ListItemIcon>
+        <ListItemIcon>
+          <FilterAltIcon fontSize="small" color={columnsSchema.hasFilters(field) ? "warning" : "inherit"} />
+        </ListItemIcon>
         <ListItemText primary="Filtry" />
         <ExpandMoreIcon fontSize="small" />
       </MenuItem>
@@ -260,7 +269,8 @@ const ColumnConfigurator = ({ field, columnsSchema, close }) => {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
-        <FilterConfigurator
+        <ColumnFilters
+          data={data}
           field={field}
           column={col}
           columnsSchema={columnsSchema}

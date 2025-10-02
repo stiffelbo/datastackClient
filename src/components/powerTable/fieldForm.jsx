@@ -6,7 +6,9 @@ import {
   IconButton,
   Tooltip,
 } from "@mui/material";
+
 import SaveIcon from "@mui/icons-material/Save";
+import ClearIcon from "@mui/icons-material/Clear";
 
 const defaultSanitize = (v) => v;
 
@@ -14,6 +16,7 @@ const FieldForm = ({
   type = "text",
   value: initialValue = "",
   onCommit,
+  onClear,
   validate = () => true,
   sanitize = defaultSanitize,
   restricted = [],
@@ -57,6 +60,11 @@ const FieldForm = ({
     if (e.key === "Escape") setValue(initialValue); // opcjonalne
   };
 
+  const handleClear = () => {
+    setValue('');
+    onCommit('');
+  }
+
   const sharedProps = {
     value,
     onChange: handleChange,
@@ -72,6 +80,20 @@ const FieldForm = ({
       endAdornment:
         !error && value !== "" ? (
           <InputAdornment position="end">
+            {/* clear */}
+            {onClear && (
+              <Tooltip title="Wyczyść">
+                <IconButton
+                  onClick={handleClear}
+                  size="small"
+                  color="error"
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* save */}
             <Tooltip title="Zapisz">
               <IconButton onClick={handleCommit} size="small" color="primary">
                 <SaveIcon fontSize="small" />
@@ -80,6 +102,7 @@ const FieldForm = ({
           </InputAdornment>
         ) : null,
     },
+
   };
 
   if (type === "select") {

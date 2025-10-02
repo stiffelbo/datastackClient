@@ -36,7 +36,7 @@ const defaultSchemaProps = {
         type: 'number',
     },
     string : {
-        width: 110,
+        width: 220,
         conditions: ['e'],
         type: 'select',
     },

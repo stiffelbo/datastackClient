@@ -12,7 +12,14 @@ import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import ColumnConfigurator from './columnConfigurator';
 import { generateCollapseKey } from './utils';
 
-const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollapse = null }) => {
+const typeIcons = {
+  string: '🅰️',
+  number: '🔢',
+  date: '📅',
+  boolean: '✔️'
+};
+
+const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, onToggleCollapse = null }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [activeField, setActiveField] = useState(null);
 
@@ -25,8 +32,6 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
     setMenuAnchor(null);
     setActiveField(null);
   };
-
-  const capitalize = (str) => str?.charAt(0).toUpperCase() + str.slice(1);
 
   return (
     <TableHead>
@@ -51,10 +56,11 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
             <TableCell
               key={col.field}
               sx={{
-                cursor: isGrouped && onToggleCollapse ? 'pointer' : 'default',
+                cursor: 'pointer',
                 width: col.width,
                 maxWidth: col.maxWidth,
                 minWidth: col.minWidth,
+                overflow: 'hidden',
                 backgroundColor: '#f8f8f8ff',
                 fontWeight: 'bold',
                 fontSize: '0.8em',
@@ -70,12 +76,17 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
                   justifyContent: 'flex-start',
                   alignItems: 'center',
                   gap: 1,
-                  borderRight: '1px solid gray'
+                  borderRight: '1px solid gray',
+                  
                 }}
               >
                 <Tooltip title={`${col.headerName}` || `${col.field}`}>
                   <span onClick={(e) => openMenu(e, col.field)}>
-                    {capitalize(col.headerName || col.field)}
+                    {/* Ikonka typu */}
+                    <span style={{ marginRight: 4 }}>
+                      {typeIcons[col.type] || '❓'}
+                    </span>
+                    {(col.headerName || col.field)}
                   </span>
                 </Tooltip>
 
@@ -123,6 +134,7 @@ const PowerTableHead = ({ columnsSchema, groupCollapseState = {}, onToggleCollap
       >
         {activeField && (
           <ColumnConfigurator
+            data={initialData}
             field={activeField}
             columnsSchema={columnsSchema}
             close={closeMenu}

@@ -9,6 +9,7 @@ import PowerTableFooter from './powerTableFooter';
 import PowerTableControl from './powerTableControl';
 
 const FlatTable = ({
+  initialData,
   data,
   columnsSchema,
   rowRules,
@@ -20,7 +21,7 @@ const FlatTable = ({
     <Box sx={{ height: '100%' }}>
       <TableContainer component={Paper} sx={{ maxHeight: '100%', width: '100%', maxWidth: '100%' }}>
         <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-          <PowerTableHead columnsSchema={columnsSchema} settings={settings} />
+          <PowerTableHead columnsSchema={columnsSchema} settings={settings} initialData={initialData}/>
           <PowerTableBody data={data} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
           <PowerTableFooter data={data} columnsSchema={columnsSchema} config={footerConfig} settings={settings} />
         </Table>

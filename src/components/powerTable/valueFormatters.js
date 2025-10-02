@@ -63,6 +63,15 @@ const fmtNumber = (val, { decimals = 0, locale = DEFAULT_LOCALE } = {}) => {
   }).format(n);
 };
 
+const booleanYesNo = (val) => {
+  if (val === true || val === 1 || val === '1') return '✅';
+  if (val === false || val === 0 || val === '0') return '❌';
+  if (val === null || val === undefined || val === '') return '⬜';
+
+  // dla niepoprawnych wartości
+  return '⚠️';
+};
+
 export const valueFormatters = {
   // ===== Liczbowe
   number: (value, opts) => fmtNumber(value, { decimals: 0, ...(opts || {}) }),
@@ -91,5 +100,5 @@ export const valueFormatters = {
   // ===== Tekst / boolean
   uppercase: (val) => (val ? String(val).toUpperCase() : ''),
   lowercase: (val) => (val ? String(val).toLowerCase() : ''),
-  booleanYesNo: (val) => (val === true ? 'Tak' : val === false ? 'Nie' : ''),
+  booleanYesNo: (val) => booleanYesNo(val),
 };

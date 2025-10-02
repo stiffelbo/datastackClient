@@ -7,7 +7,7 @@ import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
 
 import { sortData } from './utils';
-import { applyFilters } from './filterEngine';   // 👈 import
+import { applyFilters } from './filter/utils';   // 👈 import
 import { exportToXLSWithSchema } from '../../utils/exportToXLS';
 
 import SettingsModal from './settingsModal';
@@ -36,7 +36,6 @@ const PowerTable = ({
   const { settings, updateSettings } = useTableSettings(entityName);
 
   const [modalState, setModalState] = useState({ open: false, view: null });
-  const [globalSearch, setGlobalSearch] = useState('');  // 👈 slug search
 
   const openModal = (view) => setModalState({ open: true, view });
   const closeModal = () => setModalState({ open: false, view: null });
@@ -75,7 +74,7 @@ const PowerTable = ({
   };
 
   // 🔑 Filtrowanie → Sortowanie
-  const filteredData = applyFilters(data, columnsSchema.columns, globalSearch);
+  const filteredData = applyFilters(data, columnsSchema, columnsSchema.globalSearch);
   const sortedData = sortData(filteredData, columnsSchema.sortModel, columnsSchema.columns);
 
   const { getGroupedCols } = columnsSchema;
@@ -88,6 +87,7 @@ const PowerTable = ({
   const renderTable = () =>
     isGrouped ? (
       <GroupedTable
+        initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
         rowRules={rowRules}
@@ -96,6 +96,7 @@ const PowerTable = ({
       />
     ) : (
       <FlatTable
+        initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}
         rowRules={rowRules}
@@ -130,9 +131,6 @@ const PowerTable = ({
           presets={presets}
           onExport={handleExport}
           onRefresh={onRefresh}
-          // 👇 tu potem przekażemy info o filtrach
-          filtersActive={columnsSchema.hasAnyFilters()}
-          onGlobalSearch={setGlobalSearch}
         />
 
         {/* Table Section */}

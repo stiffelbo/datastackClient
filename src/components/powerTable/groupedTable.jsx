@@ -50,7 +50,7 @@ const collectGroupPaths = (nodes, ancestor = []) => {
   return result;
 };
 
-const GroupedTable = ({ data, columnsSchema, settings, rowRules }) => {
+const GroupedTable = ({ initialData, data, columnsSchema, settings, rowRules }) => {
 
   const groupedTree = groupDataHierarchical(data, columnsSchema.columns);
   const groupPaths = collectGroupPaths(groupedTree);
@@ -93,6 +93,7 @@ const GroupedTable = ({ data, columnsSchema, settings, rowRules }) => {
     <Box sx={{ height: '100%', overflow: 'auto' }}>
       <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
         <PowerTableHead
+          initialData={initialData}
           columnsSchema={columnsSchema}
           settings={settings}
           groupCollapseState={groupCollapseState}

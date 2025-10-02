@@ -54,6 +54,7 @@ const fieldsSig = (cols = []) =>
 const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default' }) => {
   const [columns, setColumns] = useState([]);
   const [sortModel, setSortModelState] = useState([]);
+  const [globalSearch, setGlobalSearch] = useState('');
 
   // ---- podpisy do deps (tanie porównanie) ----
   const autoSig = useMemo(() => fieldsSig(autoColumns), [autoColumns]);
@@ -179,18 +180,20 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     );
   };
 
-  const removeFilter = (field, index) => {
+  const removeFilter = (field, id) => {
+    console.log(field, id);
     setColumns(prev =>
       prev.map(col =>
         col.field === field
           ? {
             ...col,
-            filters: (col.filters || []).filter((_, i) => i !== index),
+            filters: (col.filters || []).filter(f => f.id !== id),
           }
           : col
       )
     );
   };
+
 
   const clearFilters = (field) => {
     updateField(field, { filters: [] });
@@ -203,10 +206,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   // Zwróć listę wszystkich filtrów (np. do panelu aktywnych filtrów)
   const getAllFilters = () => {
     return columns.flatMap(c =>
-      (c.filters || []).map((f, idx) => ({
-        field: c.field,
+      (c.filters || []).map((f) => ({
         headerName: c.headerName || c.field,
-        index: idx,
         filter: f,
       }))
     );
@@ -248,6 +249,14 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const getAggregatedValuesForData = (data) =>
     getAggregatedValues(data, getVisibleColumns());
 
+  //Checks
+  const hasAggregation = (field) => !!columns.find(c => c.field === field)?.aggregationFn;
+  const hasFormatter = (field) => !!columns.find(c => c.field === field)?.formatterKey;
+  const hasFilters = (field) => {
+    const col = columns.find(c => c.field === field);
+    return Array.isArray(col?.filters) && col.filters.length > 0;
+  };
+
   return {
     columns,
 
@@ -267,6 +276,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     setFormatterKey,
 
     // Filters
+    globalSearch,
+    setGlobalSearch,
     getFilters,
     setFilters,
     addFilter,
@@ -304,6 +315,9 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     getGroupedColumns,
     getSortDirection,
     getAggregatedValues: getAggregatedValuesForData,
+    hasAggregation,
+    hasFormatter,
+    hasFilters
   };
 };
 
