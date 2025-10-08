@@ -139,6 +139,34 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const clearSort = () => setSortModelState([]);
   // ---- header name ----
   const setHeaderName = (field, val) => updateField(field, { headerName: val });
+  // ---- group label ----
+  const setGroupName = (field, val) => updateField(field, { fieldGroup: val });
+  
+  const getAllGroups = () => {
+    const groups = new Set();
+    columns.forEach(c => {
+      if (c.fieldGroup && String(c.fieldGroup).trim() !== '') {
+        groups.add(c.fieldGroup.trim());
+      }
+    });
+    return Array.from(groups).sort();
+  };
+
+  const toggleGroupVisibility = (groupName, visible = null) => {
+    setColumns(prev => {
+      const groupCols = prev.filter(c => c.fieldGroup === groupName);
+      if (groupCols.length === 0) return prev;
+
+      const allVisible = groupCols.every(c => !c.hidden);
+      const shouldHide = visible === null ? allVisible : !visible;
+
+      return prev.map(c =>
+        c.fieldGroup === groupName
+          ? { ...c, hidden: shouldHide }
+          : c
+      );
+    });
+  };
 
   // ---- aggregation ----
   const setFormatterKey = (field, fn) => updateField(field, { formatterKey: fn });
@@ -194,7 +222,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     );
   };
 
-
   const clearFilters = (field) => {
     updateField(field, { filters: [] });
   };
@@ -226,6 +253,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     );
   };
 
+  // ---- getters ----
   const getGroupedCols = () =>
     columns
       .filter(c => c.groupBy)
@@ -233,7 +261,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
 
   const getGroupModel = () => getGroupedCols().map(c => c.field);
 
-  // ---- getters ----
   const getVisibleColumns = () => columns.filter(col => !col.hidden);
 
   const getSortDirection = (field) =>
@@ -273,8 +300,12 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     setAllVisible,
 
     setHeaderName,
+    //Field Group
+    setGroupName,
+    toggleGroupVisibility,
+    getAllGroups,
+    //formatter
     setFormatterKey,
-
     // Filters
     globalSearch,
     setGlobalSearch,

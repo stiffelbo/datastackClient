@@ -46,6 +46,7 @@ export async function importPresetFromFile(file, saveAs) {
 // Klucze zgodne ze strukturą kolumny
 const DEFAULT_TRACKED_KEYS = [
   'field',          // obowiązkowe
+  'fieldGroup',
   'headerName',     // etykieta
   'type',           // 'string' | 'number' | 'date' | 'boolean'
   'width',          // szerokość

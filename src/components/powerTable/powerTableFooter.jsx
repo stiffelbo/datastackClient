@@ -20,6 +20,7 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {} }) => {
           return (
             <PowerTableCell
               key={col.field}
+              title={`${col.field} ${col.aggregationFn}`}
               value={raw}
               column={{
                 ...col,

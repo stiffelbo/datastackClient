@@ -45,6 +45,7 @@ const useAutoColumns = (data = []) => {
     const width = detectWidth(value);
     return {
       field: key,
+      fieldGroup: '',
       headerName: prettifyHeader(key),
       type,
       width,

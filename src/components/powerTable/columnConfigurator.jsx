@@ -23,9 +23,12 @@ import ReorderIcon from '@mui/icons-material/Reorder';
 import DataObjectIcon from '@mui/icons-material/DataObject';
 import FormatSizeIcon from '@mui/icons-material/FormatSize';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import CategoryIcon from '@mui/icons-material/Category';
 
 //Comp
 import FieldForm from './fieldForm';
+import InputTextHint from '../common/inputs/inputTextHint';
 import ColumnFilters from './filter/columnFilters';
 
 //utils
@@ -103,6 +106,11 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
         onCommit={val => columnsSchema.setHeaderName(field, val)}
         textFieldProps={{ variant: "standard" }}
       />
+      <InputTextHint
+        hints={columnsSchema.getAllGroups()}
+        defaultValue={col.fieldGroup || ''}
+        onSubmit={(val) => columnsSchema.setGroupName(field, val)}
+      />
       {/* Side menu dla typu danych */}
       <MenuItem onClick={openTypeMenu}>
         <ListItemIcon><DataObjectIcon fontSize="small" /></ListItemIcon>
@@ -155,6 +163,54 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
       </Box>
 
       <Divider sx={{ my: 1 }} />
+
+      {/* === Widoczność: pojedyncza kolumna + grupa === */}
+      <MenuItem onClick={() =>{
+        columnsSchema.toggleColumnHidden(field);
+        close();
+      }}>
+        <ListItemIcon>
+          <ViewModuleIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemText primary={col.hidden ? 'Pokaż kolumnę' : 'Ukryj kolumnę'} />
+        <Checkbox
+          edge="end"
+          checked={!col.hidden}
+          tabIndex={-1}
+          disableRipple
+        />
+      </MenuItem>
+
+      {/* Widoczność grup */}
+      {col.fieldGroup && (
+        <MenuItem
+          onClick={() => {
+            columnsSchema.toggleGroupVisibility(col.fieldGroup);
+            close();
+          }}
+        >
+          <ListItemIcon>
+            <CategoryIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary={`Grupa: ${col.fieldGroup}`}
+            secondary={
+              columnsSchema.getAllGroups().includes(col.fieldGroup)
+                ? 'Przełącz widoczność grupy'
+                : null
+            }
+          />
+          <Checkbox
+            edge="end"
+            checked={columnsSchema
+              .columns
+              .filter(c => c.fieldGroup === col.fieldGroup)
+              .every(c => !c.hidden)}
+            tabIndex={-1}
+            disableRipple
+          />
+        </MenuItem>
+      )}
 
       <MenuItem onClick={() => toggle(columnsSchema.toggleGroupBy)}>
         <ListItemIcon><GroupWorkIcon fontSize="small" /></ListItemIcon>
@@ -233,7 +289,18 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
                 columnsSchema.toggleColumnHidden(c.field);
               }}
             />
-            <ListItemText primary={c.headerName || c.field} />
+            <ListItemText
+              primary={c.headerName || c.field}
+              secondary={c.fieldGroup || 'test'}
+              primaryTypographyProps={{
+                variant: 'body2',
+                sx: { fontWeight: 500 },
+              }}
+              secondaryTypographyProps={{
+                variant: 'caption',
+                sx: { color: 'text.secondary', fontStyle: 'italic' },
+              }}
+            />
             <IconButton size="small" edge="end" sx={{ ml: 'auto', cursor: 'grab' }}>
               <ReorderIcon fontSize="small" />
             </IconButton>

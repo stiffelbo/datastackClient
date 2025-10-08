@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  TableHead, TableRow, TableCell,
+  TableHead, TableRow, TableCell, Typography,
   IconButton, Menu, Tooltip, Box, Chip
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -149,6 +149,24 @@ const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, o
                     sx={{ height: 20, fontSize: '0.7rem' }}
                   />
                 )}
+
+                {col.fieldGroup && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '0.65rem',
+                      color: 'text.secondary',
+                      ml: 0.5,
+                      mt: 0.3,
+                      opacity: 0.8,
+                      lineHeight: 1,
+                      userSelect: 'none',
+                    }}
+                  >
+                    {col.fieldGroup}
+                  </Typography>
+                )}
+
               </Box>
 
             </TableCell>

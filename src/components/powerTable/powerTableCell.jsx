@@ -2,7 +2,7 @@ import React from 'react';
 import { TableCell, Typography } from '@mui/material';
 import { valueFormatters } from './valueFormatters';
 
-const PowerTableCell = ({ value, column, settings }) => {
+const PowerTableCell = ({ value, column, settings, title = null }) => {
   const {
     sx = {},
     densityPadding = '6px 10px',
@@ -41,7 +41,7 @@ const PowerTableCell = ({ value, column, settings }) => {
         textOverflow: ellipsis ? 'ellipsis' : 'clip',
         ...sx,
       }}
-      title={ellipsis ? String(displayValue) : undefined} // tooltip tylko jeśli ellipsis
+      title={title ? title : ellipsis ? String(displayValue) : undefined} // tooltip tylko jeśli ellipsis
     >
       <Typography
         component="div"
