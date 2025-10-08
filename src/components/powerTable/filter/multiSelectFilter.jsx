@@ -3,10 +3,11 @@ import { FormControl, InputLabel, Select, MenuItem, Box, IconButton, Divider } f
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { amber } from '@mui/material/colors';
-import { getUniqueOptions } from './utils';
+import { getUniqueOptions, applyFilters } from './utils';
 
-const MultiSelectFilter = ({ field, data, value, onChange }) => {
-  const opts = getUniqueOptions(data, field);
+const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) => {
+  const preFiltered = applyFilters(data, columnsSchema, [id]);
+  const opts = getUniqueOptions(preFiltered, field);
   const { include = [], exclude = [] } = value || {};
 
   const handleChange = (option, mode) => {

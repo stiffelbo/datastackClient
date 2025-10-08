@@ -15,9 +15,17 @@ const sanitizeData = data => {
       billable_rate_pln : formatDecimal(i.billable_rate_pln),
       billable_amount : formatDecimal(i.billable_amount)
     }
-
   })
 }
+
+const columns = [
+  {field: 'id', type: 'number', width: 60},
+  {field: 'project', type: 'string', width: 260},
+  {field: 'client', type: 'string', width: 160, groupBy: true, groupIndex: 1},
+  {field: 'description', type: 'string', width: 260},
+  {field: 'task', type: 'string', width: 260, groupBy: true, groupIndex: 2},
+  {field: 'costPLN', headerName: 'Koszt PLN', type: 'number', width: 90, aggregationFn: 'sum', formatterKey: 'number2'},
+];
 
 const ClockifyData = () => {
   const [rows, setRows] = useState([]);

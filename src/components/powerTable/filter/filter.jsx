@@ -10,11 +10,11 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { operatorsByType } from './utils';
-import MultiSelectFilter from './MultiSelectFilter';
+import MultiSelectFilter from './multiSelectFilter';
 
-const Filter = ({ column, filter, data, onChange, onRemove }) => {
+const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => {
   const { field, type } = column;
-  const { op, value } = filter;
+  const { op, value, id } = filter;
 
   const handleChange = (key, val) => {
     onChange({ ...filter, [key]: val });
@@ -70,6 +70,8 @@ const Filter = ({ column, filter, data, onChange, onRemove }) => {
           data={data}
           value={value || { include: [], exclude: [] }}
           onChange={(val) => handleChange('value', val)}
+          id={id}
+          columnsSchema={columnsSchema}
         />
       );
     }

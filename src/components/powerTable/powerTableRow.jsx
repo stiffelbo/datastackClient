@@ -1,10 +1,9 @@
 import React from 'react';
 import { TableRow } from '@mui/material';
-import useRowRules from './hooks/useRowRules';
+
 import PowerTableCell from './powerTableCell';
 
 const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {} }) => {
-  const rowStyle = useRowRules(row, rowRules);
 
   const densityPadding = {
     compact: '2px 6px',       // 👈 bardzo ciasno
@@ -15,7 +14,7 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {} }) => 
   const fontSize = settings.fontSize || '0.8rem';
 
   return (
-    <TableRow sx={{ ...rowStyle, height: 'auto' }}>
+    <TableRow sx={{ height: settings.rowHeight || 'auto' }}>
       {columnsSchema.getVisibleColumns().map((col) => (
         <PowerTableCell
           key={col.field}

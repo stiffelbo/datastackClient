@@ -7,7 +7,7 @@ import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
 
 import { sortData } from './utils';
-import { applyFilters } from './filter/utils';   // 👈 import
+import { applyFilters } from './filter/utils';
 import { exportToXLSWithSchema } from '../../utils/exportToXLS';
 
 import SettingsModal from './settingsModal';
@@ -15,19 +15,17 @@ import PowerSidebar from './powerSidebar';
 import FlatTable from './flatTable';
 import GroupedTable from './groupedTable';
 import PresetsModal from './presetsModal';
-import FormulaModal from './formula/formulaModal';
 
 const PowerTable = ({
   data = [],
   columnSchema = [],
-  rowRules = [],
-  sidebarConfig = [],
-  footerConfig = {},
   entityName = 'default',
   width = 1500,
   height = 600,
   loading = false,
-  onRefresh
+  onRefresh,
+  //Form
+  form = null
 }) => {
   const presets = usePresets({ entityName });
   const autoColumns = useAutoColumns(data);
@@ -59,14 +57,10 @@ const PowerTable = ({
             presets={presets}
             columns={columnsSchema}
           />
-        );
-      case 'custom':
+        )
+      case 'form':
         return (
-          <FormulaModal
-            open={modalState.open}
-            onClose={closeModal}
-            columns={columnsSchema}
-          />
+          form({onClose : closeModal})
         );
       default:
         return null;
@@ -74,7 +68,7 @@ const PowerTable = ({
   };
 
   // 🔑 Filtrowanie → Sortowanie
-  const filteredData = applyFilters(data, columnsSchema, columnsSchema.globalSearch);
+  const filteredData = applyFilters(data, columnsSchema);
   const sortedData = sortData(filteredData, columnsSchema.sortModel, columnsSchema.columns);
 
   const { getGroupedCols } = columnsSchema;
@@ -90,18 +84,12 @@ const PowerTable = ({
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
-        rowRules={rowRules}
-        settings={settings}
-        footerConfig={footerConfig}
       />
     ) : (
       <FlatTable
         initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}
-        rowRules={rowRules}
-        footerConfig={footerConfig}
-        settings={settings}
       />
     );
 
@@ -112,6 +100,7 @@ const PowerTable = ({
           display: 'flex',
           height,
           width,
+          maxWidth: width,
           overflow: 'hidden',
           overflowX: 'scroll',
           marginRight: '1em',
@@ -125,7 +114,6 @@ const PowerTable = ({
       >
         {/* Sidebar */}
         <PowerSidebar
-          config={sidebarConfig}
           onOpenSettings={openModal}
           columnsSchema={columnsSchema}
           presets={presets}
@@ -142,12 +130,7 @@ const PowerTable = ({
       {renderModalContent()}
 
       {loading && (
-        <Backdrop
-          sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-          open={true}
-        >
           <CircularProgress color="inherit" />
-        </Backdrop>
       )}
     </>
   );

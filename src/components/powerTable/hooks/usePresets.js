@@ -23,7 +23,6 @@ const DEFAULT_TRACKED_KEYS = [
   'groupBy',        // bool
   'groupIndex',     // number|null
   'order',          // kolejność
-  'expresion',      // string (custom formuła)
   'isSelected',     // bool
 ];
 

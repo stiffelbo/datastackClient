@@ -3,7 +3,6 @@ import {
   TableHead, TableRow, TableCell,
   IconButton, Menu, Tooltip, Box, Chip
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
@@ -19,9 +18,47 @@ const typeIcons = {
   boolean: '✔️'
 };
 
+const getCellSX = col => {
+  return {
+    cursor: 'pointer',
+    width: col.width,
+    maxWidth: col.maxWidth,
+    minWidth: col.minWidth,
+    overflow: 'hidden',
+    backgroundColor: '#f8f8f8ff',
+    fontWeight: 'bold',
+    fontSize: '0.8em',
+    position: 'sticky',
+    top: 0,
+    zIndex: 2,
+    whiteSpace: 'nowrap',
+    borderRight: '1px solid gray',
+  }
+}
+
 const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, onToggleCollapse = null }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [activeField, setActiveField] = useState(null);
+
+  // 👇 do drag&drop
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault(); // konieczne, by drop zadziałał
+  };
+
+  const handleDrop = (dropIndex) => {
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      columnsSchema.reorderColumn(draggedIndex, dropIndex);
+    }
+    setDraggedIndex(null);
+  };
+
+  //Menu
 
   const openMenu = (e, field) => {
     setMenuAnchor(e.currentTarget);
@@ -52,32 +89,24 @@ const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, o
             collapseKey = generateCollapseKey(col.field, groupIndex);
             isCollapsed = groupCollapseState?.[collapseKey] === true;
           }
+          const cellSX = getCellSX(col);
+
           return (
             <TableCell
               key={col.field}
-              sx={{
-                cursor: 'pointer',
-                width: col.width,
-                maxWidth: col.maxWidth,
-                minWidth: col.minWidth,
-                overflow: 'hidden',
-                backgroundColor: '#f8f8f8ff',
-                fontWeight: 'bold',
-                fontSize: '0.8em',
-                position: 'sticky',
-                top: 0,
-                zIndex: 2,
-                whiteSpace: 'nowrap',
-              }}
+              sx={cellSX}
+
+              draggable
+              onDragStart={() => handleDragStart(col.order)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(col.order)}
             >
               <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'flex-start',
                   alignItems: 'center',
-                  gap: 1,
-                  borderRight: '1px solid gray',
-                  
+                  gap: 1
                 }}
               >
                 <Tooltip title={`${col.headerName}` || `${col.field}`}>

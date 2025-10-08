@@ -6,27 +6,22 @@ import { Box, IconButton, Tooltip, Badge, Menu } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
-import CodeIcon from '@mui/icons-material/Code';
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, presets, columnsSchema, onExport, onRefresh, loading }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, onExport, onRefresh, loading }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
   const openSearch = (e) => setAnchorEl(e.currentTarget);
   const closeSearch = () => setAnchorEl(null);
 
-  
-
   //Filters
   const renderSearchControl = () => {
     const allFilters = columnsSchema.getAllFilters();
     const activeFiltersCount = allFilters.length + (columnsSchema.globalSearch ? 1 : 0);
-    const {globalSearch, setGlobalSearch} = columnsSchema;
+    const {globalSearch} = columnsSchema;
 
     const title = globalSearch ? `Fraza: ${globalSearch}` : 'Szukaj...';
 
@@ -65,49 +60,25 @@ const PowerSidebar = ({ onOpenSettings, presets, columnsSchema, onExport, onRefr
     );
   };
 
-  const renderCustomControl = () => {
-    return <Tooltip title="Custom Field">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={() => onOpenSettings('custom')}>
-        <CodeIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  }
-
   const renderPresetControl = () => {
     return <Tooltip title="Preset">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={() => onOpenSettings('presets')}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={() => onOpenSettings('presets')}>
         <TuneIcon fontSize="small" />
       </IconButton>
     </Tooltip>
   }
 
   const renderRefreshControl = () => (
-    <Tooltip title="Refresh Data">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={onRefresh}>
+    <Tooltip title="Odśwież dane">
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={onRefresh} disabled={loading}>
         <RefreshIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
-
-  const renderDisplayModeControl = () => (
-    <Tooltip title="Display Mode">
-      <IconButton size="small" sx={{ width: 40, height: 40 }}>
-        <ViewModuleIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-  );
-
-  const renderSettingsControl = () => (
-    <Tooltip title="Table Settings">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} onClick={() => onOpenSettings('settings')}>
-        <SettingsIcon fontSize="small" />
       </IconButton>
     </Tooltip>
   );
 
   const renderExportControl = () => (
     <Tooltip title="Export Data">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} color='primary' onClick={onExport}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color='' onClick={onExport}>
         <FileDownloadIcon fontSize="small" />
       </IconButton>
     </Tooltip>
@@ -127,10 +98,8 @@ const PowerSidebar = ({ onOpenSettings, presets, columnsSchema, onExport, onRefr
       }}
     >
       {renderSearchControl()}
-      {renderCustomControl()}
       {renderRefreshControl()}
       {renderPresetControl()}
-      {renderSettingsControl()}
       {renderExportControl()}
     </Box>
   );

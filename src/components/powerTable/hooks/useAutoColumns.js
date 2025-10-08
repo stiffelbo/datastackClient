@@ -52,15 +52,12 @@ const useAutoColumns = (data = []) => {
       hidden: false,
       align: type === 'number' ? 'right' : 'left',
       sortable: true,
-      filterable: true,
       filters: null,
       aggregationFn: null,
       formatterKey : null,
       groupBy: false,
       groupIndex: null,
       source: 'auto',
-      expresion: '',
-      isSelected: false
     };
   });
 };

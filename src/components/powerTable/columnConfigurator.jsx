@@ -26,12 +26,10 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 //Comp
 import FieldForm from './fieldForm';
-import FilterConfigurator from './filterConfigurator';
-import Filter from './filter/filter';
+import ColumnFilters from './filter/columnFilters';
 
 //utils
 import { valueFormatters } from './valueFormatters';
-import ColumnFilters from './filter/columnFilters';
 
 const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
   const col = columnsSchema.columns.find(c => c.field === field);

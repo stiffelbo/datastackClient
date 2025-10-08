@@ -15,14 +15,14 @@ export const defaultFilterValue = (op, type) => {
 };
 
 export const createFilter = (field, type = 'string') => {
-  const firstOp = operatorsByType[type][0];
-  return {
-    id: Date.now(),                          // 👈 timestamp jako unikalne id
-    field,
-    type,
-    op: firstOp,
-    value: defaultFilterValue(firstOp, type),
-  };
+    const firstOp = operatorsByType[type][0];
+    return {
+        id: Date.now(),                          // 👈 timestamp jako unikalne id
+        field,
+        type,
+        op: firstOp,
+        value: defaultFilterValue(firstOp, type),
+    };
 };
 
 export const getUniqueOptions = (data, field) => {
@@ -71,8 +71,8 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
     // NUMBER
     if (type === 'number') {
-        if(rawValue === '') return true;
-        const num = +rawValue.replace(',', '.');
+        if (rawValue === '') return true;
+        const num = +(String(rawValue).replace(',', '.'));
         if (isNaN(num)) return true;
 
         if (op === 'equals') return num === Number(value);
@@ -141,43 +141,45 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     return false; // 👈 default powinien być false, nie true!
 };
 
-
 /**
  * Filtruj cały dataset
  */
 
-export const applyFilters = (data, columnsSchema, globalSearch = '') => {
-  const columns = columnsSchema.columns || [];
+export const applyFilters = (data, columnsSchema, omit = []) => {
 
-  return data.filter((row) => {
-    // --- GLOBAL SLUG SEARCH ---
-    if (globalSearch && globalSearch.trim()) {
-      const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
-      const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
+    const columns = columnsSchema.columns || [];
+    const globalSearch = columnsSchema.globalSearch;
 
-      const rowSlug = Object.values(row).join(' ').toLowerCase();
+    return data.filter((row) => {
+        // --- GLOBAL SLUG SEARCH ---
+        if (globalSearch && globalSearch.trim()) {
+            const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
+            const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
 
-      const matchGlobal = orGroups.some(group => {
-        const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-        return terms.every(term => rowSlug.includes(term));
-      });
+            const rowSlug = Object.values(row).join(' ').toLowerCase();
 
-      if (!matchGlobal) return false;
-    }
+            const matchGlobal = orGroups.some(group => {
+                const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+                return terms.every(term => rowSlug.includes(term));
+            });
 
-    // --- COLUMN FILTERS ---
-    for (const col of columns) {
-      const filters = col.filters || [];
-      if (!filters.length) continue;
+            if (!matchGlobal) return false;
+        }
 
-      const rawValue = row[col.field];
-      if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string'))) {
-        return false;
-      }
-    }
+        // --- COLUMN FILTERS ---
+        for (const col of columns) {
+            const filters = (col.filters || []).filter(f => !omit.includes(f.id));
+            if (!filters.length) continue;
 
-    return true;
-  });
+            const rawValue = row[col.field];
+            if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string'))) {
+                return false;
+            }
+        }
+
+        return true;
+    });
 };
+
 
 

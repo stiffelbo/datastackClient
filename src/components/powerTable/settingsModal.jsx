@@ -10,6 +10,7 @@ const SettingsModal = ({ open, onClose, settings, onSave }) => {
             label: 'Density',
             type: 'select',
             selectOptions: ['compact', 'standard', 'comfortable'],
+            md: 4
         },
         {
             name: 'rowHeight',
@@ -17,19 +18,8 @@ const SettingsModal = ({ open, onClose, settings, onSave }) => {
             type: 'number',
             min: 48,
             max: 200,
+            md: 4
         },        
-        {
-            name: 'background',
-            label: 'Kolor Tła',
-            type: 'select',
-            selectOptions: ['auto', 'light', 'dark'],
-        },
-        {
-            name: 'rows',
-            label: 'Wiersze na stronie',
-            type: 'select',
-            selectOptions: ['wszystkie', 50, 100, 200],
-        },
     ];
 
     const handleSubmit = (formData) => {

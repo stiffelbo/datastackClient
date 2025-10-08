@@ -33,6 +33,7 @@ const ColumnFilters = ({ data, columnsSchema, field, column, onClose }) => {
           data={data}
           onChange={(newFilter) => handleChange(filter.id, newFilter)}
           onRemove={() => handleRemove(filter.id)}
+          columnsSchema={columnsSchema}
         />
       ))}
 

@@ -15,6 +15,7 @@ import Clockify from './pages/clockify/Clockify';
 import ClockifyData from './pages/clockify/ClockifyData';
 import UploadSalaries from './pages/salaries/uploadSalaries/UploadSalaries';
 import Salaries from './pages/salaries/salaries/Salaries';
+import Costs from './pages/costs/Costs';
 
 const App = () => (
     <Routes>
@@ -37,6 +38,7 @@ const App = () => (
         <Route path="clockifyData" element={<ClockifyData />} />
         <Route path="uploadsalaries" element={<UploadSalaries />} />
         <Route path="salaries" element={<Salaries />} />
+        <Route path="deptcosts" element={<Costs />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

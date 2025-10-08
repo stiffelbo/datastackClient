@@ -6,7 +6,6 @@ import {
 import PowerTableHead from './powerTableHead';
 import PowerTableBody from './powerTableBody';
 import PowerTableFooter from './powerTableFooter';
-import PowerTableControl from './powerTableControl';
 
 const FlatTable = ({
   initialData,
@@ -23,7 +22,7 @@ const FlatTable = ({
         <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
           <PowerTableHead columnsSchema={columnsSchema} settings={settings} initialData={initialData}/>
           <PowerTableBody data={data} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
-          <PowerTableFooter data={data} columnsSchema={columnsSchema} config={footerConfig} settings={settings} />
+          <PowerTableFooter data={data} columnsSchema={columnsSchema} settings={settings} />
         </Table>
       </TableContainer>
     </Box>
