@@ -6,6 +6,42 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
+// ======================================================
+// 🔁 Eksport i import presetów do/z pliku JSON
+// ======================================================
+
+export function exportPresetToFile(env, activeName) {
+  try {
+    const presetData = env.presets?.[activeName];
+    if (!presetData) throw new Error('Brak danych do eksportu');
+
+    const blob = new Blob([JSON.stringify(presetData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeName}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Błąd eksportu presetu:', err);
+  }
+}
+
+export async function importPresetFromFile(file, saveAs) {
+  try {
+    const text = await file.text();
+    const json = JSON.parse(text);
+    if (!json.columns || !Array.isArray(json.columns)) {
+      throw new Error('Nieprawidłowy format pliku presetName.json');
+    }
+    return { name: saveAs || file.name.replace(/\.json$/i, ''), data: json };
+  } catch (err) {
+    console.error('Błąd importu presetu:', err);
+    throw err;
+  }
+}
+
+
 // === CENTRALNY ZESTAW KLUCZY DO ŚLEDZENIA (łatwo rozszerzyć) ===
 // Klucze zgodne ze strukturą kolumny
 const DEFAULT_TRACKED_KEYS = [
@@ -360,7 +396,10 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
 
   const list = useMemo(() => Object.keys(env.presets), [env.presets]);
 
+  const getEnv = () => env;
+
   return {
+    env,
     activeName,
     effective,
     persistedActive,
@@ -375,6 +414,7 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
     remove,
     rename,
     reset,
+    getEnv
   };
 }
 

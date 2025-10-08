@@ -12,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 
 // 👇 zamiast swoich funkcji, importujesz z usePresets.js
-import { normalizeOverrides, equalOverrides } from './hooks/usePresets';
+import { normalizeOverrides, equalOverrides, importPresetFromFile, exportPresetToFile } from './hooks/usePresets';
 
 const PresetsModal = ({ open, onClose, presets, columns }) => {
   const {
@@ -69,7 +69,7 @@ const PresetsModal = ({ open, onClose, presets, columns }) => {
     saveAs(name, current);
     setSaveAsName('');
   };
-  
+
   const handleKey = (e, action) => {
     if (e.key === 'Enter') action();
     if (e.key === 'Escape') onClose?.();
@@ -262,13 +262,56 @@ const PresetsModal = ({ open, onClose, presets, columns }) => {
                 Jeśli się różnią, możesz <b>Zapisz</b> albo <b>Zapisz jako</b>.
               </Typography>
             </Stack>
+
+
+
           </Box>
         </Stack>
 
         <Divider />
 
-        <Stack direction="row" justifyContent="flex-end" gap={1}>
-          <Button onClick={onClose} size="small" startIcon={<CloseIcon />}>Zamknij</Button>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} >
+          <Stack direction="row" gap={1}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<SaveAsIcon />}
+              onClick={() => exportPresetToFile(presets?.env, presets?.activeName)}
+              title="Eksportuj aktywny preset do pliku .json"
+            >
+              Eksportuj
+            </Button>
+
+            <Button
+              component="label"
+              size="small"
+              variant="outlined"
+              color="warning"
+              title="Wgraj plik z presetem, nazwa pliku zostanie użyta jak nazwa presetu po imporcie"
+              startIcon={<SaveIcon />}
+            >
+              Importuj
+              <input
+                type="file"
+                hidden
+                accept="application/json"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  try {
+                    const { name, data } = await importPresetFromFile(file);
+                    presets.saveAs(name, data.columns);
+                  } catch (err) {
+                    alert('Nie udało się zaimportować pliku. Sprawdź jego strukturę.');
+                  }
+                }}
+              />
+            </Button>
+          </Stack>
+
+          <Button onClick={onClose} size="small" startIcon={<CloseIcon />}>
+            Zamknij
+          </Button>
         </Stack>
 
         {/* Delete confirm */}
