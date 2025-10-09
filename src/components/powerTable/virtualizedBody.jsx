@@ -7,7 +7,7 @@ const VirtualizedBody = ({
   columnsSchema,
   rowRules,
   settings,
-  rowHeight = 36,
+  rowHeight = 60,
   overscan = 20,
   height = 600,
   scrollTop = 0
@@ -34,8 +34,7 @@ const VirtualizedBody = ({
           row={row}
           columnsSchema={columnsSchema}
           rowRules={rowRules}
-          settings={settings}
-          style={{ height: rowHeight }}
+          settings={{ ...settings, rowHeight: rowHeight }}
         />
       ))}
 

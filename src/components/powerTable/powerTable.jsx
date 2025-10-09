@@ -76,8 +76,6 @@ const PowerTable = ({
   const cellNodes = (filteredData?.length * columnsSchema?.getVisibleColumns()?.length);
   const isVirtualized = cellNodes > V_N_COUNT ? true : false;
 
-  console.log(cellNodes, isVirtualized);
-
   const { getGroupedCols } = columnsSchema;
   const isGrouped = getGroupedCols().length;
 
