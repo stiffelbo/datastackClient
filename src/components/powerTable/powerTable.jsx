@@ -16,6 +16,8 @@ import FlatTable from './flatTable';
 import GroupedTable from './groupedTable';
 import PresetsModal from './presetsModal';
 
+const V_N_COUNT = 10000;
+
 const PowerTable = ({
   data = [],
   columnSchema = [],
@@ -71,6 +73,11 @@ const PowerTable = ({
   const filteredData = applyFilters(data, columnsSchema);
   const sortedData = sortData(filteredData, columnsSchema.sortModel, columnsSchema.columns);
 
+  const cellNodes = (filteredData?.length * columnsSchema?.getVisibleColumns()?.length);
+  const isVirtualized = cellNodes > V_N_COUNT ? true : false;
+
+  console.log(cellNodes, isVirtualized);
+
   const { getGroupedCols } = columnsSchema;
   const isGrouped = getGroupedCols().length;
 
@@ -84,12 +91,15 @@ const PowerTable = ({
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
+        isVirtualized={isVirtualized}
       />
     ) : (
       <FlatTable
         initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}
+        isVirtualized={isVirtualized}
+        height={height}
       />
     );
 

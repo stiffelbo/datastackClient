@@ -1,8 +1,5 @@
-import React from 'react';
-import {
-  TableContainer, Table, Paper, Box
-} from '@mui/material';
-
+import React, { useState, useCallback } from 'react';
+import { TableContainer, Table, Paper, Box } from '@mui/material';
 import PowerTableHead from './powerTableHead';
 import PowerTableBody from './powerTableBody';
 import PowerTableFooter from './powerTableFooter';
@@ -13,16 +10,57 @@ const FlatTable = ({
   columnsSchema,
   rowRules,
   settings,
-  footerConfig
+  footerConfig,
+  isVirtualized = false,
+  height = 600
 }) => {
+  const [heightMap, setHeightMap] = useState({ header: 0, footer: 0 });
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const handleHeightChange = useCallback((section, value) => {
+    setHeightMap(prev => ({ ...prev, [section]: value }));
+  }, []);
+
+  const handleScroll = (e) => {
+    setScrollTop(e.target.scrollTop);
+  };
+
+  const bodyHeight = height - (heightMap.header + heightMap.footer);
 
   return (
     <Box sx={{ height: '100%' }}>
-      <TableContainer component={Paper} sx={{ maxHeight: '100%', width: '100%', maxWidth: '100%' }}>
-        <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-          <PowerTableHead columnsSchema={columnsSchema} settings={settings} initialData={initialData}/>
-          <PowerTableBody data={data} columnsSchema={columnsSchema} rowRules={rowRules} settings={settings} />
-          <PowerTableFooter data={data} columnsSchema={columnsSchema} settings={settings} />
+      <TableContainer
+        component={Paper}
+        sx={{
+          maxHeight: '100%',
+          width: '100%',
+          maxWidth: '100%',
+          overflowY: 'auto'
+        }}
+        onScroll={handleScroll}
+      >
+        <Table stickyHeader size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
+          <PowerTableHead
+            columnsSchema={columnsSchema}
+            settings={settings}
+            initialData={initialData}
+            onHeightChange={(val) => handleHeightChange('header', val)}
+          />
+          <PowerTableBody
+            data={data}
+            columnsSchema={columnsSchema}
+            rowRules={rowRules}
+            settings={settings}
+            isVirtualized={isVirtualized}
+            height={bodyHeight}
+            scrollTop={scrollTop}
+          />
+          <PowerTableFooter
+            data={data}
+            columnsSchema={columnsSchema}
+            settings={settings}
+            onHeightChange={(val) => handleHeightChange('footer', val)}
+          />
         </Table>
       </TableContainer>
     </Box>

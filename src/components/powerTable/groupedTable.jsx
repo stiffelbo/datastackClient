@@ -50,7 +50,7 @@ const collectGroupPaths = (nodes, ancestor = []) => {
   return result;
 };
 
-const GroupedTable = ({ initialData, data, columnsSchema, settings, rowRules }) => {
+const GroupedTable = ({ initialData, data, columnsSchema, settings, rowRules, isVirtualized = false }) => {
 
   const groupedTree = groupDataHierarchical(data, columnsSchema.columns);
   const groupPaths = collectGroupPaths(groupedTree);

@@ -1,8 +1,30 @@
 import React from 'react';
 import { TableBody } from '@mui/material';
 import PowerTableRow from './powerTableRow';
+import VirtualizedBody from './virtualizedBody';
 
-const PowerTableBody = ({ data, columnsSchema, rowRules = [], settings = {} }) => {
+const PowerTableBody = ({
+  data,
+  columnsSchema,
+  rowRules = [],
+  settings = {},
+  isVirtualized = false,
+  height = 400,
+  scrollTop = 0
+}) => {
+  if (isVirtualized) {
+    return (
+      <VirtualizedBody
+        data={data}
+        columnsSchema={columnsSchema}
+        rowRules={rowRules}
+        settings={settings}
+        height={height}
+        scrollTop={scrollTop}
+      />
+    );
+  }
+
   return (
     <TableBody>
       {data.map((row, idx) => (

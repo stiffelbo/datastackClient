@@ -291,7 +291,7 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
             />
             <ListItemText
               primary={c.headerName || c.field}
-              secondary={c.fieldGroup || 'test'}
+              secondary={c.fieldGroup || ''}
               primaryTypographyProps={{
                 variant: 'body2',
                 sx: { fontWeight: 500 },

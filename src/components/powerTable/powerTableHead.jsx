@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   TableHead, TableRow, TableCell, Typography,
   IconButton, Menu, Tooltip, Box, Chip
@@ -36,9 +36,18 @@ const getCellSX = col => {
   }
 }
 
-const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, onToggleCollapse = null }) => {
+const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, onToggleCollapse = null, onHeightChange }) => {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [activeField, setActiveField] = useState(null);
+
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current && onHeightChange) {
+      const height = ref.current.getBoundingClientRect().height;
+      onHeightChange(height);
+    }
+  }, [columnsSchema, onHeightChange]);
 
   // 👇 do drag&drop
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -71,7 +80,7 @@ const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, o
   };
 
   return (
-    <TableHead>
+    <TableHead ref={ref}>
       <TableRow>
         {columnsSchema.getVisibleColumns().map((col) => {
           const sortDir = columnsSchema.getSortDirection(col.field);

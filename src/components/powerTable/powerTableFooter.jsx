@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { TableFooter, TableRow } from '@mui/material';
 import PowerTableCell from './powerTableCell';
 
-const PowerTableFooter = ({ data, columnsSchema, settings = {} }) => {
+
+const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange }) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (ref.current && onHeightChange) {
+      const height = ref.current.getBoundingClientRect().height;
+      onHeightChange(height);
+    }
+  }, [data, columnsSchema, onHeightChange]);
   const aggregates = columnsSchema.getAggregatedValues(data);
 
   return (
-    <TableFooter>
+    <TableFooter ref={ref}>
       <TableRow
         sx={{
           backgroundColor: '#f9f9f9',
