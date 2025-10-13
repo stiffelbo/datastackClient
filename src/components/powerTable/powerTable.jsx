@@ -5,16 +5,17 @@ import useAutoColumns from './hooks/useAutoColumns';
 import usePresets from './hooks/usePresets';
 import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
+import useTableEditing from './hooks/useTableEditing';
 
 import { sortData } from './utils';
 import { applyFilters } from './filter/utils';
-import { exportToXLSWithSchema } from '../../utils/exportToXLS';
+import { exportToXLSWithSchema } from './utils';
 
 import SettingsModal from './settingsModal';
 import PowerSidebar from './powerSidebar';
 import FlatTable from './flatTable';
-import GroupedTable from './groupedTable';
 import PresetsModal from './presetsModal';
+import GroupedTableV from './groupedTableV';
 
 const V_N_COUNT = 10000;
 
@@ -27,11 +28,14 @@ const PowerTable = ({
   loading = false,
   onRefresh,
   //Form
-  form = null
+  form = null,
+  //edit
+  onEdit = null
 }) => {
   const presets = usePresets({ entityName });
   const autoColumns = useAutoColumns(data);
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName });
+  const editing = useTableEditing(onEdit);
 
   const { settings, updateSettings } = useTableSettings(entityName);
 
@@ -85,11 +89,12 @@ const PowerTable = ({
 
   const renderTable = () =>
     isGrouped ? (
-      <GroupedTable
+      <GroupedTableV
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
-        isVirtualized={isVirtualized}
+        settings={{height}}
+        editing={editing}
       />
     ) : (
       <FlatTable
@@ -98,6 +103,7 @@ const PowerTable = ({
         columnsSchema={columnsSchema}
         isVirtualized={isVirtualized}
         height={height}
+        editing={editing}
       />
     );
 

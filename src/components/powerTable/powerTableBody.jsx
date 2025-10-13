@@ -10,7 +10,8 @@ const PowerTableBody = ({
   settings = {},
   isVirtualized = false,
   height = 400,
-  scrollTop = 0
+  scrollTop = 0,
+  editing
 }) => {
   if (isVirtualized) {
     return (
@@ -21,6 +22,7 @@ const PowerTableBody = ({
         settings={settings}
         height={height}
         scrollTop={scrollTop}
+        editing={editing}
       />
     );
   }
@@ -34,6 +36,7 @@ const PowerTableBody = ({
           columnsSchema={columnsSchema}
           rowRules={rowRules}
           settings={settings}
+          editing={editing}
         />
       ))}
     </TableBody>

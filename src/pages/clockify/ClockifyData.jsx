@@ -23,8 +23,9 @@ const columns = [
   {field: 'project', type: 'string', width: 260},
   {field: 'client', type: 'string', width: 160, groupBy: true, groupIndex: 1},
   {field: 'description', type: 'string', width: 260},
-  {field: 'task', type: 'string', width: 260, groupBy: true, groupIndex: 2},
+  {field: 'task', type: 'string', width: 260, editable: true, groupBy: true, groupIndex: 2},
   {field: 'costPLN', headerName: 'Koszt PLN', type: 'number', width: 90, aggregationFn: 'sum', formatterKey: 'number2'},
+  {field: 'tags', headerName: 'Tagi', type: 'number', editable: true, width: 90, aggregationFn: 'sum', formatterKey: 'number2'},
 ];
 
 const ClockifyData = () => {
@@ -53,6 +54,10 @@ const ClockifyData = () => {
     populate();
   }, []);
 
+  const handleEdit = (value, params) => {
+    console.log(value, params);
+  }
+
   return (   
       <PowerTable
         entityName='clockifyData'
@@ -61,6 +66,8 @@ const ClockifyData = () => {
         width={window.innerWidth}
         loading={loading}
         onRefresh={()=>populate()}
+        columnSchema={columns}
+        onEdit={handleEdit} 
       />
   );
 };

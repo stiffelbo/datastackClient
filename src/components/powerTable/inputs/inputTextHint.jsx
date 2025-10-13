@@ -8,7 +8,7 @@ import {
   Box
 } from '@mui/material';
 
-const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę grupy…', defaultValue = '' }) => {
+const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę...', title ='', defaultValue = '', sx={}}) => {
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
 
@@ -39,7 +39,7 @@ const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę grupy
   );
 
   return (
-    <Box sx={{ position: 'relative', width: '100%' }}>
+    <Box sx={{ position: 'relative', width: '100%', ...sx }} title={title}>
       <TextField
         value={value}
         onChange={handleChange}

@@ -1,65 +1,63 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   TableHead, TableRow, TableCell, Typography,
-  IconButton, Menu, Tooltip, Box, Chip
+  IconButton, Tooltip, Box, Chip
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
-import ColumnConfigurator from './columnConfigurator';
+import ColumnConfigurator from './columnConfigurator/columnConfigurator';
 import { generateCollapseKey } from './utils';
 
 const typeIcons = {
   string: '🅰️',
   number: '🔢',
   date: '📅',
-  boolean: '✔️'
+  boolean: '✔️',
 };
 
-const getCellSX = col => {
-  return {
-    cursor: 'pointer',
-    width: col.width,
-    maxWidth: col.maxWidth,
-    minWidth: col.minWidth,
-    overflow: 'hidden',
-    backgroundColor: '#f8f8f8ff',
-    fontWeight: 'bold',
-    fontSize: '0.8em',
-    position: 'sticky',
-    top: 0,
-    zIndex: 2,
-    whiteSpace: 'nowrap',
-    borderRight: '1px solid gray',
-  }
-}
+const getCellSX = (col) => ({
+  cursor: 'pointer',
+  width: col.width,
+  maxWidth: col.maxWidth,
+  minWidth: col.minWidth,
+  overflow: 'hidden',
+  backgroundColor: '#f8f8f8ff',
+  fontWeight: 'bold',
+  fontSize: '0.8em',
+  position: 'sticky',
+  top: 0,
+  zIndex: 2,
+  whiteSpace: 'nowrap',
+  borderRight: '1px solid #ddd',
+});
 
-const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, onToggleCollapse = null, onHeightChange }) => {
-  const [menuAnchor, setMenuAnchor] = useState(null);
-  const [activeField, setActiveField] = useState(null);
-
+const PowerTableHead = ({
+  initialData,
+  columnsSchema,
+  groupCollapseState = {},
+  onToggleCollapse = null,
+  onHeightChange,
+  height,
+}) => {
   const ref = useRef(null);
+
+  const [activeField, setActiveField] = useState(null);
 
   useEffect(() => {
     if (ref.current && onHeightChange) {
-      const height = ref.current.getBoundingClientRect().height;
-      onHeightChange(height);
+      const calcHeight = ref.current.getBoundingClientRect().height;
+      if (height === calcHeight) onHeightChange(calcHeight);
     }
-  }, [columnsSchema, onHeightChange]);
+  }, [height]);
 
-  // 👇 do drag&drop
+  // === Drag & drop columns ===
   const [draggedIndex, setDraggedIndex] = useState(null);
 
-  const handleDragStart = (index) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (event) => {
-    event.preventDefault(); // konieczne, by drop zadziałał
-  };
-
+  const handleDragStart = (index) => setDraggedIndex(index);
+  const handleDragOver = (e) => e.preventDefault();
   const handleDrop = (dropIndex) => {
     if (draggedIndex !== null && draggedIndex !== dropIndex) {
       columnsSchema.reorderColumn(draggedIndex, dropIndex);
@@ -67,137 +65,131 @@ const PowerTableHead = ({ initialData, columnsSchema, groupCollapseState = {}, o
     setDraggedIndex(null);
   };
 
-  //Menu
-
-  const openMenu = (e, field) => {
-    setMenuAnchor(e.currentTarget);
-    setActiveField(field);
-  };
-
-  const closeMenu = () => {
-    setMenuAnchor(null);
-    setActiveField(null);
-  };
-
   return (
-    <TableHead ref={ref}>
-      <TableRow>
-        {columnsSchema.getVisibleColumns().map((col) => {
-          const sortDir = columnsSchema.getSortDirection(col.field);
+    <>
+      <TableHead ref={ref}>
+        <TableRow>
+          {columnsSchema.getVisibleColumns().map((col) => {
+            const sortDir = columnsSchema.getSortDirection(col.field);
+            const groupIndex = col.groupIndex;
+            const isGrouped = typeof groupIndex === 'number';
 
-          const groupIndex = col.groupIndex;
-          const isGrouped = typeof groupIndex === 'number';
+            const pathsAtLevel = Object.keys(groupCollapseState).filter(
+              (p) => p.split('/').length === groupIndex + 1
+            );
+            const allCollapsed = pathsAtLevel.every(
+              (p) => groupCollapseState[p] === true
+            );
 
-          let collapseKey = null;
-          let isCollapsed = false;
+            const cellSX = getCellSX(col);
+            const cellTitle = col.headerName
+              ? [col.headerName, col.fieldGroup].filter(Boolean).join(' - ')
+              : [col.field, col.fieldGroup].filter(Boolean).join(' - ');
 
-          const pathsAtLevel = Object.keys(groupCollapseState).filter(p => p.split('/').length === groupIndex + 1);
-          const allCollapsed = pathsAtLevel.every(p => groupCollapseState[p] === true);
-
-          if (isGrouped) {
-            collapseKey = generateCollapseKey(col.field, groupIndex);
-            isCollapsed = groupCollapseState?.[collapseKey] === true;
-          }
-          const cellSX = getCellSX(col);
-
-          return (
-            <TableCell
-              key={col.field}
-              sx={cellSX}
-
-              draggable
-              onDragStart={() => handleDragStart(col.order)}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(col.order)}
-            >
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: 1
-                }}
+            return (
+              <TableCell
+                key={col.field}
+                sx={cellSX}
+                title={cellTitle}
+                draggable
+                onDragStart={() => handleDragStart(col.order)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(col.order)}
               >
-                <Tooltip title={`${col.headerName}` || `${col.field}`}>
-                  <span onClick={(e) => openMenu(e, col.field)}>
-                    {/* Ikonka typu */}
-                    <span style={{ marginRight: 4 }}>
-                      {typeIcons[col.type] || '❓'}
-                    </span>
-                    {(col.headerName || col.field)}
-                  </span>
-                </Tooltip>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  {/* HEADER CLICK → OPEN CONFIGURATOR */}
+                  <Tooltip title="Kliknij, aby skonfigurować kolumnę">
+                    <Box
+                      component="span"
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                      onClick={() => setActiveField(col.field)}
+                    >
+                      <span>{typeIcons[col.type] || '❓'}</span>
+                      <Typography
+                        variant="body2"
+                        sx={{ fontWeight: 600, userSelect: 'none' }}
+                      >
+                        {col.headerName || col.field}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
 
-                {/* sort indicators */}
-                {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
-                {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
+                  {/* sort indicators */}
+                  {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
+                  {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
 
-                {/* group indicator */}
-                {isGrouped && (
-                  <Chip
-                    size="small"
-                    label={`#${groupIndex + 1}`}
-                    icon={<GroupWorkIcon fontSize="small" />}
-                    sx={{ height: 20, fontSize: '0.75rem' }}
-                  />
-                )}
+                  {/* group indicator */}
+                  {isGrouped && (
+                    <Chip
+                      size="small"
+                      label={`#${groupIndex + 1}`}
+                      icon={<GroupWorkIcon fontSize="small" />}
+                      sx={{
+                        height: 20,
+                        fontSize: '0.75rem',
+                        backgroundColor: '#f3f3f3',
+                      }}
+                      title={`Usuń grupowanie ${col.headerName || col.field}`}
+                      onClick={() => columnsSchema.toggleGroupBy(col.field)}
+                    />
+                  )}
 
-                {/* collapse button for groups */}
-                {isGrouped && onToggleCollapse && (
-                  <IconButton onClick={() => onToggleCollapse(groupIndex)}>
-                    {allCollapsed ? <ExpandLess /> : <ExpandMore />}
-                  </IconButton>
-                )}
+                  {/* collapse all button for level */}
+                  {isGrouped && onToggleCollapse && (
+                    <IconButton
+                      size="small"
+                      onClick={() => onToggleCollapse(groupIndex)}
+                    >
+                      {allCollapsed ? <ExpandLess /> : <ExpandMore />}
+                    </IconButton>
+                  )}
 
-                {/* 👇 NEW: active filters badge */}
-                {Array.isArray(col.filters) && col.filters.length > 0 && (
-                  <Chip
-                    size="small"
-                    color="warning"
-                    label={col.filters.length}
-                    sx={{ height: 20, fontSize: '0.7rem' }}
-                  />
-                )}
+                  {/* filters badge */}
+                  {Array.isArray(col.filters) && col.filters.length > 0 && (
+                    <Chip
+                      size="small"
+                      color="warning"
+                      label={col.filters.length}
+                      sx={{ height: 20, fontSize: '0.7rem' }}
+                    />
+                  )}
 
-                {col.fieldGroup && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '0.65rem',
-                      color: 'text.secondary',
-                      ml: 0.5,
-                      mt: 0.3,
-                      opacity: 0.8,
-                      lineHeight: 1,
-                      userSelect: 'none',
-                    }}
-                  >
-                    {col.fieldGroup}
-                  </Typography>
-                )}
+                  {/* field group caption */}
+                  {col.fieldGroup && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: '0.65rem',
+                        color: 'text.secondary',
+                        opacity: 0.8,
+                      }}
+                    >
+                      {col.fieldGroup}
+                    </Typography>
+                  )}
+                </Box>
+              </TableCell>
+            );
+          })}
+        </TableRow>
+      </TableHead>
 
-              </Box>
-
-            </TableCell>
-          );
-        })}
-      </TableRow>
-
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={closeMenu}
-      >
-        {activeField && (
-          <ColumnConfigurator
-            data={initialData}
-            field={activeField}
-            columnsSchema={columnsSchema}
-            close={closeMenu}
-          />
-        )}
-      </Menu>
-    </TableHead>
+      {/* === CENTRAL CONFIGURATOR === */}
+      {activeField && (
+        <ColumnConfigurator
+          data={initialData}
+          field={activeField}
+          columnsSchema={columnsSchema}
+          close={() => setActiveField(null)}
+        />
+      )}
+    </>
   );
 };
 

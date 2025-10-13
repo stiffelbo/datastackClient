@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx';
+
 const isEmpty = (val, type) => {
     if (val == null || val === '') return true;
 
@@ -32,7 +34,6 @@ export const formatNumberPL = (num, fractionDigits = 2) => {
       maximumFractionDigits: fractionDigits,
     });
 };
-
 
 export const getAggregatedValues = (data, columns) => {
     const result = {};
@@ -258,5 +259,102 @@ export const sortData = (data = [], sortModel = [], columns = []) => {
 
         return 0;
     });
+};
+
+
+/**
+ * Flattenuje drzewo grup do płaskiej listy elementów,
+ * z uwzględnieniem collapseState.
+ *
+ * @param {Array} nodes - wynik groupDataHierarchical
+ * @param {object} collapseState - { 'HR/Administrator': true|false }
+ * @param {Array} ancestor - aktualna ścieżka grup
+ * @param {number} level - aktualny poziom zagnieżdżenia
+ * @returns {Array} płaska lista elementów
+ */
+export const flattenGroupedData = (nodes = [], collapseState = {}, ancestor = [], level = 0) => {
+  const result = [];
+
+  for (const node of nodes) {
+    if (node.type === 'group') {
+      const path = [...ancestor, node.value].join('/');
+      const isCollapsed = collapseState?.[path] === true;
+
+      result.push({
+        type: 'group',
+        level,
+        path,
+        field: node.field,
+        value: node.value,
+        rows: node.rows,
+        aggregates: node.aggregates,
+      });
+
+      // jeśli grupa otwarta — rekurencja dla dzieci
+      if (!isCollapsed && Array.isArray(node.children)) {
+        const children = flattenGroupedData(node.children, collapseState, [...ancestor, node.value], level + 1);
+        result.push(...children);
+      }
+    } else if (node.type === 'row') {
+      result.push({
+        type: 'row',
+        level,
+        path: [...ancestor, node.value].join('/'),
+        row: node.row,
+      });
+    }
+  }
+
+  return result;
+};
+
+//Export
+/**
+ * Eksportuje dane do Excela zgodnie ze schematem kolumn
+ * @param {Array} data - dane (tablica obiektów)
+ * @param {Array} columns - schema kolumn (field, headerName, order)
+ * @param {string} filename - nazwa pliku
+ * @param {string} sheetName - nazwa arkusza
+ */
+export const exportToXLSWithSchema = (
+  data = [],
+  columns = [],
+  filename = 'export.xlsx',
+  sheetName = 'Sheet1'
+) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    toast.warning('Brak danych do przetworzenia dla pliku: ' + sheetName);
+    return;
+  }
+
+  // sortowanie kolumn po "order"
+  const visibleColumns = columns
+    .filter(col => !col.hidden)
+    .sort((a, b) => a.order - b.order);
+
+  const headers = visibleColumns.map(col => col.headerName);
+  const fields = visibleColumns.map(col => col.field);
+
+  // przemodelowanie danych pod kolejność pól + konwersja liczb
+  const mappedData = data.map(row =>
+    fields.map(field => {
+      let value = row[field] ?? '';
+
+      // konwersja liczbowych stringów
+      if (typeof value === 'string' && /^\d+([.,]\d+)?$/.test(value)) {
+        value = parseFloat(value.replace(',', '.'));
+      }
+
+      return value;
+    })
+  );
+
+  // budujemy arkusz
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...mappedData]);
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+  XLSX.writeFile(workbook, filename);
 };
 

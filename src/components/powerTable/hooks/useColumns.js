@@ -47,6 +47,15 @@ const reindexGroupBy = (columns) => {
   });
 };
 
+const applyDefaultAlign = (col) => {
+  if (col.align) return col;
+  let align = 'left';
+  if (col.type === 'number') align = 'right';
+  else if (col.type === 'boolean') align = 'center';
+  return { ...col, align };
+};
+
+
 // pomocniczo: lekki podpis po polach (stabilne deps w useEffect)
 const fieldsSig = (cols = []) =>
   cols.map(c => c.field).sort().join('|');
@@ -66,12 +75,12 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   // ---- inicjalizacja / re-inicjalizacja, gdy mamy dane albo zmienił się preset/dev ----
   useEffect(() => {
     const base = mergeColumns(autoColumns, devSchema);
-
+    console.log(base);
     if (savedCols.length > 0) {
       let restored = mergeColumns(base, savedCols); // tu już sort + order w środku
       restored = reindexGroupBy(restored);
-      // (opcjonalnie) jeśli chcesz mieć pewność, że order jest ciągły:
-      restored = restored.map((c, idx) => ({ ...c, order: idx }));
+      // (opcjonalnie) jeśli chcesz mieć pewność, że order jest ciągły + default align
+      restored = restored.map((c, idx) => applyDefaultAlign({ ...c, order: idx }));
       setColumns(restored);
 
       const initialSort = extractSortModel(savedCols);
@@ -348,7 +357,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     getAggregatedValues: getAggregatedValuesForData,
     hasAggregation,
     hasFormatter,
-    hasFilters
+    hasFilters,
+    updateField
   };
 };
 

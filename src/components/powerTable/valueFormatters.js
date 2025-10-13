@@ -78,7 +78,17 @@ export const valueFormatters = {
   number2: (value, opts) => fmtNumber(value, { decimals: 2, ...(opts || {}) }),
   number4: (value, opts) => fmtNumber(value, { decimals: 4, ...(opts || {}) }),
 
-  currency: (value, { currency = 'PLN', locale = DEFAULT_LOCALE } = {}) => {
+  PLN: (value, { currency = 'PLN', locale = DEFAULT_LOCALE } = {}) => {
+    const n = toNumberLike(value);
+    if (n === null) return value ?? '';
+    return getIntl(locale, { style: 'currency', currency }).format(n);
+  },
+  USD: (value, { currency = 'USD', locale = DEFAULT_LOCALE } = {}) => {
+    const n = toNumberLike(value);
+    if (n === null) return value ?? '';
+    return getIntl(locale, { style: 'currency', currency }).format(n);
+  },
+  EURO: (value, { currency = 'EUR', locale = DEFAULT_LOCALE } = {}) => {
     const n = toNumberLike(value);
     if (n === null) return value ?? '';
     return getIntl(locale, { style: 'currency', currency }).format(n);

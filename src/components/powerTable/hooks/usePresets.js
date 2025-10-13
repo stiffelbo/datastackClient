@@ -43,25 +43,29 @@ export async function importPresetFromFile(file, saveAs) {
 
 
 // === CENTRALNY ZESTAW KLUCZY DO ŚLEDZENIA (łatwo rozszerzyć) ===
-// Klucze zgodne ze strukturą kolumny
+// Klucze zgodne ze strukturą kolumny — do porównywania i zapisu w presetach
 const DEFAULT_TRACKED_KEYS = [
-  'field',          // obowiązkowe
-  'fieldGroup',
-  'headerName',     // etykieta
-  'type',           // 'string' | 'number' | 'date' | 'boolean'
-  'width',          // szerokość
-  'hidden',         // bool
-  'align',          // 'left' | 'center' | 'right'
-  'sortable',       // bool
-  'filterable',     // bool
-  'filters',        // object || null
-  'aggregationFn',  // np. 'sum'
-  'formatterKey',   // np. 'currency'
-  'groupBy',        // bool
-  'groupIndex',     // number|null
-  'order',          // kolejność
-  'isSelected',     // bool
+  'field',           // obowiązkowe, unikalny identyfikator
+  'fieldGroup',      // grupowanie logiczne kolumn
+  'headerName',      // etykieta nagłówka
+  'type',            // 'string' | 'number' | 'date' | 'boolean'
+  'inputType',       // 'text' | 'number' | 'checkbox' | 'select' | 'date'
+  'displayType',     // 'text' | 'numeric' | 'boolean' | 'chip' | 'currency'
+  'width',           // szerokość kolumny
+  'hidden',          // bool – ukryta/pokazana
+  'align',           // 'left' | 'center' | 'right'
+  'sortable',        // czy można sortować
+  'filterable',      // czy można filtrować
+  'filters',         // definicje filtrów
+  'aggregationFn',   // funkcja agregacji lub jej nazwa ('sum', 'avg', itd.)
+  'formatterKey',    // klucz formatowania (np. 'number2', 'PLN', 'percent')
+  'formatterOptions',// dodatkowe opcje do formattera
+  'styleFn',         // funkcja warunkowa stylowania (zapisz tylko referencję)
+  'groupBy',         // czy kolumna grupująca
+  'groupIndex',      // kolejność grupowania
+  'order',           // pozycja w kolejności kolumn
 ];
+
 
 
 const toNum = (v) => {
@@ -399,6 +403,31 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
 
   const getEnv = () => env;
 
+  const reinitialize = useCallback(() => {
+    setEnv(prev => {
+      // skopiuj poprzednie presety
+      const next = { ...prev };
+
+      // odtwórz tylko preset "default"
+      next.presets = {
+        ...prev.presets,
+        default: { columns: [] },
+      };
+
+      // jeśli aktualny preset był "default", też go aktywuj od nowa
+      if (prev.activePreset === 'default') {
+        next.activePreset = 'default';
+      }
+
+      saveEnvelope(storageNS, entityName, next);
+      return next;
+    });
+
+    setStaged(null);
+    setDirty(false);
+    setDiff(null);
+  }, [entityName, storageNS]);
+
   return {
     env,
     activeName,
@@ -415,7 +444,8 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
     remove,
     rename,
     reset,
-    getEnv
+    getEnv,
+    reinitialize
   };
 }
 

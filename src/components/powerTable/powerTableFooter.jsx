@@ -3,15 +3,15 @@ import { TableFooter, TableRow } from '@mui/material';
 import PowerTableCell from './powerTableCell';
 
 
-const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange }) => {
+const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange, height }) => {
   const ref = useRef(null);
 
   useEffect(() => {
     if (ref.current && onHeightChange) {
-      const height = ref.current.getBoundingClientRect().height;
-      onHeightChange(height);
+      const calcheight = ref.current.getBoundingClientRect().height;
+      if(height === calcheight) onHeightChange(calcheight);
     }
-  }, [data, columnsSchema, onHeightChange]);
+  }, [height]);
   const aggregates = columnsSchema.getAggregatedValues(data);
 
   return (

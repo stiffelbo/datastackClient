@@ -2,56 +2,6 @@ import { toast } from 'react-toastify';
 import * as XLSX from 'xlsx';
 
 
-/**
- * Eksportuje dane do Excela zgodnie ze schematem kolumn
- * @param {Array} data - dane (tablica obiektów)
- * @param {Array} columns - schema kolumn (field, headerName, order)
- * @param {string} filename - nazwa pliku
- * @param {string} sheetName - nazwa arkusza
- */
-export const exportToXLSWithSchema = (
-  data = [],
-  columns = [],
-  filename = 'export.xlsx',
-  sheetName = 'Sheet1'
-) => {
-  if (!Array.isArray(data) || data.length === 0) {
-    toast.warning('Brak danych do przetworzenia dla pliku: ' + sheetName);
-    return;
-  }
-
-  // sortowanie kolumn po "order"
-  const visibleColumns = columns
-    .filter(col => !col.hidden)
-    .sort((a, b) => a.order - b.order);
-
-  const headers = visibleColumns.map(col => col.headerName);
-  const fields = visibleColumns.map(col => col.field);
-
-  // przemodelowanie danych pod kolejność pól + konwersja liczb
-  const mappedData = data.map(row =>
-    fields.map(field => {
-      let value = row[field] ?? '';
-
-      // konwersja liczbowych stringów
-      if (typeof value === 'string' && /^\d+([.,]\d+)?$/.test(value)) {
-        value = parseFloat(value.replace(',', '.'));
-      }
-
-      return value;
-    })
-  );
-
-  // budujemy arkusz
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...mappedData]);
-
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-  XLSX.writeFile(workbook, filename);
-};
-
-
 // Function to convert array of objects to XLS file
 export const exportToXLS = (data = [], filename = 'datastackXls.xlsx', sheetName = 'Sheet1') => {
   if (!Array.isArray(data) || data.length === 0) {

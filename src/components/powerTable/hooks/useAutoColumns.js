@@ -1,21 +1,38 @@
 /**
- * useAutoColumns - automatyczne generowanie schematu kolumn na podstawie danych
-*/
+ * useAutoColumns - automatyczne generowanie schematu kolumn PowerTable na podstawie danych
+ * 
+ * Tworzy pełny schemat z właściwościami:
+ * field, headerName, type, inputType, options, validationFn,
+ * editable, hidden, styleFn, align, sortable, width, filters,
+ * aggregationFn, formatterKey, renderCell, groupBy, groupIndex, source
+ */
 
+import { useMemo } from 'react';
+
+/* -------------------------------------------------------------------------- */
+/* 🔹 TYPE DETECTORS                                                          */
+/* -------------------------------------------------------------------------- */
+
+/** Detekcja typu danych */
 const detectType = (value) => {
+  if (value === null || value === undefined) return 'string';
   if (typeof value === 'number' && !isNaN(value)) return 'number';
   if (typeof value === 'boolean') return 'boolean';
-  if (typeof value === 'string' && !isNaN(Number(value))) return 'number';
-  if (!isNaN(Date.parse(value))) return 'date';
+  if (typeof value === 'string') {
+    const num = Number(value);
+    if (!isNaN(num) && value.trim() !== '') return 'number';
+    if (!isNaN(Date.parse(value))) return 'date';
+    return 'string';
+  }
+  if (value instanceof Date) return 'date';
   return 'string';
 };
 
+/** Detekcja preferowanej szerokości kolumny */
 const detectWidth = (value) => {
   if (value === null || value === undefined) return 90;
-
   const str = String(value);
   const length = str.length;
-
   if (length <= 4) return 80;
   if (length <= 8) return 110;
   if (length <= 15) return 160;
@@ -24,43 +41,102 @@ const detectWidth = (value) => {
   return 320;
 };
 
+/** Upiększanie nazw kolumn */
 export const prettifyHeader = (str) => {
   if (!str) return '';
-  
   return String(str)
     .trim()
-    .split(/[_\s-]+/)            // rozdziel po _, spacji, myślniku
-    .filter(Boolean)             // usuń puste
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    )
     .join(' ');
 };
 
+/* -------------------------------------------------------------------------- */
+/* 🔹 TYPE → INPUT / DISPLAY MAP                                              */
+/* -------------------------------------------------------------------------- */
+
+/** Automatyczne dopasowanie typu inputa do typu danych */
+const inferInputType = (type) => {
+  switch (type) {
+    case 'number':
+      return 'number';
+    case 'boolean':
+      return 'checkbox';
+    case 'date':
+      return 'date';
+    default:
+      return 'text';
+  }
+};
+
+/** Automatyczne dopasowanie typu wyświetlania (displayType) */
+const inferDisplayType = (type) => {
+  switch (type) {
+    case 'boolean':
+      return 'boolean';
+    case 'number':
+      return 'numeric';
+    case 'date':
+      return 'date';
+    default:
+      return 'text';
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/* 🔹 HOOK                                                                    */
+/* -------------------------------------------------------------------------- */
+
 const useAutoColumns = (data = []) => {
-  if (!Array.isArray(data) || data.length === 0) return [];
+  return useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
 
-  const sample = data[0];
+    const sample = data[0];
+    if (!sample || typeof sample !== 'object') return [];
 
-  return Object.entries(sample).map(([key, value]) => {
-    const type = detectType(value);
-    const width = detectWidth(value);
-    return {
-      field: key,
-      fieldGroup: '',
-      headerName: prettifyHeader(key),
-      type,
-      width,
-      editable: false,
-      hidden: false,
-      align: type === 'number' ? 'right' : 'left',
-      sortable: true,
-      filters: null,
-      aggregationFn: null,
-      formatterKey : null,
-      groupBy: false,
-      groupIndex: null,
-      source: 'auto',
-    };
-  });
+    return Object.entries(sample).map(([key, value]) => {
+      const type = detectType(value);
+      const width = detectWidth(value);
+
+      return {
+        /* 📘 Identyfikacja */
+        field: key,
+        fieldGroup: '',
+        headerName: prettifyHeader(key),
+
+        /* 📗 Typy danych i renderowania */
+        type,
+        inputType: inferInputType(type),
+        displayType: inferDisplayType(type),
+
+        /* 📙 Edycja / Walidacja */
+        editable: false, // lub (params) => boolean
+        validationFn: null, // (val, params) => true | false | 'error message'
+        options: [], // dla selectów / lookupów
+
+        /* 📒 Formatowanie i wygląd */
+        styleFn: null, // (val, params) => sx
+        formatterKey: null, // np. 'currencyPL'
+        renderCell: null, // niestandardowy renderer: params => <Component />
+        align: type === 'number' ? 'right' : 'left',
+        hidden: false,
+        sortable: true,
+        width,
+
+        /* 📕 Grupowanie i agregacje */
+        aggregationFn: null, // 'sum' | 'avg' | fn
+        groupBy: false,
+        groupIndex: null,
+
+        /* 📔 Dodatkowe */
+        filters: null,
+        source: 'auto',
+      };
+    });
+  }, [data]);
 };
 
 export default useAutoColumns;

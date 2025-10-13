@@ -1,61 +1,63 @@
 import React from 'react';
-import { TableCell, Typography } from '@mui/material';
-import { valueFormatters } from './valueFormatters';
+import DisplayCell from './cell/displayCell';
+import EditCell from './cell/editCell';
 
-const PowerTableCell = ({ value, column, settings, title = null }) => {
-  const {
-    sx = {},
-    densityPadding = '6px 10px',
-    fontSize = '0.8rem',         // 👈 domyślnie mniejsza czcionka
-    wrap = true,                 // 👈 zawijanie treści domyślnie ON
-    ellipsis = false,            // 👈 zamiast zawijania można uciąć
-    align = column.align || 'left',
-  } = settings || {};
+/**
+ * PowerTableCell – kontroler renderowania komórki.
+ * Decyduje, czy renderować tryb wyświetlania, czy edycji.
+ */
+const PowerTableCell = ({
+  value,
+  column,
+  settings,
+  params,
+  editing, // obiekt z hooka useTableEditing()
+}) => {
 
-  const formatter = column.formatterKey
-    ? valueFormatters[column.formatterKey]
-    : null;
+  const { startEdit, stopEdit, isEditing, commitEdit } = editing || {};
+  const isEditMode = isEditing ? isEditing(params) : false;
 
-  let displayValue = value ?? '';
-  if (typeof formatter === 'function') {
-    try {
-      displayValue = formatter(value, column.formatterOptions || {});
-    } catch (err) {
-      console.warn(`Formatter error for column ${column.field}`, err);
-    }
-  }
+  /** Kliknięcie 2× = wejście w edycję */
+  const handleDoubleClick = () => {
+    console.log('Edytuj', editing, column);
+    const editable =
+      typeof column.editable === 'function'
+        ? column.editable(params)
+        : column.editable;
 
-  return (
-    <TableCell
-      sx={{
-        width: column.width,
-        minWidth: column.minWidth,
-        maxWidth: column.maxWidth,
-        padding: densityPadding,
-        fontSize,
-        lineHeight: 1.3,
-        verticalAlign: 'top',   // 👈 treść zaczyna się od góry
-        textAlign: align,
-        whiteSpace: wrap ? 'normal' : 'nowrap',
-        overflow: ellipsis ? 'hidden' : 'visible',
-        textOverflow: ellipsis ? 'ellipsis' : 'clip',
-        ...sx,
-      }}
-      title={title ? title : ellipsis ? String(displayValue) : undefined} // tooltip tylko jeśli ellipsis
-    >
-      <Typography
-        component="div"
-        variant="body2"
-        sx={{
-          fontSize,
-          whiteSpace: wrap ? 'normal' : 'nowrap',
-          overflow: ellipsis ? 'hidden' : 'visible',
-          textOverflow: ellipsis ? 'ellipsis' : 'clip',
-        }}
-      >
-        {displayValue}
-      </Typography>
-    </TableCell>
+    if (editable && typeof startEdit === 'function') startEdit(params);
+  };
+
+  /** Commit z EditCell */
+  const handleCommit = (newValue, cellParams) => {
+    if (typeof commitEdit === 'function')
+      commitEdit(newValue, cellParams, (id, field, val) => {
+        console.log('commit', id, field, val);
+      });
+  };
+
+  /** Obsługa anulowania */
+  const handleCancel = () => {
+    if (typeof stopEdit === 'function') stopEdit();
+  };
+
+  return isEditMode ? (
+    <EditCell
+      type={column.inputType}
+      value={value}
+      onCommit={handleCommit}
+      onCancel={handleCancel}
+      column={column}
+      params={params}
+    />
+  ) : (
+    <DisplayCell
+      value={value}
+      column={column}
+      settings={settings}
+      params={params}
+      onDoubleClick={handleDoubleClick}
+    />
   );
 };
 

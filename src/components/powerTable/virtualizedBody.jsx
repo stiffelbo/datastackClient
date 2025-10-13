@@ -10,7 +10,8 @@ const VirtualizedBody = ({
   rowHeight = 60,
   overscan = 20,
   height = 600,
-  scrollTop = 0
+  scrollTop = 0,
+  editing
 }) => {
   const visibleCount = Math.ceil(height / rowHeight);
   const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
@@ -35,6 +36,7 @@ const VirtualizedBody = ({
           columnsSchema={columnsSchema}
           rowRules={rowRules}
           settings={{ ...settings, rowHeight: rowHeight }}
+          editing={editing}
         />
       ))}
 
