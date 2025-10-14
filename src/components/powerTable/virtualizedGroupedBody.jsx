@@ -3,6 +3,7 @@ import { TableBody, TableRow, TableCell, Box, IconButton } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import PowerTableCell from './powerTableCell';
 import PowerTableRow from './powerTableRow';
+import ActionCell from './cell/actionCell';
 
 const VirtualizedGroupedBody = ({
   flatData,
@@ -16,6 +17,7 @@ const VirtualizedGroupedBody = ({
   overscan = 20,
   height = 600,
   scrollTop = 0,
+  actionsApi
 }) => {
   const visibleCount = Math.ceil(height / rowHeight);
   const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
@@ -38,9 +40,22 @@ const VirtualizedGroupedBody = ({
       {visibleRows.map((item, idx) => {
         if (item.type === 'group') {
           const open = !groupCollapseState[item.path];
+          const groupRows = flatData.filter(i => i.type === "row" && i.path.includes(item.path));
           return (
             <TableRow key={`group-${idx}`} sx={{ backgroundColor: '#f3f3f3', height : groupHeight }}>
               {visibleColumns.map((col) => {
+                if(col.type === 'action'){
+                  return <ActionCell 
+                    key={`group-${idx}-${col.field}`}
+                    column={col}
+                    params={{}}
+                    parent='group'
+                    actionsApi={actionsApi}
+                    cellSX={{}}
+                    data={groupRows}
+                  />
+                }
+
                 if (col.field === item.field) {
                   return (
                     <TableCell key={col.field}>
@@ -60,6 +75,8 @@ const VirtualizedGroupedBody = ({
                       value={item.aggregates[col.field]}
                       column={col}
                       settings={settings}
+                      parent={'grouped'}
+                      actionsApi={actionsApi}
                     />
                   );
                 }
@@ -77,6 +94,8 @@ const VirtualizedGroupedBody = ({
             columnsSchema={columnsSchema}
             rowRules={rowRules}
             settings={{...settings, rowHeight: rowHeight}}
+            actionsApi={actionsApi}
+            parent="grouprow"
           />
         );
       })}

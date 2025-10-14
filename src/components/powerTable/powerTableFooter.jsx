@@ -1,9 +1,13 @@
 import React, { useRef, useEffect } from 'react';
+
+import { createCellParams } from './cell/cellParams';
+
 import { TableFooter, TableRow } from '@mui/material';
+
 import PowerTableCell from './powerTableCell';
 
 
-const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange, height }) => {
+const PowerTableFooter = ({ data, columnsSchema, settings = {}, actionsApi = {}, onHeightChange, height }) => {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -13,6 +17,8 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange, 
     }
   }, [height]);
   const aggregates = columnsSchema.getAggregatedValues(data);
+
+   
 
   return (
     <TableFooter ref={ref}>
@@ -26,6 +32,7 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange, 
       >
         {columnsSchema.getVisibleColumns().map((col) => {
           const raw = aggregates[col.field];
+          const params = createCellParams({ value: raw, row: {}, column: col });
           return (
             <PowerTableCell
               key={col.field}
@@ -41,6 +48,9 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, onHeightChange, 
                 ...settings,
                 sx: { fontWeight: 'bold', ...(settings.sx || {}) },
               }}
+              parent={'footer'}
+              actionsApi={actionsApi}
+              params={params}
             />
           );
         })}

@@ -7,10 +7,13 @@ import TuneIcon from '@mui/icons-material/Tune';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema, onExport, onRefresh, loading }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, loading }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -60,6 +63,24 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, onExport, onRefresh, load
     );
   };
 
+  const renderShowSelected = () => {
+    if(actionsApi.selectedIds.length){
+      if(!columnsSchema.showSelected){
+        return <Tooltip title={"Filtruj zaznaczone (" + actionsApi.selectedIds.length + ")"}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(true)}>
+        <CheckCircleIcon  fontSize="small" />
+      </IconButton>
+    </Tooltip>
+      }else{
+        return <Tooltip title={"Usuń filtr zaznaczone (" + actionsApi.selectedIds.length + ")"}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(false)}>
+        <ClearIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+      }
+    }
+  }
+
   const renderPresetControl = () => {
     return <Tooltip title="Preset">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={() => onOpenSettings('presets')}>
@@ -98,6 +119,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, onExport, onRefresh, load
       }}
     >
       {renderSearchControl()}
+      {renderShowSelected()}
       {renderRefreshControl()}
       {renderPresetControl()}
       {renderExportControl()}

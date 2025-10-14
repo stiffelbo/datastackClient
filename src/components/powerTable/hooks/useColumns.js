@@ -1,39 +1,60 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getAggregatedValues } from '../utils';
 
+import { COLUMN_ACTIONS } from './useActions';
+
 const extractSortModel = (overrides = []) =>
   overrides
     .map(o => (o?.sort?.direction ? { field: o.field, direction: o.sort.direction } : null))
     .filter(Boolean);
 
 // ZAMIANA / UZUPEŁNIENIE: na końcu mergeColumns
-const mergeColumns = (auto, user) => {
+const mergeColumns = (auto, user, actions = []) => {
   const map = new Map();
+
+  // 1️⃣ Najpierw wstaw kolumny auto
   auto?.forEach((col) => map.set(col.field, { ...col }));
-  user?.forEach((u) => map.set(u.field, { ...map.get(u.field), ...u }));
 
-  const merged = Array.from(map.values());
+  // 2️⃣ Potem user overrides
+  user?.forEach((u) => {
+    const existing = map.get(u.field);
+    map.set(u.field, { ...existing, ...u });
+  });
 
-  if (user && user.length) {
-    const orderMap = new Map(
-      user.map((u, idx) => [u.field, Number.isFinite(u?.order) ? u.order : idx])
-    );
+  // 3️⃣ Wyliczamy aktualną maksymalną wartość order w zbiorze
+  const currentMaxOrder = Math.max(
+    0,
+    ...Array.from(map.values()).map((c) =>
+      Number.isFinite(c.order) ? c.order : 0
+    )
+  );
 
-    merged.sort((a, b) => {
-      const ao = orderMap.has(a.field) ? orderMap.get(a.field) : Number.MAX_SAFE_INTEGER;
-      const bo = orderMap.has(b.field) ? orderMap.get(b.field) : Number.MAX_SAFE_INTEGER;
-
-      if (ao !== bo) return ao - bo;
-
-      const ai = auto ? auto.findIndex((c) => c.field === a.field) : 0;
-      const bi = auto ? auto.findIndex((c) => c.field === b.field) : 0;
-      return ai - bi;
+  // 4️⃣ Wstawiamy kolumny akcji (unikalne i z nowym offsetem)
+  if (Array.isArray(actions) && actions.length > 0) {
+    actions.forEach((a, idx) => {
+      if (!map.has(a.field)) {
+        map.set(a.field, {
+          ...a,
+          // przesuwamy akcje na koniec lub początek zestawu
+          order: currentMaxOrder + idx + 1, // 🔸 unikamy kolizji
+        });
+      }
     });
   }
 
-  // 🔑 normalizacja: po finalnym ułożeniu przypisz order = aktualny index
+  // 5️⃣ Tworzymy listę i sortujemy wg. order
+  const merged = Array.from(map.values());
+
+  merged.sort((a, b) => {
+    const ao = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
+    const bo = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
+    return ao - bo;
+  });
+
+  // 6️⃣ Nadajemy ostateczne indeksy (ciągłość 0..N)
   return merged.map((c, idx) => ({ ...c, order: idx }));
 };
+
 
 const reindexGroupBy = (columns) => {
   const grouped = columns
@@ -60,10 +81,11 @@ const applyDefaultAlign = (col) => {
 const fieldsSig = (cols = []) =>
   cols.map(c => c.field).sort().join('|');
 
-const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default' }) => {
+const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default', columnActions = [] }) => {
   const [columns, setColumns] = useState([]);
   const [sortModel, setSortModelState] = useState([]);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [showSelected, setShowSelected] = useState(false);
 
   // ---- podpisy do deps (tanie porównanie) ----
   const autoSig = useMemo(() => fieldsSig(autoColumns), [autoColumns]);
@@ -72,25 +94,29 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const savedSig = useMemo(() => fieldsSig(savedCols), [savedCols]);
   const activeName = presets?.activeName;
 
-  // ---- inicjalizacja / re-inicjalizacja, gdy mamy dane albo zmienił się preset/dev ----
   useEffect(() => {
-    const base = mergeColumns(autoColumns, devSchema);
-    console.log(base);
-    if (savedCols.length > 0) {
-      let restored = mergeColumns(base, savedCols); // tu już sort + order w środku
-      restored = reindexGroupBy(restored);
-      // (opcjonalnie) jeśli chcesz mieć pewność, że order jest ciągły + default align
-      restored = restored.map((c, idx) => applyDefaultAlign({ ...c, order: idx }));
-      setColumns(restored);
+    let base = mergeColumns(autoColumns, devSchema, columnActions);
 
-      const initialSort = extractSortModel(savedCols);
-      setSortModelState(initialSort.length ? initialSort : []);
+    // === 🔹 Dodajemy kolumny akcji tylko, jeśli nie ma zapisanych presetów ===
+    const hasSaved = savedCols.length > 0;
+
+    let restored;
+
+    if (hasSaved) {
+      restored = mergeColumns(base, savedCols);
     } else {
-      let restored = reindexGroupBy(base);
-      restored = restored.map((c, idx) => ({ ...c, order: idx })); // 🔑
-      setColumns(restored);
-      setSortModelState([]);
+      restored = base;
     }
+
+    restored = reindexGroupBy(restored);
+    restored = restored.map((c, idx) =>
+      applyDefaultAlign({ ...c, order: idx })
+    );
+
+    setColumns(restored);
+
+    const initialSort = hasSaved ? extractSortModel(savedCols) : [];
+    setSortModelState(initialSort);
   }, [entityName, autoSig, devSig, savedSig, activeName]);
 
   // ---- helpers ----
@@ -150,7 +176,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const setHeaderName = (field, val) => updateField(field, { headerName: val });
   // ---- group label ----
   const setGroupName = (field, val) => updateField(field, { fieldGroup: val });
-  
+
   const getAllGroups = () => {
     const groups = new Set();
     columns.forEach(c => {
@@ -318,6 +344,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     // Filters
     globalSearch,
     setGlobalSearch,
+    showSelected,
+    setShowSelected,
     getFilters,
     setFilters,
     addFilter,

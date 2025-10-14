@@ -5,7 +5,7 @@ import { createCellParams } from './cell/cellParams';
 
 import PowerTableCell from './powerTableCell';
 
-const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {}, editing }) => {
+const PowerTableRow = ({ row, columnsSchema, rowRules = [], actionsApi = {}, settings = {}, editing, parent = "body" }) => {
 
   const densityPadding = {
     compact: '2px 6px',       // 👈 bardzo ciasno
@@ -17,11 +17,15 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {}, editi
 
   const visibleColls = columnsSchema.getVisibleColumns();
 
+  const isSelected = +actionsApi.selected === +row.id ? true : actionsApi.selectedIds.includes(+row.id) ? true : false;
+  
+  const color = isSelected ? "#e3f2fd" : 'inherit';
   return (
-    <TableRow sx={{ height: settings.rowHeight || 'auto' }}>
+    <TableRow sx={{ height: settings.rowHeight || 'auto', backgroundColor: color }}>
       {visibleColls.map((col) => {
 
-        const params = createCellParams({ row, column: col });
+        const params = createCellParams({ value: row[col.field], row, column: col });
+        
         return <PowerTableCell
           key={col.field}
           value={row[col.field]}
@@ -33,6 +37,8 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], settings = {}, editi
             fontSize,
           }}
           editing={editing}
+          parent={parent}
+          actionsApi={actionsApi}
         />
       })}
     </TableRow>

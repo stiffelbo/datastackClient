@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   List,
   ListItemButton,
   ListItemText,
   Paper,
-  Box
+  Box,
+  InputAdornment,
 } from '@mui/material';
 
-const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę...', title ='', defaultValue = '', sx={}}) => {
+const InputTextHint = ({
+  hints = [],
+  onSubmit,
+  placeholder = 'Podaj nazwę...',
+  title = '',
+  defaultValue = '',
+  sx = {},
+  icon = null,
+}) => {
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
 
@@ -34,9 +43,15 @@ const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę...', 
     }
   };
 
-  const filtered = hints.filter(g =>
+  const filtered = hints.filter((g) =>
     g.toLowerCase().includes(value.toLowerCase())
   );
+
+  useEffect(() => {
+    if (defaultValue !== value) {
+      setValue(defaultValue);
+    }
+  }, [defaultValue]);
 
   return (
     <Box sx={{ position: 'relative', width: '100%', ...sx }} title={title}>
@@ -50,7 +65,15 @@ const InputTextHint = ({ hints = [], onSubmit, placeholder = 'Podaj nazwę...', 
         size="small"
         variant="standard"
         fullWidth
+        InputProps={{
+          startAdornment: icon ? (
+            <InputAdornment position="start" sx={{ color: 'grey.500' }}>
+              {icon}
+            </InputAdornment>
+          ) : null,
+        }}
       />
+
       {open && filtered.length > 0 && (
         <Paper
           sx={{

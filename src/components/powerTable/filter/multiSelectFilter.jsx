@@ -6,7 +6,7 @@ import { amber } from '@mui/material/colors';
 import { getUniqueOptions, applyFilters } from './utils';
 
 const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) => {
-  const preFiltered = applyFilters(data, columnsSchema, [id]);
+  const preFiltered = applyFilters({data, columnsSchema, omit: [id]});
   const opts = getUniqueOptions(preFiltered, field);
   const { include = [], exclude = [] } = value || {};
 
@@ -57,7 +57,7 @@ const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) 
         </MenuItem>
 
         {groupedOpts.map((group, gi) => (
-          <React.Fragment key={gi}>
+          <Box key={gi}>
             <Divider />
             <MenuItem disabled sx={{ fontWeight: 'bold', opacity: 0.8 }}>
               {group.label}
@@ -83,7 +83,7 @@ const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) 
                 </Box>
               </MenuItem>
             ))}
-          </React.Fragment>
+          </Box>
         ))}
       </Select>
     </FormControl>

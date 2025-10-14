@@ -140,3 +140,33 @@ const useAutoColumns = (data = []) => {
 };
 
 export default useAutoColumns;
+
+/* -------------------------------------------------------------------------- */
+/* 🔹 FABRYKA KOLUMN AKCJI                                                   */
+/* -------------------------------------------------------------------------- */
+/**
+ * Tworzy kolumny akcji (action columns) z listy akcji
+ * @param {Array} actions - lista akcji np. [{ type:'delete', label:'Usuń', onAction }]
+ * @param {Function} exec - opcjonalny executor akcji
+ */
+export const createActionColumns = (actions = [], exec, COLUMN_ACTIONS = []) => {
+  if (!Array.isArray(actions) || !actions.length) return [];
+
+  return actions.filter(i => COLUMN_ACTIONS.includes(i.type)).map((a, idx) => ({
+    field: `__action_${a.type}`,
+    fieldGroup: 'actions',
+    headerName: a.label || '',
+    order: idx,
+    type: 'action',
+    align: 'center',
+    width: 60,
+    sortable: false,
+    filterable: false,
+    editable: false,
+    groupBy: false,
+    hidden: false,
+    meta: a, // dane o akcji (ikona, label, confirm, itp.)
+    onAction: (params) => exec?.(a.type, params) || a.handler?.(params),
+  }));
+};
+

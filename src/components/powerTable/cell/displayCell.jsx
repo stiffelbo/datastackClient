@@ -51,7 +51,7 @@ const DisplayCell = ({ value, column, settings, params, onDoubleClick }) => {
     }
 
     // 1️⃣ renderCell ma najwyższy priorytet
-    if (typeof column.renderCell === "function") {
+    if (typeof column.renderCell === "function" && params) {
         displayValue = column.renderCell(params);
     } else if (typeof formatter === "function") {
         try {

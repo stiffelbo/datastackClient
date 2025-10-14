@@ -100,7 +100,7 @@ const NORMALIZE = {
     if (v === null || v === undefined) return '';   // zamiast undefined
     return v;
   },
-  type: (v) => toEnum(v, ['string', 'number', 'date', 'boolean']),
+  type: (v) => toEnum(v, ['string', 'number', 'date', 'boolean', 'action']),
   align: (v) => toEnum(v, ['left', 'center', 'right']),
 
   width: (v) => toNum(v),

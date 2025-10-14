@@ -45,7 +45,7 @@ const collectGroupPaths = (nodes, ancestor = []) => {
 /**
  * Główna tabela zgrupowana z pełną wirtualizacją (GroupedTableV)
  */
-const GroupedTableV = ({ initialData, data, columnsSchema, settings, rowRules }) => {
+const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings, rowRules }) => {
   const groupedTree = useMemo(
     () => groupDataHierarchical(data, columnsSchema.columns),
     [data, columnsSchema.columns]
@@ -121,6 +121,7 @@ const GroupedTableV = ({ initialData, data, columnsSchema, settings, rowRules })
             groupCollapseState={groupCollapseState}
             onToggleCollapse={toggleCollapseLevel}
             onHeightChange={(h) => handleHeightChange('header', h)}
+            actionsApi={actionsApi}
           />
           <VirtualizedGroupedBody
             flatData={flatData}
@@ -131,6 +132,7 @@ const GroupedTableV = ({ initialData, data, columnsSchema, settings, rowRules })
             toggleCollapse={toggleCollapse}
             height={bodyHeight}
             scrollTop={scrollTop}
+            actionsApi={actionsApi}
           />
         </Table>
       </TableContainer>

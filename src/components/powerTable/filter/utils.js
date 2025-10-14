@@ -145,12 +145,23 @@ export const applyFilterToValue = (rawValue, filter, type) => {
  * Filtruj cały dataset
  */
 
-export const applyFilters = (data, columnsSchema, omit = []) => {
+export const applyFilters = ({data = [], columnsSchema = {}, omit = [], selectedIds = []}) => {
 
     const columns = columnsSchema.columns || [];
     const globalSearch = columnsSchema.globalSearch;
+    const showSelected = columnsSchema.showSelected;
 
     return data.filter((row) => {
+        if(showSelected){
+            if(!selectedIds.length){
+                columnsSchema.setShowSelected(false);
+            }else{
+                if(!selectedIds.includes(+row.id)){
+                    return false;
+                };
+            }            
+        }
+
         // --- GLOBAL SLUG SEARCH ---
         if (globalSearch && globalSearch.trim()) {
             const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR

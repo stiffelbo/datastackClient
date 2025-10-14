@@ -14,8 +14,6 @@ const EditCell = ({
   const [error, setError] = useState(null);
   const ref = useRef(null);
 
-  console.log(column, value);
-
   useEffect(() => {
     if (ref.current) {
       const input = ref.current.querySelector("input, select, textarea");

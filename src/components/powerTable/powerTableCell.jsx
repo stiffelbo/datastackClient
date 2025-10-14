@@ -1,6 +1,8 @@
 import React from 'react';
+
 import DisplayCell from './cell/displayCell';
 import EditCell from './cell/editCell';
+import ActionCell from './cell/actionCell';
 
 /**
  * PowerTableCell – kontroler renderowania komórki.
@@ -12,6 +14,8 @@ const PowerTableCell = ({
   settings,
   params,
   editing, // obiekt z hooka useTableEditing()
+  parent = 'body',
+  actionsApi = {}
 }) => {
 
   const { startEdit, stopEdit, isEditing, commitEdit } = editing || {};
@@ -19,7 +23,6 @@ const PowerTableCell = ({
 
   /** Kliknięcie 2× = wejście w edycję */
   const handleDoubleClick = () => {
-    console.log('Edytuj', editing, column);
     const editable =
       typeof column.editable === 'function'
         ? column.editable(params)
@@ -31,9 +34,7 @@ const PowerTableCell = ({
   /** Commit z EditCell */
   const handleCommit = (newValue, cellParams) => {
     if (typeof commitEdit === 'function')
-      commitEdit(newValue, cellParams, (id, field, val) => {
-        console.log('commit', id, field, val);
-      });
+      commitEdit(newValue, cellParams);
   };
 
   /** Obsługa anulowania */
@@ -41,24 +42,37 @@ const PowerTableCell = ({
     if (typeof stopEdit === 'function') stopEdit();
   };
 
-  return isEditMode ? (
-    <EditCell
-      type={column.inputType}
-      value={value}
-      onCommit={handleCommit}
-      onCancel={handleCancel}
-      column={column}
-      params={params}
-    />
-  ) : (
-    <DisplayCell
-      value={value}
-      column={column}
-      settings={settings}
-      params={params}
-      onDoubleClick={handleDoubleClick}
-    />
-  );
+  if (column.type === 'action') {
+    return (
+      <ActionCell
+        column={column}
+        params={params || {}}
+        parent={parent}
+        actionsApi={actionsApi}
+      />
+    );
+  }else{
+     return isEditMode ? (
+      <EditCell
+        type={column.inputType}
+        value={value}
+        onCommit={handleCommit}
+        onCancel={handleCancel}
+        column={column}
+        params={params}
+        parent={parent}
+      />
+    ) : (
+      <DisplayCell
+        value={value}
+        column={column}
+        settings={settings}
+        params={params}
+        onDoubleClick={handleDoubleClick}
+        parent={parent}
+      />
+    );
+  } 
 };
 
 export default PowerTableCell;

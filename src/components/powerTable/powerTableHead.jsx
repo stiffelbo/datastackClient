@@ -10,6 +10,7 @@ import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 import ColumnConfigurator from './columnConfigurator/columnConfigurator';
 import { generateCollapseKey } from './utils';
+import ActionCell from './cell/actionCell';
 
 const typeIcons = {
   string: '🅰️',
@@ -41,6 +42,7 @@ const PowerTableHead = ({
   onToggleCollapse = null,
   onHeightChange,
   height,
+  actionsApi
 }) => {
   const ref = useRef(null);
 
@@ -86,96 +88,109 @@ const PowerTableHead = ({
               ? [col.headerName, col.fieldGroup].filter(Boolean).join(' - ')
               : [col.field, col.fieldGroup].filter(Boolean).join(' - ');
 
-            return (
-              <TableCell
+            if (col.type === 'action') {
+              return <ActionCell
                 key={col.field}
-                sx={cellSX}
-                title={cellTitle}
-                draggable
-                onDragStart={() => handleDragStart(col.order)}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(col.order)}
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
+                column={col}
+                params={{}}
+                parent="header"
+                actionsApi={actionsApi}
+                cellSX={cellSX}
+                data={initialData}
+              />
+            } else {
+              return (
+                <TableCell
+                  key={col.field}
+                  sx={cellSX}
+                  title={cellTitle}
+                  draggable
+                  onDragStart={() => handleDragStart(col.order)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(col.order)}
                 >
-                  {/* HEADER CLICK → OPEN CONFIGURATOR */}
-                  <Tooltip title="Kliknij, aby skonfigurować kolumnę">
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    {/* HEADER CLICK → OPEN CONFIGURATOR */}
                     <Box
                       component="span"
                       sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                       onClick={() => setActiveField(col.field)}
                     >
-                      <span>{typeIcons[col.type] || '❓'}</span>
+                      <span>{typeIcons[col.type] || ''}</span>
                       <Typography
                         variant="body2"
                         sx={{ fontWeight: 600, userSelect: 'none' }}
                       >
                         {col.headerName || col.field}
                       </Typography>
+                      {col.editable ? <span>✏️</span> : ''}
                     </Box>
-                  </Tooltip>
 
-                  {/* sort indicators */}
-                  {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
-                  {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
+                    {/* sort indicators */}
+                    {sortDir === 'asc' && <ArrowUpwardIcon fontSize="small" />}
+                    {sortDir === 'desc' && <ArrowDownwardIcon fontSize="small" />}
 
-                  {/* group indicator */}
-                  {isGrouped && (
-                    <Chip
-                      size="small"
-                      label={`#${groupIndex + 1}`}
-                      icon={<GroupWorkIcon fontSize="small" />}
-                      sx={{
-                        height: 20,
-                        fontSize: '0.75rem',
-                        backgroundColor: '#f3f3f3',
-                      }}
-                      title={`Usuń grupowanie ${col.headerName || col.field}`}
-                      onClick={() => columnsSchema.toggleGroupBy(col.field)}
-                    />
-                  )}
+                    {/* group indicator */}
+                    {isGrouped && (
+                      <Chip
+                        size="small"
+                        label={`#${groupIndex + 1}`}
+                        icon={<GroupWorkIcon fontSize="small" />}
+                        sx={{
+                          height: 20,
+                          fontSize: '0.75rem',
+                          backgroundColor: '#f3f3f3',
+                        }}
+                        title={`Usuń grupowanie ${col.headerName || col.field}`}
+                        onClick={() => columnsSchema.toggleGroupBy(col.field)}
+                      />
+                    )}
 
-                  {/* collapse all button for level */}
-                  {isGrouped && onToggleCollapse && (
-                    <IconButton
-                      size="small"
-                      onClick={() => onToggleCollapse(groupIndex)}
-                    >
-                      {allCollapsed ? <ExpandLess /> : <ExpandMore />}
-                    </IconButton>
-                  )}
+                    {/* collapse all button for level */}
+                    {isGrouped && onToggleCollapse && (
+                      <IconButton
+                        size="small"
+                        onClick={() => onToggleCollapse(groupIndex)}
+                      >
+                        {allCollapsed ? <ExpandLess /> : <ExpandMore />}
+                      </IconButton>
+                    )}
 
-                  {/* filters badge */}
-                  {Array.isArray(col.filters) && col.filters.length > 0 && (
-                    <Chip
-                      size="small"
-                      color="warning"
-                      label={col.filters.length}
-                      sx={{ height: 20, fontSize: '0.7rem' }}
-                    />
-                  )}
+                    {/* filters badge */}
+                    {Array.isArray(col.filters) && col.filters.length > 0 && (
+                      <Chip
+                        size="small"
+                        color="warning"
+                        label={col.filters.length}
+                        sx={{ height: 20, fontSize: '0.7rem' }}
+                      />
+                    )}
 
-                  {/* field group caption */}
-                  {col.fieldGroup && (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '0.65rem',
-                        color: 'text.secondary',
-                        opacity: 0.8,
-                      }}
-                    >
-                      {col.fieldGroup}
-                    </Typography>
-                  )}
-                </Box>
-              </TableCell>
-            );
+                    {/* field group caption */}
+                    {col.fieldGroup && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '0.65rem',
+                          color: 'text.secondary',
+                          opacity: 0.8,
+                        }}
+                      >
+                        {col.fieldGroup}
+                      </Typography>
+                    )}
+                  </Box>
+                </TableCell>
+              );
+            }
+
+
           })}
         </TableRow>
       </TableHead>

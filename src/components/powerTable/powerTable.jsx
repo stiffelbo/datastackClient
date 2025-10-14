@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Backdrop, CircularProgress } from '@mui/material';
 
 import useAutoColumns from './hooks/useAutoColumns';
+import { useActions } from './hooks/useActions';
 import usePresets from './hooks/usePresets';
 import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
@@ -26,15 +27,18 @@ const PowerTable = ({
   width = 1500,
   height = 600,
   loading = false,
-  onRefresh,
   //Form
   form = null,
-  //edit
-  onEdit = null
+  //Callbacks
+  onRefresh,
+  onEdit = null,
+  //Actions
+  actions = []
 }) => {
   const presets = usePresets({ entityName });
-  const autoColumns = useAutoColumns(data);
-  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName });
+  const actionsApi = useActions(actions, data);
+  const autoColumns = useAutoColumns(data, );
+  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions : actionsApi.columnActions });
   const editing = useTableEditing(onEdit);
 
   const { settings, updateSettings } = useTableSettings(entityName);
@@ -74,7 +78,7 @@ const PowerTable = ({
   };
 
   // 🔑 Filtrowanie → Sortowanie
-  const filteredData = applyFilters(data, columnsSchema);
+  const filteredData = applyFilters({data : data, columnsSchema : columnsSchema, omit : [], selectedIds : actionsApi.selectedIds});
   const sortedData = sortData(filteredData, columnsSchema.sortModel, columnsSchema.columns);
 
   const cellNodes = (filteredData?.length * columnsSchema?.getVisibleColumns()?.length);
@@ -95,6 +99,7 @@ const PowerTable = ({
         columnsSchema={columnsSchema}
         settings={{height}}
         editing={editing}
+        actionsApi={actionsApi}
       />
     ) : (
       <FlatTable
@@ -104,8 +109,9 @@ const PowerTable = ({
         isVirtualized={isVirtualized}
         height={height}
         editing={editing}
+        actionsApi={actionsApi}
       />
-    );
+  );
 
   return (
     <>
@@ -129,10 +135,12 @@ const PowerTable = ({
         {/* Sidebar */}
         <PowerSidebar
           onOpenSettings={openModal}
-          columnsSchema={columnsSchema}
           presets={presets}
+          columnsSchema={columnsSchema}
+          actionsApi={actionsApi}
           onExport={handleExport}
           onRefresh={onRefresh}
+          loading={loading}
         />
 
         {/* Table Section */}

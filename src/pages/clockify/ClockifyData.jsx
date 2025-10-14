@@ -21,9 +21,10 @@ const sanitizeData = data => {
 const columns = [
   {field: 'id', type: 'number', width: 60},
   {field: 'project', type: 'string', width: 260},
-  {field: 'client', type: 'string', width: 160, groupBy: true, groupIndex: 1},
+  {field: 'client', type: 'string', width: 160},
   {field: 'description', type: 'string', width: 260},
-  {field: 'task', type: 'string', width: 260, editable: true, groupBy: true, groupIndex: 2},
+  {field: 'task', type: 'string', width: 260, editable: true},
+  {field: 'parrentTask', type: 'string', width: 260, editable: true},
   {field: 'costPLN', headerName: 'Koszt PLN', type: 'number', width: 90, aggregationFn: 'sum', formatterKey: 'number2'},
   {field: 'tags', headerName: 'Tagi', type: 'number', editable: true, width: 90, aggregationFn: 'sum', formatterKey: 'number2'},
 ];
@@ -54,9 +55,39 @@ const ClockifyData = () => {
     populate();
   }, []);
 
-  const handleEdit = (value, params) => {
-    console.log(value, params);
+  const handleEdit = (value, params) => {  
+    const {field, id} = params;
+    setRows(prev =>
+      prev.map(r => (r.id === id ? { ...r, [field]: value } : r))
+    );
+  };
+
+  const handleDelete = (id) => {
+    if(id){
+      setRows(prev => 
+        prev.filter(r => +r.id !== +id)
+      )
+    }
+  } 
+
+  const handleSelect = (params) => {
+    console.log(params);
   }
+
+  const handleMultiSelect = (params) => {
+    console.log(params);
+  }
+
+  const handleMultiDelete = (params) => {
+    console.log(params);
+  }
+
+  const actions = [
+    {type: 'select', handler : handleSelect},
+    {type: 'delete', handler : handleDelete},
+    {type: 'multiSelect', handler : handleMultiSelect},
+    {type: 'multiDelete', handler : handleMultiDelete},
+  ];
 
   return (   
       <PowerTable
@@ -67,7 +98,8 @@ const ClockifyData = () => {
         loading={loading}
         onRefresh={()=>populate()}
         columnSchema={columns}
-        onEdit={handleEdit} 
+        onEdit={handleEdit}
+        actions={actions}
       />
   );
 };

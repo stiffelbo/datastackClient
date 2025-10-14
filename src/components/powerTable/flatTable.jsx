@@ -13,7 +13,8 @@ const FlatTable = ({
   footerConfig,
   isVirtualized = false,
   height = 600,
-  editing
+  editing,
+  actionsApi
 }) => {
   const [heightMap, setHeightMap] = useState({ header: 0, footer: 0 });
   const [scrollTop, setScrollTop] = useState(0);
@@ -47,6 +48,7 @@ const FlatTable = ({
             initialData={initialData}
             onHeightChange={(val) => handleHeightChange('header', val)}
             height={heightMap.header}
+            actionsApi={actionsApi}
           />
           <PowerTableBody
             data={data}
@@ -57,6 +59,7 @@ const FlatTable = ({
             height={bodyHeight}
             scrollTop={scrollTop}
             editing={editing}
+            actionsApi={actionsApi}
           />
           <PowerTableFooter
             data={data}
@@ -64,6 +67,7 @@ const FlatTable = ({
             settings={settings}
             onHeightChange={(val) => handleHeightChange('footer', val)}
             height={heightMap.header}
+            actionsApi={actionsApi}
           />
         </Table>
       </TableContainer>
