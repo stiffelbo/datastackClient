@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { toast } from 'react-toastify';
 
 const isEmpty = (val, type) => {
     if (val == null || val === '') return true;
@@ -329,6 +330,7 @@ export const exportToXLSWithSchema = (
 
   // sortowanie kolumn po "order"
   const visibleColumns = columns
+    .filter(col => col.type !== 'action')
     .filter(col => !col.hidden)
     .sort((a, b) => a.order - b.order);
 
@@ -358,3 +360,10 @@ export const exportToXLSWithSchema = (
   XLSX.writeFile(workbook, filename);
 };
 
+export const computeViewSelection = ({ data = [], selectedIds = [] }) => {
+  const viewIds = Array.isArray(data) ? data.map((r) => (r.row ? r.row.id : r.id)) : [];
+  const selSet = new Set(selectedIds || []);
+  const selectedInView = viewIds.filter((id) => selSet.has(id));
+  const notSelectedInView = viewIds.filter((id) => !selSet.has(id));
+  return { viewIds, selectedInView, notSelectedInView };
+};

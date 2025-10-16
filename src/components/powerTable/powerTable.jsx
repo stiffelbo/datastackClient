@@ -12,11 +12,13 @@ import { sortData } from './utils';
 import { applyFilters } from './filter/utils';
 import { exportToXLSWithSchema } from './utils';
 
-import SettingsModal from './settingsModal';
 import PowerSidebar from './powerSidebar';
 import FlatTable from './flatTable';
-import PresetsModal from './presetsModal';
 import GroupedTableV from './groupedTableV';
+
+import SettingsModal from './settingsModal';
+import PresetsModal from './presetsModal';
+import BulkFormModal from './bulkFormModal';
 
 const V_N_COUNT = 10000;
 
@@ -27,13 +29,14 @@ const PowerTable = ({
   width = 1500,
   height = 600,
   loading = false,
-  //Form
-  form = null,
   //Callbacks
   onRefresh,
   onEdit = null,
   //Actions
-  actions = []
+  actions = [],
+  //Bulk Edit
+  bulkEditFormSchema = [],
+  onBulkEdit = null,
 }) => {
   const presets = usePresets({ entityName });
   const actionsApi = useActions(actions, data);
@@ -66,6 +69,17 @@ const PowerTable = ({
             onClose={closeModal}
             presets={presets}
             columns={columnsSchema}
+          />
+        )
+      case 'bulkForm':
+        return (
+          <BulkFormModal
+            open={modalState.open}
+            onClose={closeModal}
+            actionsApi={actionsApi}
+            bulkEditFormSchema={bulkEditFormSchema}
+            onBulkEdit={onBulkEdit}
+            entityName={entityName}
           />
         )
       case 'form':
@@ -141,6 +155,7 @@ const PowerTable = ({
           onExport={handleExport}
           onRefresh={onRefresh}
           loading={loading}
+          bulkEdit={Array.isArray(bulkEditFormSchema)}
         />
 
         {/* Table Section */}

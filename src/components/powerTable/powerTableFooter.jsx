@@ -44,6 +44,7 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, actionsApi = {},
                 formatterKey: col.formatterKey,
                 formatterOptions: col.formatterOptions,
               }}
+              columnsSchema={columnsSchema}
               settings={{
                 ...settings,
                 sx: { fontWeight: 'bold', ...(settings.sx || {}) },

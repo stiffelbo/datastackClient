@@ -1,9 +1,9 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { createActionColumns } from "./useAutoColumns";
 
 
 // 🔹 typy akcji renderowane jako kolumny
-export const COLUMN_ACTIONS = ["delete", "select", "multiSelect"];
+export const COLUMN_ACTIONS = ["select", "multiSelect"];
 
 /* -------------------------------------------------------------------------- */
 /* 🔹 KATALOG AKCJI WBUDOWANYCH                                              */
@@ -21,6 +21,14 @@ const BUILTIN_ACTIONS = {
 export const useActions = (actions = []) => {
   const [selected, setSelected] = useState(null);       // pojedynczy wybór
   const [selectedIds, setSelectedIds] = useState([]);   // multi-wybór
+
+  useEffect(()=>{
+    exec('select', selected);
+  }, [selected])
+
+  useEffect(()=>{
+    exec('multiSelect', selectedIds);
+  }, [selectedIds])
 
 /* -------------------------------------------------------------------------- */
 /* 🔹 GŁÓWNY HOOK                                                            */
@@ -75,58 +83,54 @@ export const useActions = (actions = []) => {
     setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
   }, []);
 
+   /* ---------------------------------------------------------------------- */
+  /*  Delete                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const deleteOne = (id) => {
+    exec('delete', id)
+  }
+
+  const deleteMany = () => {
+    const count = selectedIds.length || 0;
+      const msg = `Na pewno chcesz usunąć ${count} rekordów?`;
+
+      if (!window.confirm(msg)) {
+        return;
+      }else{
+          exec('multiDelete', selectedIds)
+      }
+  }
+
+
   /* ---------------------------------------------------------------------- */
   /* 🚀 Executor – bezpieczne wywołanie akcji                               */
   /* ---------------------------------------------------------------------- */
   const exec = useCallback(
-    (type, params = {}, scope = "body") => {
+    (type, value) => {
       const action = normalized.find((a) => a.type === type);
       if (!action) return;
-
-      const ctx = {
-        type,
-        scope,
-        id: params?.id ?? null,
-        row: params?.row ?? null,
-        selected,
-        selectedIds,
-      };
-
-      // confirm (jeśli potrzebny)
-      if (action.confirm && !window.confirm(`Potwierdź: ${action.label}`)) return;
 
       switch (type) {
         /* --- SINGLE SELECT --- */
         case "select":
-          toggleSelect(ctx.id);
-          action.handler?.(ctx);
-          break;
-
-        /* --- MULTI SELECT --- */
         case "multiSelect":
-          if (scope === "group") {
-            toggleMultiSelect(params.ids || []);
-          } else {
-            toggleMultiSelect(ctx.id);
-          }
-          action.handler?.(ctx);
-          break;
-
-        /* --- DELETE --- */
         case "delete":
-          action.handler?.(ctx);
+          if (typeof action.handler === "function") {
+            action.handler(value);
+          }
           break;
 
         /* --- MULTI DELETE --- */
         case "multiDelete":
-          if (selectedIds.length && typeof action.handler === "function") {
-            action.handler(ctx);
+          if (value.length && typeof action.handler === "function") {
+            action.handler(value);
             clearMultiSelect();
           }
           break;
 
         default:
-          action.handler?.(ctx);
+          return;
       }
     },
     [normalized, selected, selectedIds, toggleSelect, toggleMultiSelect, clearMultiSelect]
@@ -160,6 +164,10 @@ export const useActions = (actions = []) => {
     clearMultiSelect,
     addManyToMultiSelect,
     removeManyFromMultiSelect,
+
+    // 🔹 Delete
+    deleteOne,
+    deleteMany,
 
     // 🔹 Executor
     exec,

@@ -11,6 +11,7 @@ import ActionCell from './cell/actionCell';
 const PowerTableCell = ({
   value,
   column,
+  columnSchema,
   settings,
   params,
   editing, // obiekt z hooka useTableEditing()
@@ -46,6 +47,7 @@ const PowerTableCell = ({
     return (
       <ActionCell
         column={column}
+        columnSchema={columnSchema}
         params={params || {}}
         parent={parent}
         actionsApi={actionsApi}
@@ -54,7 +56,7 @@ const PowerTableCell = ({
   }else{
      return isEditMode ? (
       <EditCell
-        type={column.inputType}
+        type={column.type}
         value={value}
         onCommit={handleCommit}
         onCancel={handleCancel}

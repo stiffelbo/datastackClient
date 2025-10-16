@@ -2,14 +2,18 @@ import React from "react";
 import { TableCell, IconButton, Tooltip, Typography, Box } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import CircleIcon from '@mui/icons-material/Circle';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import ChecklistIcon from '@mui/icons-material/Checklist';
+
+import {computeViewSelection} from '../utils';
 
 /**
  * 🧩 getButton — drzewo decyzyjne generujące pełny obiekt przycisku akcji
  * Całość oparta na klasycznych if-ach dla czytelności i przewidywalności
  */
-export const getButton = ({ parent, column, params, actionsApi, data = [] }) => {
+const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [] }) => {
   const { type } = column.meta || {};
   const { selected, selectedIds = [] } = actionsApi || {};
 
@@ -19,7 +23,7 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
     : [];
 
   const selectedInGroup = groupIds.filter((id) =>
-    selectedIds.includes(id)
+    selectedIds.includes?.(id)
   );
   const allSelected =
     selectedInGroup.length === groupIds.length && groupIds.length > 0;
@@ -31,28 +35,31 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
     icon: <RadioButtonUncheckedIcon fontSize="small" />,
     color: "default",
     title: "",
-    handler: () => {},
+    handler: () => { },
   };
 
   // --------------------------------------------------------------------------
   // 🔹 DRZEWO DECYZYJNE
   // --------------------------------------------------------------------------
+
+  //SINGLE SELECT
+
   if (type === "select") {
-    if (parent === "body") {
+    if (parent === "body" || parent === "grouprow") {
       if (selected === params.id) {
-        button.icon = <CheckCircleIcon fontSize="small" />;
+        button.icon = <CircleIcon fontSize="small" />;
         button.color = "primary";
         button.title = "Odznacz element";
         button.handler = () => actionsApi.toggleSelect?.(params.id);
       } else {
         button.icon = <RadioButtonUncheckedIcon fontSize="small" />;
-        button.color = "default";
+        button.color = "primary";
         button.title = "Wybierz element";
         button.handler = () => actionsApi.toggleSelect?.(params.id);
       }
     } else {
       button.icon = null;
-      button.handler = () => {};
+      button.handler = () => { };
     }
   }
 
@@ -60,21 +67,38 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
 
   else if (type === "multiSelect") {
     if (parent === "header") {
-      if (selectedIds.length > 0) {
-        button.icon = <RadioButtonUncheckedIcon fontSize="small" />;
-        button.color = "secondary";
-        button.title = `Odznacz ${selectedIds.length} wierszy`;
-        button.handler = () => actionsApi.toggleMultiSelect?.(selectedIds);
-      } else {
-        button.icon = <DoneAllIcon fontSize="small" />;
+      // ids z obecnego widoku / filtrowanych wierszy
+      const { viewIds: filteredIds, selectedInView, notSelectedInView } =
+            computeViewSelection({ data, selectedIds });
+
+      // brak wierszy w aktualnym widoku -> zablokuj guzik
+      if (filteredIds.length === 0) {
+        button.icon = <ChecklistIcon fontSize="small" />;
         button.color = "default";
-        button.title = `Zaznacz ${data.length} wierszy`;
-        button.handler = () => actionsApi.toggleMultiSelect?.(data.map((i) => i.id));
+        button.title = "Brak wierszy do zaznaczenia";
+        button.disabled = true;
+        button.handler = () => { };
+      }
+      // są zaznaczenia w obrębie widoku -> pokaż secondary i przekaż tylko te id
+      else if (selectedInView.length > 0) {
+        button.icon = <ChecklistIcon fontSize="small" />;
+        button.color = "secondary";
+        button.title = `Odznacz ${selectedInView.length} wierszy (z widoku)`;
+        button.handler = () =>
+          actionsApi.toggleMultiSelect?.(selectedInView);
+      }
+      // brak zaznaczeń w widoku -> zaznacz wszystkie id z widoku
+      else {
+        button.icon = <ChecklistIcon fontSize="small" />;
+        button.color = "default";
+        button.title = `Zaznacz ${filteredIds.length} wierszy (z widoku)`;
+        button.handler = () =>
+          actionsApi.toggleMultiSelect?.(filteredIds);
       }
     }
 
     else if (parent === "group") {
-      if (allSelected || partiallySelected) {        
+      if (allSelected || partiallySelected) {
         button.icon = <RadioButtonUncheckedIcon fontSize="small" />;
         button.color = "secondary";
         button.title = "Odznacz elementy grupy";
@@ -88,12 +112,12 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
     }
 
     else if (parent === "grouprow") {
-      if(selectedIds.includes(params.id)){        
+      if (selectedIds.includes(params.id)) {
         button.icon = <CheckCircleIcon fontSize="small" />;
         button.color = "secondary";
         button.title = "Zaznacz";
         button.handler = () => actionsApi.toggleMultiSelect?.(params.id);
-      }else{
+      } else {
         button.icon = <RadioButtonUncheckedIcon fontSize="small" />;
         button.color = "default";
         button.title = "Odznacz";
@@ -108,14 +132,15 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
           <Typography variant="caption">{selectedIds.length}</Typography>
         </Box>
       );
+      button.disabled = true;
       if (selectedIds.length > 0) {
         button.color = "success";
         button.title = `Zaznaczonych: ${selectedIds.length}`;
-        button.handler = () => actionsApi.clearMultiSelect?.();
+        button.handler = () => { };
       } else {
         button.color = "default";
         button.title = "Brak zaznaczeń";
-        button.handler = () => {};
+        button.handler = () => { };
       }
     }
 
@@ -137,14 +162,14 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
   //DELETE
 
   else if (type === "delete") {
-    if (parent === "body") {
+    if (parent === "body" || parent === "grouprow") {
       button.icon = <DeleteIcon fontSize="small" />;
       button.color = "error";
       button.title = "Usuń wiersz";
       button.handler = () => actionsApi.deleteOne?.(params.id);
     } else {
       button.icon = null;
-      button.handler = () => {};
+      button.handler = () => { };
     }
   }
 
@@ -152,6 +177,19 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
   // 🧭 RETURN FINAL JSX
   // --------------------------------------------------------------------------
   if (!button.icon) return null;
+
+  if (button.disabled) {
+    return (
+      <IconButton
+        size="small"
+        color={button.color}
+        disabled
+        title={button.title}
+      >
+        {button.icon}
+      </IconButton>
+    );
+  }
 
   return (
     <Tooltip title={button.title}>
@@ -168,7 +206,6 @@ export const getButton = ({ parent, column, params, actionsApi, data = [] }) => 
     </Tooltip>
   );
 };
-
 
 const ActionCell = ({ column, params, parent = "body", actionsApi, cellSX = {}, data = [] }) => {
 

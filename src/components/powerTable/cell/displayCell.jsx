@@ -53,7 +53,18 @@ const DisplayCell = ({ value, column, settings, params, onDoubleClick }) => {
     // 1️⃣ renderCell ma najwyższy priorytet
     if (typeof column.renderCell === "function" && params) {
         displayValue = column.renderCell(params);
-    } else if (typeof formatter === "function") {
+    } 
+    else if (column.inputType === 'select' && Array.isArray(column.options) && displayValue) {
+        const option = column.options.find(option => {
+            if(typeof option === 'object'){
+                return +option.value === +value;
+            }
+        });
+        if(option){
+            displayValue = option.label;
+        }
+    }
+    else if (typeof formatter === "function") {
         try {
             displayValue = formatter(value, column.formatterOptions || {});
         } catch (err) {

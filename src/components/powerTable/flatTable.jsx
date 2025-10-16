@@ -49,6 +49,7 @@ const FlatTable = ({
             onHeightChange={(val) => handleHeightChange('header', val)}
             height={heightMap.header}
             actionsApi={actionsApi}
+            data={data}
           />
           <PowerTableBody
             data={data}

@@ -8,7 +8,7 @@ const EditCell = ({
   onCancel,
   onChange,
   column,
-  params,
+  params
 }) => {
   const [value, setValue] = useState(initialValue ?? "");
   const [error, setError] = useState(null);
@@ -59,10 +59,17 @@ const EditCell = ({
     }
   };
 
-  const handleCommit = () => {
-    const valid = validate(value);
-    if (!valid) return;
-    onCommit?.(value, params);
+  const handleCommit = (passedValue) => {
+    if(passedValue){
+      const valid = validate(passedValue);
+      if (!valid) return;
+      onCommit?.(passedValue, params);
+    }else{
+      const valid = validate(value);
+      if (!valid) return;
+      onCommit?.(value, params);
+    }
+    
   };
 
   const handleKeyDown = (e) => {
@@ -110,8 +117,11 @@ const EditCell = ({
     ),
     date: <EditCell.InputDate {...baseProps} />,
   };
-
-  if(map[type]) return <TableCell>{map[type]}</TableCell>
+  if(map[column.inputType]){
+    return <TableCell>{map[column.inputType]}</TableCell>
+  }
+  else if(map[type]) 
+    return <TableCell>{map[type]}</TableCell>
   else {
     return <TableCell>{map.text}</TableCell>
   }
@@ -135,10 +145,12 @@ EditCell.InputCheckbox = ({ value, onChange, error }) => (
     title={error || undefined}
   />
 );
-EditCell.InputSelect = ({ value, onChange, column, error }) => (
+EditCell.InputSelect = ({ value, onChange, onCommit, column, error }) => (
   <Select
     value={value ?? ""}
-    onChange={(e) => onChange(e.target.value)}
+    onChange={(e) =>{
+      onCommit(e.target.value);
+    }}
     size="small"
     variant="standard"
     fullWidth

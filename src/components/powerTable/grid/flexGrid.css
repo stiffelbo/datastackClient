@@ -1,0 +1,102 @@
+/* flexGrid.css - prosty 12-col flex grid z trzema breakpointami */
+:root {
+  --ft-gap-unit: 8px; /* baza odstępu: 1 -> 8px */
+}
+
+/* Kontener (row) */
+.ft-row {
+  display: flex;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  width: 100%;
+  align-items: flex-start;
+  --gap: calc(var(--ft-gap-unit) * 1);
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+}
+
+/* Wyrównania */
+.ft-row.justify-start { justify-content: flex-start; }
+.ft-row.justify-center { justify-content: center; }
+.ft-row.justify-end { justify-content: flex-end; }
+.ft-row.justify-between { justify-content: space-between; }
+.ft-row.align-start { align-items: flex-start; }
+.ft-row.align-center { align-items: center; }
+.ft-row.align-end { align-items: flex-end; }
+
+/* Każda kolumna w domyśle box-sizing: border-box */
+.ft-col {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Domyślnie kolumny zajmują 100% (xs = 12) */
+.ft-col.ft-col-xs-12 { width: 100%; }
+
+/* Generowane klasy dla xs (mobile-first) */
+.ft-col.ft-col-xs-1 { width: 8%; }
+.ft-col.ft-col-xs-2 { width: 16%; }
+.ft-col.ft-col-xs-3 { width: 25%; }
+.ft-col.ft-col-xs-4 { width: 33%; }
+.ft-col.ft-col-xs-5 { width: 41%; }
+.ft-col.ft-col-xs-6 { width: 50%; }
+.ft-col.ft-col-xs-7 { width: 58%; }
+.ft-col.ft-col-xs-8 { width: 66%; }
+.ft-col.ft-col-xs-9 { width: 75%; }
+.ft-col.ft-col-xs-10 { width: 83%; }
+.ft-col.ft-col-xs-11 { width: 91%; }
+.ft-col.ft-col-xs-12 { width: 100%; }
+
+/* Breakpoints - dostosuj wartości jeśli potrzebujesz innych punktów przerwania */
+@media (min-width: 768px) {
+  /* md */
+  .ft-col.ft-col-md-1 { width: 8%; }
+  .ft-col.ft-col-md-2 { width: 16%; }
+  .ft-col.ft-col-md-3 { width: 25%; }
+  .ft-col.ft-col-md-4 { width: 33%; }
+  .ft-col.ft-col-md-5 { width: 41%; }
+  .ft-col.ft-col-md-6 { width: 50%; }
+  .ft-col.ft-col-md-7 { width: 58%; }
+  .ft-col.ft-col-md-8 { width: 66%; }
+  .ft-col.ft-col-md-9 { width: 75%; }
+  .ft-col.ft-col-md-10 { width: 83%; }
+  .ft-col.ft-col-md-11 { width: 91%; }
+  .ft-col.ft-col-md-12 { width: 100%; }
+}
+
+@media (min-width: 1200px) {
+  /* xl */
+  .ft-col.ft-col-xl-1 { width: 8%; }
+  .ft-col.ft-col-xl-2 { width: 16%; }
+  .ft-col.ft-col-xl-3 { width: 25%; }
+  .ft-col.ft-col-xl-4 { width: 33%; }
+  .ft-col.ft-col-xl-5 { width: 41%; }
+  .ft-col.ft-col-xl-6 { width: 50%; }
+  .ft-col.ft-col-xl-7 { width: 58%; }
+  .ft-col.ft-col-xl-8 { width: 66%; }
+  .ft-col.ft-col-xl-9 { width: 75%; }
+  .ft-col.ft-col-xl-10 { width: 83%; }
+  .ft-col.ft-col-xl-11 { width: 91%; }
+  .ft-col.ft-col-xl-12 { width: 100%; }
+}
+
+/* Helpery dodatków: wyrównanie wewnątrz kolumny i padding */
+.ft-col .ft-item {
+  width: 100%;
+}
+.ft-col.pad {
+  padding: 6px;
+}
+
+.ft-row {
+  display: flex;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.ft-col {
+  box-sizing: border-box;
+  min-height: 1px; /* jak w bootstrapie */
+}

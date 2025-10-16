@@ -9,11 +9,12 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, loading }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, loading, bulkEdit = false }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -81,6 +82,26 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
     }
   }
 
+  const renderBulkEditControl = () => {
+    if(actionsApi.selectedIds.length && bulkEdit){
+      return <Tooltip title="Multi Edycja">
+        <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => onOpenSettings('bulkForm')}>
+          <ChecklistIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    }    
+  }
+
+  const renderBulkDeleteControl = () => {
+    if(actionsApi.selectedIds.length){
+      return <Tooltip title="Usuń zaznaczone">
+        <IconButton size="small" sx={{ width: 40, height: 40 }} color="error" onClick={() => actionsApi.deleteMany(actionsApi.selectedIds)}>
+          <DeleteForeverIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    }    
+  }
+
   const renderPresetControl = () => {
     return <Tooltip title="Preset">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={() => onOpenSettings('presets')}>
@@ -123,6 +144,8 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
       {renderRefreshControl()}
       {renderPresetControl()}
       {renderExportControl()}
+      {renderBulkEditControl()}
+      {renderBulkDeleteControl()}
     </Box>
   );
 };

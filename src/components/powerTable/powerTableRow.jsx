@@ -17,7 +17,7 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], actionsApi = {}, set
 
   const visibleColls = columnsSchema.getVisibleColumns();
 
-  const isSelected = +actionsApi.selected === +row.id ? true : actionsApi.selectedIds.includes(+row.id) ? true : false;
+  const isSelected = +actionsApi.selected === +row.id ? true : actionsApi.selectedIds.includes?.(+row.id) ? true : false;
   
   const color = isSelected ? "#e3f2fd" : 'inherit';
   return (
@@ -30,6 +30,7 @@ const PowerTableRow = ({ row, columnsSchema, rowRules = [], actionsApi = {}, set
           key={col.field}
           value={row[col.field]}
           column={col}
+          columnsSchema={columnsSchema}
           params={params}
           settings={{
             ...settings,

@@ -9,7 +9,6 @@ import GroupWorkIcon from '@mui/icons-material/GroupWork';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 import ColumnConfigurator from './columnConfigurator/columnConfigurator';
-import { generateCollapseKey } from './utils';
 import ActionCell from './cell/actionCell';
 
 const typeIcons = {
@@ -42,7 +41,8 @@ const PowerTableHead = ({
   onToggleCollapse = null,
   onHeightChange,
   height,
-  actionsApi
+  actionsApi,
+  data = []
 }) => {
   const ref = useRef(null);
 
@@ -92,11 +92,12 @@ const PowerTableHead = ({
               return <ActionCell
                 key={col.field}
                 column={col}
+                columnsSchema={columnsSchema}
                 params={{}}
                 parent="header"
                 actionsApi={actionsApi}
                 cellSX={cellSX}
-                data={initialData}
+                data={data}
               />
             } else {
               return (

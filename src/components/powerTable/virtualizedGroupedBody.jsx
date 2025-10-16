@@ -57,13 +57,26 @@ const VirtualizedGroupedBody = ({
                 }
 
                 if (col.field === item.field) {
+                  let displayValue = item.value;
+
+                  if(col.inputType === 'select' && Array.isArray(col.options) && displayValue) {
+                      const option = col.options.find(option => {
+                          if(typeof option === 'object'){
+                              return +option.value === +item.value;
+                          }
+                      });
+                      if(option){
+                          displayValue = option.label;
+                      }
+                  }
+
                   return (
                     <TableCell key={col.field}>
                       <Box sx={{ pl: item.level * 2, display: 'flex', alignItems: 'center' }}>
                         <IconButton size="small" onClick={() => toggleCollapse(item.path)}>
                           {open ? <ExpandMore /> : <ExpandLess />}
                         </IconButton>
-                        {`${item.value} (${item.rows?.length ?? 0})`}
+                        {`${displayValue} (${item.rows?.length ?? 0})`}
                       </Box>
                     </TableCell>
                   );
@@ -74,6 +87,7 @@ const VirtualizedGroupedBody = ({
                       key={col.field}
                       value={item.aggregates[col.field]}
                       column={col}
+                      columnsSchema={columnsSchema}
                       settings={settings}
                       parent={'grouped'}
                       actionsApi={actionsApi}
