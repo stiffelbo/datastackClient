@@ -1,170 +1,287 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { TextField, Checkbox, Select, MenuItem, TableCell } from "@mui/material";
+import { TextField, Select, MenuItem, TableCell, Box, Typography } from "@mui/material";
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import RemoveIcon from '@mui/icons-material/Remove';
 
-const EditCell = ({
-  type = "text",
-  value: initialValue,
-  onCommit,
-  onCancel,
-  onChange,
-  column,
-  params
-}) => {
+/**
+ * EditCell
+ *
+ * Props:
+ * - value: initial value
+ * - onCommit(value, params): commit handler (calls commitEdit in hook)
+ * - onCancel(): cancel editing
+ * - onChange(value, params, validationError) optional: for live validation feedback
+ * - column: column schema (may contain .input, .options, .validationFn, .commitOnSelect)
+ * - params: cell params from table (must contain id, field)
+ */
+const EditCell = ({ value: initialValue, onCommit, onCancel, onChange, column = {}, params = {} }) => {
   const [value, setValue] = useState(initialValue ?? "");
   const [error, setError] = useState(null);
-  const ref = useRef(null);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    if (ref.current) {
-      const input = ref.current.querySelector("input, select, textarea");
-      if (input) input.focus();
+    setValue(initialValue ?? "");
+  }, [initialValue]);
+
+  // focus first input when mounting
+  useEffect(() => {
+    if (inputRef.current) {
+      if (typeof inputRef.current.focus === 'function') {
+        inputRef.current.focus();
+        if (inputRef.current.select) inputRef.current.select();
+      }
+    } else if (containerRef.current) {
+      const input = containerRef.current.querySelector("input, textarea, select");
+      if (input) {
+        input.focus();
+        if (input.select) input.select();
+      }
     }
   }, []);
 
-  /** Walidacja */
-  const validate = useCallback(
-    (val) => {
-      if (typeof column?.validationFn === "function") {
-        const result = column.validationFn(val, params); // 👈 przekazujemy cały params
-
-        if (result === true || result === null) {
-          setError(null);
-          return true;
-        }
-
-        if (typeof result === "string") {
-          setError(result);
-          return false;
-        }
-
-        if (result === false) {
-          setError("Nieprawidłowa wartość");
-          return false;
-        }
+  // validation wrapper (returns true if valid)
+  const validate = useCallback((val) => {
+    setError(null);
+    if (typeof column?.validationFn === "function") {
+      const res = column.validationFn(val, params);
+      if (res === true || res === null || res === undefined) {
+        setError(null);
+        return true;
       }
-      setError(null);
+      if (typeof res === "string") {
+        setError(res);
+        return false;
+      }
+      if (res === false) {
+        setError("Nieprawidłowa wartość");
+        return false;
+      }
+    }
+    return true;
+  }, [column, params]);
+
+  // local change handler used for all inputs (doesn't commit)
+  const handleLocalChange = (next) => {
+    setValue(next);
+    const ok = validate(next);
+    if (typeof onChange === "function") onChange(next, params, ok ? null : error);
+    return ok;
+  };
+
+  // commit helper
+  const handleCommit = async (maybeValue = undefined) => {
+    const v = maybeValue === undefined ? value : maybeValue;
+    const ok = validate(v);
+    if (!ok) return false;
+    try {
+      if (typeof onCommit === "function") {
+        await onCommit(v, params);
+      }
       return true;
-    },
-    [column, params]
+    } catch (err) {
+      // jeśli backend odrzucił, ustaw error (możesz przekazać err do powerTable state)
+      setError(err?.message ?? String(err));
+      return false;
+    }
+  };
+
+  // cancel helper
+  const handleCancel = () => {
+    if (typeof onCancel === "function") onCancel();
+  };
+
+  // Key handling for text/number/date
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // prevent default submit maybe
+      e.preventDefault();
+      handleCommit();
+    } else if (e.key === "Escape") {
+      handleCancel();
+    }
+  };
+
+  // ---------------- subcomponents ----------------
+
+  // TEXT
+  const InputText = () => (
+    <TextField
+      inputRef={inputRef}
+      value={value}
+      onChange={(e) => handleLocalChange(e.target.value)}
+      onBlur={() => handleCommit()}
+      onKeyDown={handleKeyDown}
+      fullWidth
+      size="small"
+      variant="standard"
+      error={!!error}
+      helperText={error || ""}
+      title={error || undefined}
+      autoFocus
+    />
   );
 
-  const handleChange = (e) => {
-    const val = e?.target?.value ?? e;
-    setValue(val);
+  // NUMBER
+  const InputNumber = () => (
+    <TextField
+      inputRef={inputRef}
+      value={value}
+      onChange={(e) => {
+        // allow empty and numbers
+        const v = e.target.value;
+        // optional: filter to numeric characters if needed
+        handleLocalChange(v);
+      }}
+      onBlur={() => handleCommit()}
+      onKeyDown={handleKeyDown}
+      fullWidth
+      size="small"
+      variant="standard"
+      type="number"
+      error={!!error}
+      helperText={error || ""}
+      title={error || undefined}
+      autoFocus
+    />
+  );
 
-    const valid = validate(val);
+  // DATE (ISO YYYY-MM-DD)
+  const InputDate = () => (
+    <TextField
+      inputRef={inputRef}
+      value={value ?? ""}
+      onChange={(e) => handleLocalChange(e.target.value)}
+      onBlur={() => handleCommit()}
+      onKeyDown={handleKeyDown}
+      fullWidth
+      size="small"
+      variant="standard"
+      type="date"
+      error={!!error}
+      helperText={error || ""}
+      title={error || undefined}
+      autoFocus
+    />
+  );
 
-    if (typeof onChange === "function") {
-      onChange(val, params, valid ? null : error);
-    }
+  // SELECT (commits immediately onChange to avoid Select portal blur race)
+  const InputSelect = () => {
+    const opts = Array.isArray(column?.options) ? column.options : [];
+
+    const handleChange = async (e) => {
+      const v = e.target.value;
+      // local update + notify
+      handleLocalChange(v);
+      // commit immediately (avoid blur race)
+      await handleCommit(v);
+    };
+
+    return (
+      <Select
+        inputRef={inputRef}
+        value={value ?? ""}
+        onChange={handleChange}
+        size="small"
+        variant="standard"
+        fullWidth
+        error={!!error}
+        title={error || undefined}
+        // do not rely on onBlur for commit here
+      >
+        {opts.map((opt, idx) => {
+          const val = (opt && typeof opt === "object") ? opt.value : opt;
+          const lab = (opt && typeof opt === "object") ? (opt.label ?? String(val)) : String(opt);
+          return (
+            <MenuItem key={`${String(val)}_${idx}`} value={val}>
+              {lab}
+            </MenuItem>
+          );
+        })}
+      </Select>
+    );
   };
 
-  const handleCommit = (passedValue) => {
-    if(passedValue){
-      const valid = validate(passedValue);
-      if (!valid) return;
-      onCommit?.(passedValue, params);
-    }else{
-      const valid = validate(value);
-      if (!valid) return;
-      onCommit?.(value, params);
-    }
-    
+  // SELECT BOOL (specialized)
+  const InputSelectBool = () => {
+    // normalization helpers
+    const normalizeIncoming = (v) => {
+      if (v === null || v === undefined || v === '') return null;
+      if (typeof v === 'boolean') return v;
+      if (v === 'true' || v === '1' || v === 1) return true;
+      if (v === 'false' || v === '0' || v === 0) return false;
+      return null;
+    };
+    const toSelectValue = (v) => (v === null ? "" : v === true ? "true" : "false");
+
+    const normalized = normalizeIncoming(value);
+
+    const handleChange = async (e) => {
+      let v = e.target.value;
+      if (v === "") v = null;
+      else if (v === "true") v = true;
+      else if (v === "false") v = false;
+
+      handleLocalChange(v);
+      await handleCommit(v);
+    };
+
+    const itemStyle = { display: 'flex', alignItems: 'center', gap: 1 };
+
+    return (
+      <Select
+        inputRef={inputRef}
+        value={toSelectValue(normalized)}
+        onChange={handleChange}
+        size="small"
+        variant="standard"
+        fullWidth
+        error={!!error}
+        title={error || undefined}
+      >
+        <MenuItem value="">
+          <Box sx={itemStyle}>
+            <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>— Brak —</Typography>
+          </Box>
+        </MenuItem>
+        <MenuItem value="true">
+          <Box sx={itemStyle}>
+            <CheckIcon fontSize="small" sx={{ color: 'success.main' }} />
+            <Typography variant="body2">Tak</Typography>
+          </Box>
+        </MenuItem>
+        <MenuItem value="false">
+          <Box sx={itemStyle}>
+            <CloseIcon fontSize="small" sx={{ color: 'error.main' }} />
+            <Typography variant="body2">Nie</Typography>
+          </Box>
+        </MenuItem>
+      </Select>
+    );
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleCommit();
-    if (e.key === "Escape") onCancel?.();
-  };
-
-  const baseProps = {
-    ref,
-    value,
-    onChange: handleChange,
-    onBlur: handleCommit,
-    onKeyDown: handleKeyDown,
-    autoFocus: true,
-    fullWidth: true,
-    size: "small",
-    variant: "standard",
-    error: !!error,
-    helperText: error || "",
-    sx: error
-      ? { "& .MuiInputBase-root": { borderColor: "error.main" } }
-      : undefined,
-    title: error || undefined,
-  };
+  // fallback render
+  const inputType = (column?.input || column?.type || "text").toLowerCase();
 
   const map = {
-    text: <EditCell.InputText {...baseProps} />,
-    number: <EditCell.InputNumber {...baseProps} />,
-    checkbox: (
-      <EditCell.InputCheckbox
-        value={value}
-        onChange={handleChange}
-        onCommit={handleCommit}
-        error={error}
-      />
-    ),
-    select: (
-      <EditCell.InputSelect
-        {...baseProps}
-        column={column}
-        onChange={handleChange}
-        onCommit={handleCommit}
-        error={error}
-      />
-    ),
-    date: <EditCell.InputDate {...baseProps} />,
+    text: <InputText />,
+    textarea: <InputText />, // you can replace with multiline if desired
+    number: <InputNumber />,
+    date: <InputDate />,
+    select: <InputSelect />,
+    bool: <InputSelectBool />,
+    boolean: <InputSelectBool />,
   };
-  if(map[column.inputType]){
-    return <TableCell>{map[column.inputType]}</TableCell>
-  }
-  else if(map[type]) 
-    return <TableCell>{map[type]}</TableCell>
-  else {
-    return <TableCell>{map.text}</TableCell>
-  }
-}
 
-/* --- subkomponenty --- */
-EditCell.InputText = (props) => <TextField type="text" {...props} />;
-EditCell.InputNumber = (props) => <TextField type="number" {...props} />;
-EditCell.InputCheckbox = ({ value, onChange, error }) => (
-  <Checkbox
-    checked={!!value}
-    onChange={(e) => onChange(e.target.checked)}
-    sx={{
-      p: 0,
-      ...(error && {
-        outline: "1px solid",
-        outlineColor: "error.main",
-        borderRadius: "4px",
-      }),
-    }}
-    title={error || undefined}
-  />
-);
-EditCell.InputSelect = ({ value, onChange, onCommit, column, error }) => (
-  <Select
-    value={value ?? ""}
-    onChange={(e) =>{
-      onCommit(e.target.value);
-    }}
-    size="small"
-    variant="standard"
-    fullWidth
-    error={!!error}
-    title={error || undefined}
-    sx={error ? { borderColor: "error.main" } : undefined}
-  >
-    {(column?.options || []).map((opt) => (
-      <MenuItem key={opt.value ?? opt} value={opt.value ?? opt}>
-        {opt.label ?? opt}
-      </MenuItem>
-    ))}
-  </Select>
-);
-EditCell.InputDate = (props) => <TextField type="date" {...props} />;
+  const rendered = map[inputType] ?? map.text;
+
+  return (
+    <TableCell ref={containerRef} sx={{ padding: '6px 8px' }}>
+      {rendered}
+    </TableCell>
+  );
+};
 
 export default EditCell;

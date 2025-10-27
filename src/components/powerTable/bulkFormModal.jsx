@@ -2,8 +2,26 @@ import React from 'react';
 import { Modal, Box } from '@mui/material';
 
 import FormTemplate from './form/formTemplate';
+import ErrorAlerts from './errorAlerts';
 
-const BulkFormModal = ({open, onClose, actionsApi, bulkEditFormSchema = [], onBulkEdit, loading, entityName}) => {
+const BulkFormModal = ({open, onClose, actionsApi, bulkEditFormSchema = {label: '', schema : []}, onBulkEdit, loading, error, clearError, entityName}) => {
+    
+    const handleClose = () => {
+      clearError();
+      onClose();
+    }
+
+    const handleSubmit = async (data) => {
+      const result = await onBulkEdit(actionsApi.selectedIds, data);
+      if(!error){
+        handleClose();
+      }
+    }
+
+    const renderResponse = () => {
+      return <ErrorAlerts error={error} onClose={clearError} severity='warning'/>
+    };
+    
     return <Modal open={open} onClose={onClose}>
             <Box
               role="dialog"
@@ -18,10 +36,10 @@ const BulkFormModal = ({open, onClose, actionsApi, bulkEditFormSchema = [], onBu
               }}
             >
               <FormTemplate
-                formLabel={'Edytycja masowa ' + entityName} 
+                formLabel={bulkEditFormSchema.label || 'Edycja masowa ' + entityName} 
                 data={{}}
-                schema={bulkEditFormSchema}
-                onSubmit={data => onBulkEdit(actionsApi.selectedIds, data)}
+                schema={bulkEditFormSchema?.schema}
+                onSubmit={data => handleSubmit(data)}
                 loading={loading}
                 onCancel={onClose}
                 submitButtonText={`Zapisz zmiany`}
@@ -29,7 +47,8 @@ const BulkFormModal = ({open, onClose, actionsApi, bulkEditFormSchema = [], onBu
                 mode="bulk"
                 addons={{selectedIds: actionsApi?.selectedIds || 0}}
               />
-            </Box>            
+              {renderResponse()}       
+            </Box>     
         </Modal>
 }
 

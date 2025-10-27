@@ -31,7 +31,8 @@ export const useTableEditing = (onCommit) => {
     async (newValue, params) => {
       if (typeof onCommit === "function") {
         try {
-          await onCommit(newValue, params);
+          const payload = {id: params.id , field: params.field, value: newValue};
+          await onCommit(payload);
         } catch (err) {
           console.warn("Edit commit failed:", err);
         }

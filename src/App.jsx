@@ -11,6 +11,7 @@ import Users from './pages/users/Users';
 import Employees from './pages/employees/Employees';
 import Structures from './pages/structures/Structures';
 
+import Clocki from './pages/clockify/Clocki';
 import Clockify from './pages/clockify/Clockify';
 import ClockifyData from './pages/clockify/ClockifyData';
 import UploadSalaries from './pages/salaries/uploadSalaries/UploadSalaries';
@@ -34,8 +35,7 @@ const App = () => (
         <Route path="users" element={<Users />} />
         <Route path="structures" element={<Structures />} />
         <Route path="employees" element={<Employees />} />
-        <Route path="clockify" element={<Clockify />} />
-        <Route path="clockifyData" element={<ClockifyData />} />
+        <Route path="clockify" element={<Clocki />} />
         <Route path="uploadsalaries" element={<UploadSalaries />} />
         <Route path="salaries" element={<Salaries />} />
         <Route path="deptcosts" element={<Costs />} />

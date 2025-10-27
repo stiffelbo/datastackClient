@@ -56,7 +56,6 @@ const PowerTableCell = ({
   }else{
      return isEditMode ? (
       <EditCell
-        type={column.type}
         value={value}
         onCommit={handleCommit}
         onCancel={handleCancel}
@@ -72,6 +71,7 @@ const PowerTableCell = ({
         params={params}
         onDoubleClick={handleDoubleClick}
         parent={parent}
+        editing={editing}
       />
     );
   } 

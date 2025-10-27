@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getAggregatedValues } from '../utils';
 
-import { COLUMN_ACTIONS } from './useActions';
-
 const extractSortModel = (overrides = []) =>
   overrides
     .map(o => (o?.sort?.direction ? { field: o.field, direction: o.sort.direction } : null))
@@ -12,13 +10,45 @@ const extractSortModel = (overrides = []) =>
 const mergeColumns = (auto, user, actions = []) => {
   const map = new Map();
 
-  // 1️⃣ Najpierw wstaw kolumny auto
+  // 1️⃣ Najpierw wstaw kolumny auto (lub już wstępnie zmergowane)
   auto?.forEach((col) => map.set(col.field, { ...col }));
 
-  // 2️⃣ Potem user overrides
+  // 2️⃣ Potem user overrides — ale robimy *bezpieczne* scalanie:
   user?.forEach((u) => {
-    const existing = map.get(u.field);
-    map.set(u.field, { ...existing, ...u });
+
+    if(u.field === 'is_active'){
+      //console.log(u);
+    }
+    
+    const existing = map.get(u.field) || {};
+    // shallow merge (user overrides)
+    const merged = { ...existing, ...u };
+
+    // zachowaj input jeśli override nie dostarcza wartości
+    if (existing.input) {
+      merged.input = existing.input;
+      if(u.field === 'is_active'){
+        //console.log(merged.input, existing.input);
+      }
+    }
+
+    // zachowaj options jeśli override nie dostarcza listy (lub dał pustą)
+    if (
+      (merged.options === null || merged.options === undefined || (Array.isArray(merged.options) && merged.options.length === 0)) &&
+      Array.isArray(existing.options) && existing.options.length > 0
+    ) {
+      merged.options = existing.options;
+    }
+
+    // zachowaj renderCell, styleFn, formatterKey/formatterOptions, aggregationFn itp.
+    if (!merged.renderCell && existing.renderCell) merged.renderCell = existing.renderCell;
+    if (!merged.styleFn && existing.styleFn) merged.styleFn = existing.styleFn;
+    if ((merged.formatterOptions == null || (typeof merged.formatterOptions === 'object' && Object.keys(merged.formatterOptions || {}).length === 0))
+        && existing.formatterOptions) merged.formatterOptions = existing.formatterOptions;
+    if ((merged.formatterKey == null || merged.formatterKey === '') && existing.formatterKey) merged.formatterKey = existing.formatterKey;
+    if ((merged.aggregationFn == null || merged.aggregationFn === '') && existing.aggregationFn) merged.aggregationFn = existing.aggregationFn;
+
+    map.set(u.field, merged);
   });
 
   // 3️⃣ Wyliczamy aktualną maksymalną wartość order w zbiorze
@@ -28,15 +58,13 @@ const mergeColumns = (auto, user, actions = []) => {
       Number.isFinite(c.order) ? c.order : 0
     )
   );
-
   // 4️⃣ Wstawiamy kolumny akcji (unikalne i z nowym offsetem)
   if (Array.isArray(actions) && actions.length > 0) {
     actions.forEach((a, idx) => {
       if (!map.has(a.field)) {
         map.set(a.field, {
           ...a,
-          // przesuwamy akcje na koniec lub początek zestawu
-          order: currentMaxOrder + idx + 1, // 🔸 unikamy kolizji
+          order: currentMaxOrder + idx + 1,
         });
       }
     });
@@ -54,7 +82,6 @@ const mergeColumns = (auto, user, actions = []) => {
   // 6️⃣ Nadajemy ostateczne indeksy (ciągłość 0..N)
   return merged.map((c, idx) => ({ ...c, order: idx }));
 };
-
 
 const reindexGroupBy = (columns) => {
   const grouped = columns
@@ -75,7 +102,6 @@ const applyDefaultAlign = (col) => {
   else if (col.type === 'boolean') align = 'center';
   return { ...col, align };
 };
-
 
 // pomocniczo: lekki podpis po polach (stabilne deps w useEffect)
 const fieldsSig = (cols = []) =>
@@ -121,6 +147,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
 
   // ---- helpers ----
   const updateField = (field, changes) => {
+    console.log(field,changes);
     setColumns(prev =>
       prev.map(col => (col.field === field ? { ...col, ...changes } : col))
     );
@@ -244,7 +271,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   };
 
   const removeFilter = (field, id) => {
-    console.log(field, id);
     setColumns(prev =>
       prev.map(col =>
         col.field === field

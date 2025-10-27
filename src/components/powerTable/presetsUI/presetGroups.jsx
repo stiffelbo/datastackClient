@@ -55,7 +55,7 @@ const PresetGroups = ({ columns }) => {
           return (
             <React.Fragment key={groupName || "_no_group"}>
               <ListItem
-                button
+                button={"true"}
                 onClick={() => columns.toggleGroupVisibility(groupName)}
                 sx={{
                   borderRadius: 1,

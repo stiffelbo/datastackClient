@@ -1,14 +1,38 @@
-import React, {useState, useEffect} from 'react';
-import { toast } from 'react-toastify';
-//Services
-import http from '../../http';
+import React from 'react';
+//Hooks
+import useEntity from '../../hooks/useEntity';
 
 //Comp
-import FormTemplate from '../../components/form/formTemplate';
 import PowerTable from '../../components/powerTable/powerTable';
 
+const endpoint = '/period_structures_costs/';
+const entityName = 'PeriodStructuresCosts';
+
+
 const Costs = () => {
-    return <div>Costs</div>
+
+    const entity = useEntity({endpoint});
+
+    return (
+        <PowerTable
+            entityName={entityName}
+            data={entity.rows}
+            height={window.innerHeight - 90}
+            width={window.innerWidth}
+            loading={entity.loading}
+            onRefresh={entity.refresh}
+            columnSchema={entity.schema.columns}
+            onEdit={entity.update}
+
+            actions={entity.schema.actions}
+            onMultiDelete={entity.removeMany}
+            bulkEditFormSchema={entity.schema.bulkEditForm}
+            onBulkEdit={entity.updateMany}
+
+            importSchema={[]}
+            onUpload={null}
+        />
+    );
 }
 
 export default Costs;

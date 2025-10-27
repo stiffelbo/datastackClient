@@ -15,6 +15,12 @@ const validator = (schema = [], formState = {}) => {
     const rules = field.validation;
     const fieldErrors = [];
 
+    //Type based
+
+    if(field.type === 'email' && rules.required){
+      //validate for proper email
+    }
+
     if (rules.required && (val === null || val === '' || typeof val === 'undefined' || (typeof val === 'object' && Object.keys(val).length === 0))) {
       fieldErrors.push(defaultMessages.required);
     }

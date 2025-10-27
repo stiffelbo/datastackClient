@@ -21,6 +21,7 @@ const sanitizeData = data => {
 const ClockifyData = () => {
   const [rows, setRows] = useState([]);
   const [structOptions, setStructOptions] = useState([]);
+  const [uploadSchema, setUploadSchema] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const populate = async () => {
@@ -36,6 +37,24 @@ const ClockifyData = () => {
     } catch (err) {
       console.error(err);
       toast.error('Błąd podczas pobierania danych!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const populateSchema = async () => {
+    setLoading(true);
+    try {
+      const { data } = await http.get('clockify/getImportSchema.php');
+      if (data && data.length) {
+        setUploadSchema(data);
+        toast.success(`Pobrano schemat importu danych.`);
+      } else {
+        toast.warning(`Nie pobrano scematu danych`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Błąd podczas pobierania scematu danych!');
     } finally {
       setLoading(false);
     }
@@ -60,6 +79,7 @@ const ClockifyData = () => {
   };
 
   useEffect(() => {
+    populateSchema();
     populate();
     populateStructOptions();
   }, []);
@@ -80,16 +100,6 @@ const ClockifyData = () => {
   };
 
   //Actions
-  const handleDelete = async (id) => {
-    if (id) {
-      const { data } = await http.delete('/clockify/delete.php?id=' + id);
-      if (data) {
-        setRows(prev =>
-          prev.filter(r => +r.id !== +id)
-        )
-      }
-    }
-  }
 
   const handleMultiDelete = async (ids = []) => {
     if (!ids || !ids.length) return;
@@ -133,7 +143,7 @@ const ClockifyData = () => {
 
   const actions = [
     { type: 'multiSelect' },
-    { type: 'multiDelete', handler: handleMultiDelete },
+    { type: 'multiDelete' },
   ];
 
   const bulkEditFormSchema = [
@@ -146,15 +156,19 @@ const ClockifyData = () => {
 
   const columns = [
     { field: 'id', type: 'number', width: 60 },
-    { field: 'structure_id', headerName: 'Dział', type: 'number', inputType : 'select', options: structOptions, width: 140, editable: true },
+    { field: 'structure_id', headerName: 'Dział', type: 'number', input : 'select', options: structOptions, width: 140, editable: true },
     { field: 'project', type: 'string', width: 260 },
     { field: 'client', type: 'string', width: 160 },
     { field: 'description', type: 'string', width: 260 },
-    { field: 'task', type: 'string', width: 260, editable: true },
+    { field: 'task', type: 'string', width: 260, editable: true},
     { field: 'parrentTask', type: 'string', width: 260, editable: true },
     { field: 'costPLN', headerName: 'Koszt PLN', type: 'number', width: 90, aggregationFn: 'sum', formatterKey: 'number2' },
     { field: 'tags', headerName: 'Tagi', type: 'number', editable: true, width: 90, aggregationFn: 'sum', formatterKey: 'number2' },
   ];
+
+  const handleUpload = (schema, data = []) => {
+    console.log(schema, data);
+  }
 
   return (
     <PowerTable
@@ -171,6 +185,9 @@ const ClockifyData = () => {
       onMultiDelete={handleMultiDelete}
       bulkEditFormSchema={bulkEditFormSchema}
       onBulkEdit={handleBulkEdit}
+      
+      importSchema={uploadSchema}
+      onUpload={handleUpload}
     />
   );
 };

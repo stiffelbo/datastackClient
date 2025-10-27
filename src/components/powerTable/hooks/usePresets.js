@@ -49,7 +49,7 @@ const DEFAULT_TRACKED_KEYS = [
   'fieldGroup',      // grupowanie logiczne kolumn
   'headerName',      // etykieta nagłówka
   'type',            // 'string' | 'number' | 'date' | 'boolean'
-  'inputType',       // 'text' | 'number' | 'checkbox' | 'select' | 'date'
+  'input',       // 'text' | 'number' | 'checkbox' | 'select' | 'date'
   'displayType',     // 'text' | 'numeric' | 'boolean' | 'chip' | 'currency'
   'width',           // szerokość kolumny
   'hidden',          // bool – ukryta/pokazana
@@ -100,7 +100,7 @@ const NORMALIZE = {
     if (v === null || v === undefined) return '';   // zamiast undefined
     return v;
   },
-  type: (v) => toEnum(v, ['string', 'number', 'date', 'boolean', 'action']),
+  type: (v) => toEnum(v, ['string', 'number', 'date', 'boolean', 'action', 'fk']),
   align: (v) => toEnum(v, ['left', 'center', 'right']),
 
   width: (v) => toNum(v),

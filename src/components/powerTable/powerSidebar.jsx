@@ -11,10 +11,12 @@ import ClearIcon from '@mui/icons-material/Clear';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, loading, bulkEdit = false }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, allowAdd = false, allowUpload = false }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -64,6 +66,15 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
     );
   };
 
+  const renderAdd = () => {
+    if(!allowAdd) return;
+    return <Tooltip title="Dodaj">
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color='primary' onClick={() => onOpenSettings('addForm')}>
+        <AddCircleOutlineIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  };
+
   const renderShowSelected = () => {
     if(actionsApi.selectedIds.length){
       if(!columnsSchema.showSelected){
@@ -93,9 +104,15 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   }
 
   const renderBulkDeleteControl = () => {
+    const handle = async () => {
+      const res = await onBulkDelete(actionsApi.selectedIds);
+      console.log(res);
+      actionsApi.clearMultiSelect();
+    }
+
     if(actionsApi.selectedIds.length){
       return <Tooltip title="Usuń zaznaczone">
-        <IconButton size="small" sx={{ width: 40, height: 40 }} color="error" onClick={() => actionsApi.deleteMany(actionsApi.selectedIds)}>
+        <IconButton size="small" sx={{ width: 40, height: 40 }} color="error" onClick={handle}>
           <DeleteForeverIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -120,11 +137,20 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
 
   const renderExportControl = () => (
     <Tooltip title="Export Data">
-      <IconButton size="small" sx={{ width: 40, height: 40 }} color='' onClick={onExport}>
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={onExport}>
         <FileDownloadIcon fontSize="small" />
       </IconButton>
     </Tooltip>
   );
+
+  const renderUploadControl = () => {
+    if(!allowUpload) return;
+    return <Tooltip title="Upload XSLSX">
+      <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={() => onOpenSettings('uploadData')}>
+        <UploadFileIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  };
 
   return (
     <Box
@@ -140,12 +166,14 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
       }}
     >
       {renderSearchControl()}
+      {renderAdd()}
       {renderShowSelected()}
       {renderRefreshControl()}
       {renderPresetControl()}
       {renderExportControl()}
       {renderBulkEditControl()}
       {renderBulkDeleteControl()}
+      {renderUploadControl()}
     </Box>
   );
 };

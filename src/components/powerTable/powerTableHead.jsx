@@ -15,7 +15,9 @@ const typeIcons = {
   string: '🅰️',
   number: '🔢',
   date: '📅',
+  bool: '✔️',
   boolean: '✔️',
+  fk: '🔗',
 };
 
 const getCellSX = (col) => ({
@@ -84,9 +86,15 @@ const PowerTableHead = ({
             );
 
             const cellSX = getCellSX(col);
-            const cellTitle = col.headerName
+                       
+            const bgColor = col.editable ? "#e3f2fd" : 'white';
+            cellSX['backgroundColor'] = bgColor;
+            let cellTitle = col.headerName
               ? [col.headerName, col.fieldGroup].filter(Boolean).join(' - ')
               : [col.field, col.fieldGroup].filter(Boolean).join(' - ');
+            
+            if(col.editable) cellTitle += ' edytowalne';
+            
 
             if (col.type === 'action') {
               return <ActionCell
@@ -130,7 +138,6 @@ const PowerTableHead = ({
                       >
                         {col.headerName || col.field}
                       </Typography>
-                      {col.editable ? <span>✏️</span> : ''}
                     </Box>
 
                     {/* sort indicators */}

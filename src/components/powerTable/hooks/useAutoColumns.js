@@ -2,7 +2,7 @@
  * useAutoColumns - automatyczne generowanie schematu kolumn PowerTable na podstawie danych
  * 
  * Tworzy pełny schemat z właściwościami:
- * field, headerName, type, inputType, options, validationFn,
+ * field, headerName, type, input, options, validationFn,
  * editable, hidden, styleFn, align, sortable, width, filters,
  * aggregationFn, formatterKey, renderCell, groupBy, groupIndex, source
  */
@@ -17,7 +17,7 @@ import { useMemo } from 'react';
 const detectType = (value) => {
   if (value === null || value === undefined) return 'string';
   if (typeof value === 'number' && !isNaN(value)) return 'number';
-  if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'bool') return 'bool';
   if (typeof value === 'string') {
     const num = Number(value);
     if (!isNaN(num) && value.trim() !== '') return 'number';
@@ -47,7 +47,6 @@ export const prettifyHeader = (str) => {
   return String(str)
     .trim()
     .split(/[_\s-]+/)
-    .filter(Boolean)
     .map(
       (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     )
@@ -59,14 +58,16 @@ export const prettifyHeader = (str) => {
 /* -------------------------------------------------------------------------- */
 
 /** Automatyczne dopasowanie typu inputa do typu danych */
-const inferInputType = (type) => {
+const inferinput = (type) => {
   switch (type) {
     case 'number':
       return 'number';
-    case 'boolean':
-      return 'checkbox';
+    case 'bool':
+      return 'bool';
     case 'date':
       return 'date';
+    case 'fk':
+      return 'select';
     default:
       return 'text';
   }
@@ -75,22 +76,36 @@ const inferInputType = (type) => {
 /** Automatyczne dopasowanie typu wyświetlania (displayType) */
 const inferDisplayType = (type) => {
   switch (type) {
-    case 'boolean':
-      return 'boolean';
+    case 'bool':
+      return 'bool';
     case 'number':
       return 'numeric';
     case 'date':
       return 'date';
+    case 'fk':
+      return 'select';
     default:
       return 'text';
   }
 };
 
+const inferAlign = (type) => {
+  switch (type) {
+    case 'bool':
+      return 'center';
+    case 'number':
+      return 'right';
+    default:
+      return 'left';
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* 🔹 HOOK                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const useAutoColumns = (data = []) => {
+const useAutoColumns = (data = [], dev = {}) => {
+  //console.log(dev);
   return useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];
 
@@ -98,9 +113,11 @@ const useAutoColumns = (data = []) => {
     if (!sample || typeof sample !== 'object') return [];
 
     return Object.entries(sample).map(([key, value]) => {
-      const type = detectType(value);
-      const width = detectWidth(value);
 
+      const type = dev[key]?.type ? dev[key].type : detectType(value);
+      const input = dev[key]?.input ? dev[key].input : inferinput(value);
+      const width = dev[key]?.width ? dev[key].width : detectWidth(value);
+      const aggregationFn = dev[key]?.aggregation ? dev[key].aggregation : null
       return {
         /* 📘 Identyfikacja */
         field: key,
@@ -109,11 +126,11 @@ const useAutoColumns = (data = []) => {
 
         /* 📗 Typy danych i renderowania */
         type,
-        inputType: inferInputType(type),
+        input,
         displayType: inferDisplayType(type),
 
         /* 📙 Edycja / Walidacja */
-        editable: false, // lub (params) => boolean
+        editable: false, // lub (params) => bool
         validationFn: null, // (val, params) => true | false | 'error message'
         options: [], // dla selectów / lookupów
 
@@ -121,13 +138,13 @@ const useAutoColumns = (data = []) => {
         styleFn: null, // (val, params) => sx
         formatterKey: null, // np. 'currencyPL'
         renderCell: null, // niestandardowy renderer: params => <Component />
-        align: type === 'number' ? 'right' : 'left',
+        align: inferAlign(type),
         hidden: false,
         sortable: true,
         width,
 
         /* 📕 Grupowanie i agregacje */
-        aggregationFn: null, // 'sum' | 'avg' | fn
+        aggregationFn, // 'sum' | 'avg' | fn
         groupBy: false,
         groupIndex: null,
 
@@ -144,29 +161,33 @@ export default useAutoColumns;
 /* -------------------------------------------------------------------------- */
 /* 🔹 FABRYKA KOLUMN AKCJI                                                   */
 /* -------------------------------------------------------------------------- */
-/**
- * Tworzy kolumny akcji (action columns) z listy akcji
- * @param {Array} actions - lista akcji np. [{ type:'delete', label:'Usuń', onAction }]
- * @param {Function} exec - opcjonalny executor akcji
- */
-export const createActionColumns = (actions = [], exec, COLUMN_ACTIONS = []) => {
-  if (!Array.isArray(actions) || !actions.length) return [];
 
-  return actions.filter(i => COLUMN_ACTIONS.includes(i.type)).map((a, idx) => ({
-    field: `__action_${a.type}`,
-    fieldGroup: 'actions',
-    headerName: a.label || '',
-    order: idx,
-    type: 'action',
-    align: 'center',
-    width: 60,
-    sortable: false,
-    filterable: false,
-    editable: false,
-    groupBy: false,
-    hidden: false,
-    meta: a, // dane o akcji (ikona, label, confirm, itp.)
-    onAction: (params) => exec?.(a.type, params) || a.handler?.(params),
-  }));
+export const createSelectionColumns = ({isDeleteCol, isSelectCol, isSelectedItemsCol}) => {
+  
+  const columns = [];
+  const makeColumn = (name) => {
+    return {
+      field: `__action_${name}`,
+      fieldGroup: 'actions',
+      headerName: name || '',
+      order: 0,
+      type: 'action',
+      align: 'center',
+      width: 45,
+      sortable: false,
+      filterable: false,
+      editable: false,
+      groupBy: false,
+      hidden: false,
+      meta : {
+        type: name,
+      }
+    }
+  }
+  
+  if(isDeleteCol) columns.push(makeColumn('delete'));
+  if(isSelectCol) columns.push(makeColumn('select'));
+  if(isSelectedItemsCol) columns.push(makeColumn('multiSelect'));
+  return columns;
 };
 

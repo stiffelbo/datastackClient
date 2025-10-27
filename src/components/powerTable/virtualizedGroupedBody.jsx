@@ -59,7 +59,7 @@ const VirtualizedGroupedBody = ({
                 if (col.field === item.field) {
                   let displayValue = item.value;
 
-                  if(col.inputType === 'select' && Array.isArray(col.options) && displayValue) {
+                  if(col.input === 'select' && Array.isArray(col.options) && displayValue) {
                       const option = col.options.find(option => {
                           if(typeof option === 'object'){
                               return +option.value === +item.value;

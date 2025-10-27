@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
+  Box,
+  Typography,
   Card,
   CardHeader,
   CardContent,
@@ -23,6 +25,10 @@ import {
 // MUI imports needed for buildForm
 import ClearIcon from '@mui/icons-material/Clear';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 import validatorDefault from './validator'; // ./validator.js
 import { Row, Col } from '../grid/flexGrid'; // Twój flex grid
@@ -52,6 +58,7 @@ const FormTemplate = ({
   mode = 'add',
   addons = {}
 }) => {
+
   const validateFn = validator || validatorDefault;
 
   const [formState, setFormState] = useState(() => createInitialStateFromSchema(data, schema));
@@ -355,7 +362,6 @@ const FormTemplate = ({
           );
 
         case 'select':
-        case 'select-single':
         case 'select-object':
         case 'select-multiple': {
           const isMultiple = field.type === 'select-multiple' || !!field.multiple;
@@ -420,17 +426,67 @@ const FormTemplate = ({
             </Col>
           );
 
-        case 'boolean':
-          // render as checkbox-like switch for boolean
+        case 'bool':
+        case 'boolean': {
+          // Specjalny select z ikonami, null = brak, true = Prawda, false = Fałsz
+          const normalizeIncoming = (v) => {
+            if (v === null || v === undefined || v === '') return null;
+            if (typeof v === 'boolean') return v;
+            if (v === 'true' || v === '1' || v === 1) return true;
+            if (v === 'false' || v === '0' || v === 0) return false;
+            return null;
+          };
+          const toSelectValue = (v) => (v === null ? "" : v === true ? "true" : "false");
+
+          const normalized = normalizeIncoming(value);
+
+          const handleChange = (e) => {
+            let v = e.target.value;
+            if (v === "") v = null;
+            else if (v === "true") v = true;
+            else if (v === "false") v = false;
+            setField(field.name, v);
+          };
+
+          const itemStyle = { display: 'flex', alignItems: 'center', gap: 1 };
+
           return (
             <Col key={field.name} {...colProps}>
-              <FormControlLabel
-                control={<Switch checked={!!value} onChange={(e) => setField(field.name, e.target.checked)} />}
-                label={field.label}
-              />
+              <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
+                <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
+                <Select
+                  value={toSelectValue(normalized)}
+                  onChange={handleChange}
+                  size="small"
+                  variant="outlined"
+                  fullWidth
+                  error={!!errorsText}
+                  title={errorsText || undefined}
+                >
+                  <MenuItem value="">
+                    <Box sx={itemStyle}>
+                      <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>— Brak —</Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="true">
+                    <Box sx={itemStyle}>
+                      <CheckIcon fontSize="small" sx={{ color: 'success.main' }} />
+                      <Typography variant="body2">Tak</Typography>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem value="false">
+                    <Box sx={itemStyle}>
+                      <CloseIcon fontSize="small" sx={{ color: 'error.main' }} />
+                      <Typography variant="body2">Nie</Typography>
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
               {errorsText && <div style={{ color: '#c00', marginTop: 6 }}>{errorsText}</div>}
             </Col>
           );
+        }
 
         default:
           // fallback: generic text input
@@ -499,8 +555,72 @@ const FormTemplate = ({
 };
 
 FormTemplate.propTypes = {
+  // dane wejściowe (edytowany/ładowany obiekt)
   data: PropTypes.object,
-  schema: PropTypes.array.isRequired,
+
+  // schema: tablica definicji pól formularza.
+  // Każdy element opisuje pojedyncze pole i może zawierać tylko poniższe właściwości.
+  schema: PropTypes.arrayOf(
+    PropTypes.shape({
+      // identyfikator pola (wymagany)
+      name: PropTypes.string.isRequired,
+
+      // etykieta / tekst pomocniczy / placeholder
+      label: PropTypes.string,
+      helperText: PropTypes.string,
+      placeholder: PropTypes.string,
+
+      // typ pola (steruje wyborem kontrolki w FormTemplate)
+      type: PropTypes.oneOf([
+        'hidden', 'text', 'email', 'number', 'date', 'textarea',
+        'password', 'switch', 'boolean', 'select',
+        'select-object', 'select-multiple', 'file'
+      ]),
+
+      // drobne wskazówki dotyczące wejścia (np. 'datetime', 'email') - passthrough
+      input: PropTypes.string,
+
+      // layout / rozmiary siatki
+      md: PropTypes.number,
+      xl: PropTypes.number,
+      xs: PropTypes.number,
+
+      // wygląd / rozmiar kontrolki
+      size: PropTypes.oneOf(['small', 'medium']),
+      variant: PropTypes.string,
+
+      // zachowanie kontrolki
+      disabled: PropTypes.bool,
+      validation: PropTypes.array,
+      multiple: PropTypes.bool, // dla select
+      rows: PropTypes.number,   // dla textarea
+      step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // dla number
+      min: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      max: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+      labelPlacement: PropTypes.oneOf(['end', 'start']), // dla switch
+
+      // passthrough props dla komponetów MUI
+      textFieldProps: PropTypes.object,
+      inputProps: PropTypes.object,
+      selectProps: PropTypes.object,
+
+      // selectOptions: tablica opcji dla Select
+      selectOptions: PropTypes.arrayOf(
+        PropTypes.shape({
+          value: PropTypes.any.isRequired,
+          label: PropTypes.string.isRequired,
+          title: PropTypes.oneOfType([PropTypes.string, PropTypes.null]),
+          disabled: PropTypes.bool,
+        })
+      ),
+
+      // opcjonalne: pole pomocnicze do obliczeń/wyliczania wartości w createInitialState/applyCompute
+      // (FormTemplate używa applyCompute przed renderem — pozostaw jako opcjonalność)
+      computed: PropTypes.oneOfType([PropTypes.object, PropTypes.func, PropTypes.string]),
+    })
+  ).isRequired,
+
+  // handlers + UI state
   onSubmit: PropTypes.func,
   onChange: PropTypes.func,
   onCancel: PropTypes.func,
@@ -515,6 +635,7 @@ FormTemplate.propTypes = {
   sendFormData: PropTypes.bool,
   validator: PropTypes.func,
 };
+
 
 FormTemplate.defaultProps = {
   data: {},

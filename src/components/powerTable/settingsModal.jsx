@@ -1,7 +1,7 @@
 // settingsModal.jsx
 import React from 'react';
 import { Modal, Box } from '@mui/material';
-import FormTemplate from '../form/formTemplate';
+import FormTemplate from './form/formTemplate';
 
 const SettingsModal = ({ open, onClose, settings, onSave }) => {
     const formSchema = [

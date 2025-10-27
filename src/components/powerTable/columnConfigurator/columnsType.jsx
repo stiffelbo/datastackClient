@@ -6,10 +6,11 @@ import {
 } from "@mui/material";
 
 const TYPES = [
+  { key: "fk", label: "Klucz 🔗" },
   { key: "string", label: "Tekstowy 🅰️" },
   { key: "number", label: "Liczbowy 🔢" },
   { key: "date", label: "Data 📅" },
-  { key: "boolean", label: "Logiczny ✔️" },
+  { key: "bool", label: "Logiczny ✔️" },
 ];
 
 /**
@@ -23,6 +24,7 @@ const ColumnType = ({ field, column, columnsSchema, onClose }) => {
     onClose?.();
   };
 
+  const disabled = current === 'fk';
   return (
     <Box sx={{ width: '100%', p: 1 }}>
 
@@ -31,6 +33,7 @@ const ColumnType = ({ field, column, columnsSchema, onClose }) => {
           key={item.key}
           selected={current === item.key}
           onClick={() => handleSelect(item.key)}
+          disabled={disabled}
         >
           <ListItemText primary={item.label} />
         </MenuItem>

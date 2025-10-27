@@ -6,6 +6,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import ChecklistIcon from '@mui/icons-material/Checklist';
+import ClearIcon from '@mui/icons-material/Clear';
 
 import {computeViewSelection} from '../utils';
 
@@ -128,16 +129,21 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
     else if (parent === "footer") {
       button.icon = (
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <DoneAllIcon fontSize="small" />
+          <ClearIcon fontSize="small" />
           <Typography variant="caption">{selectedIds.length}</Typography>
         </Box>
       );
-      button.disabled = true;
+      button.disabled = false;
       if (selectedIds.length > 0) {
-        button.color = "success";
-        button.title = `Zaznaczonych: ${selectedIds.length}`;
-        button.handler = () => { };
+        button.color = "warning";
+        button.title = `Wyczyść : ${selectedIds.length}`;
+        button.handler = () => {actionsApi.clearMultiSelect()};
       } else {
+        button.disabled = true;
+        button.icon = (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          </Box>
+        );
         button.color = "default";
         button.title = "Brak zaznaczeń";
         button.handler = () => { };
@@ -209,7 +215,8 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
 
 const ActionCell = ({ column, params, parent = "body", actionsApi, cellSX = {}, data = [] }) => {
 
-  if (!column?.meta || !actionsApi) return null;
+
+  if (!actionsApi) return null;
   //Extracting PARAMS
 
   return (
