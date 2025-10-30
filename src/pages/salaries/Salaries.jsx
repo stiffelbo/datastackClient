@@ -6,7 +6,7 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const enityName = 'Clockify';
+const enityName = 'Salaries';
 
 const selected = null;
 const onSelected = (val) => {
@@ -18,8 +18,8 @@ const onSelectItems = (val) => {
     console.log(val);
 }
 
-const Clocki = () => {
-    const entity = useEntity({ endpoint: '/clocki/' });
+const Salaries = () => {
+    const entity = useEntity({ endpoint: '/salaries/' });
     useEffect(() => {
         entity.refresh();
     }, []);
@@ -55,4 +55,4 @@ const Clocki = () => {
     );
 };
 
-export default Clocki;
+export default Salaries;

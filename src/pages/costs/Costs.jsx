@@ -1,38 +1,58 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+
 //Hooks
 import useEntity from '../../hooks/useEntity';
 
-//Comp
+// Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const endpoint = '/period_structures_costs/';
-const entityName = 'PeriodStructuresCosts';
+const enityName = 'Costs';
 
+const selected = null;
+const onSelected = (val) => {
+    console.log(val)
+}
+
+const selectedItems = [];
+const onSelectItems = (val) => {
+    console.log(val);
+}
 
 const Costs = () => {
-
-    const entity = useEntity({endpoint});
-
+    const entity = useEntity({ endpoint: '/period_structures_costs/' });
+    useEffect(() => {
+        entity.refresh();
+    }, []);
     return (
         <PowerTable
-            entityName={entityName}
-            data={entity.rows}
-            height={window.innerHeight - 90}
+            entityName={enityName}
             width={window.innerWidth}
+            height={window.innerHeight - 90}
             loading={entity.loading}
-            onRefresh={entity.refresh}
+            data={entity.rows}
             columnSchema={entity.schema.columns}
-            onEdit={entity.update}
 
-            actions={entity.schema.actions}
-            onMultiDelete={entity.removeMany}
+            addFormSchema={entity.schema.addForm}
             bulkEditFormSchema={entity.schema.bulkEditForm}
-            onBulkEdit={entity.updateMany}
+            importSchema={entity.schema.importSchema}
 
-            importSchema={[]}
-            onUpload={null}
+            onRefresh={entity.refresh}
+            onPost={entity.create}
+            onEdit={entity.updateField}
+            onUpload={entity.upload}
+            onBulkEdit={entity.updateMany}
+            onDelete={entity.remove}
+            onBulkDelete={entity.removeMany}
+
+            error={entity.error}
+            clearError={entity.clearError}
+
+            selected={selected}
+            onSelect={onSelected}
+            selectedItems={selectedItems}
+            onSelectItems={onSelectItems}
         />
     );
-}
+};
 
 export default Costs;

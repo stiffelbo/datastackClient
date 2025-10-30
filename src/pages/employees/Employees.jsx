@@ -1,57 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import React from 'react';
 
-import { getEmployees } from '../../services/employees/getEmployees';
+//Hooks
+import useEntity from '../../hooks/useEntity';
 
+// Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const sanitizeData = data => {
-  if(!data || !data.length) return [];
+const enityName = 'Employees';
 
-  return data.map(i => {
-    return {
-      ...i
-    }
-
-  })
+const selected = null;
+const onSelected = (val) => {
+  console.log(val)
 }
 
-const Employees = () => {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(false);
+const selectedItems = [];
+const onSelectItems = (val) => {
+  console.log(val);
+}
 
-  const populate = async () => {
-    setLoading(true);
-    try {
-      const { data } = await getEmployees();
-      setRows(sanitizeData(data));
-      if(data && data.length){
-        toast.success(`Pobrano ${data.length} wierszy danych.`);
-      }else{
-        toast.warning(`Pobrano ${data.length} wierszy danych!`);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Błąd podczas pobierania danych!');
-    } finally {
-      setLoading(false);
-    }
-  };
+const Users = () => {
+  const entity = useEntity({endpoint : '/employees/'});
 
-  useEffect(() => {
-    populate();
-  }, []);
+  return (
+    <PowerTable
+      entityName={enityName}
+      width={window.innerWidth}
+      height={window.innerHeight - 90}
+      loading={entity.loading}
+      data={entity.rows}
+      columnSchema={entity.schema.columns}
+      
+      addFormSchema={entity.schema.addForm}
+      bulkEditFormSchema={entity.schema.bulkEditForm}
+      importSchema={entity.schema.importSchema}
+      
+      onRefresh={entity.refresh}
+      onPost={entity.create}
+      onEdit={entity.updateField}
+      onUpload={entity.upload}
+      onBulkEdit={entity.updateMany}
+      onDelete={entity.remove}
+      onBulkDelete={entity.removeMany}      
 
-  return (   
-      <PowerTable
-        entityName='employees'
-        data={rows}
-        height={window.innerHeight - 90}
-        width={window.innerWidth}
-        loading={loading}
-        onRefresh={()=>populate()}
-      />
+      error={entity.error}
+      clearError={entity.clearError}
+
+      selected={selected}
+      onSelect={onSelected}
+      selectedItems={selectedItems}
+      onSelectItems={onSelectItems}
+    />
   );
 };
 
-export default Employees;
+export default Users;

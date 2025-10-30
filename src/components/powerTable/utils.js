@@ -230,6 +230,7 @@ export const sortData = (data = [], sortModel = [], columns = []) => {
 
             // Type-aware casting
             switch (type) {
+                case 'fk':
                 case 'number':
                     aValue = typeof aValue === 'number' ? aValue : parseFloat(String(aValue).replace(',', '.'));
                     bValue = typeof bValue === 'number' ? bValue : parseFloat(String(bValue).replace(',', '.'));

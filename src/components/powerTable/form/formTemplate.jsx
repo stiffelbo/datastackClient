@@ -250,7 +250,12 @@ const FormTemplate = ({
                 label={field.label}
                 type="number"
                 value={value === null || typeof value === 'undefined' ? '' : value}
-                onChange={(e) => setField(field.name, e.target.value)} // zapisujemy surowo (string) - jeśli chcesz parsować -> onCommit
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const normalized = typeof raw === 'string' ? raw.replace(',', '.') : raw;
+                  console.log(normalized);
+                  setField(field.name, normalized);
+                }}
                 error={!!errorsText}
                 helperText={errorsText || field.helperText}
                 size={field.size || 'small'}

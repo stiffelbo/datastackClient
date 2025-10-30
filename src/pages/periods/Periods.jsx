@@ -6,7 +6,7 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const enityName = 'Structures';
+const enityName = 'Periods';
 
 const selected = null;
 const onSelected = (val) => {
@@ -18,8 +18,8 @@ const onSelectItems = (val) => {
     console.log(val);
 }
 
-const Structures = () => {
-    const entity = useEntity({ endpoint: '/structures/' });
+const Salaries = () => {
+    const entity = useEntity({ endpoint: '/periods/' });
     useEffect(() => {
         entity.refresh();
     }, []);
@@ -55,4 +55,4 @@ const Structures = () => {
     );
 };
 
-export default Structures;
+export default Salaries;

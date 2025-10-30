@@ -45,10 +45,13 @@ function organizeSchema(input = defaultSchema) {
 
   const optionsDict = schema.options || {};
 
+  //const emptyOption = {value : '', label: '--Brak wartosci--', title: 'pusta wartość', disabled: false};
+
   const getOpts = (key) => {
     const opts = optionsDict?.[key];
-    return Array.isArray(opts) && opts.length > 0 ? opts : null;
-  };
+    const result = Array.isArray(opts) && opts.length > 0 ? opts : null;
+    return result;
+};
 
   // -------- addForm block --------
   if (Array.isArray(schema.addForm.schema)) {
@@ -107,7 +110,7 @@ function organizeSchema(input = defaultSchema) {
       const { field, input, editable } = col;
 
       // Rule: input === 'select' AND editable === true → set/create selectOptions from options[field]
-      if (input === 'select' && editable === true && field) {
+      if (input === 'select' && field) {
         const opts = getOpts(field);
         if (opts) {
           return {
@@ -348,7 +351,7 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         setLoading(true);
         try {
             const res = await http.post(url, data);
-            const id = res.created ?? null;
+            const id = res.id ?? null;
             const r = await getOne(id);
             if (id) toast.success(`${entityName || 'Rekord'} utworzony wpis o id: ${id}`);
             return id;

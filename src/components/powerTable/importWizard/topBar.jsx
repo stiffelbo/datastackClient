@@ -16,6 +16,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 
 import AlertsChips from "./alertChips";
+import TopBarLists from "./topBarLists";
 /**
  * TopBar z podziałem na segmenty:
  *  [ akcja ] | [ nawigacja ] | [ alerty ] | [ misc ]
@@ -42,6 +43,9 @@ const TopBar = ({
     alertsProps = null,
     importSchema = [],
     mapping = {},
+    lists = [],
+    optionValues = {},
+    onListsChange = null,
     loading = false
 }) => {
     // helper do wrappera tooltipu na disabled element
@@ -143,6 +147,9 @@ const TopBar = ({
                         </Typography>
                     </Box>
                 )}
+            </Box>
+            <Box>
+                <TopBarLists lists={lists} values={optionValues} onChange={onListsChange}/>
             </Box>
         </Stack>
     );
