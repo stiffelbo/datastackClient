@@ -147,7 +147,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
 
   // ---- helpers ----
   const updateField = (field, changes) => {
-    console.log(field,changes);
     setColumns(prev =>
       prev.map(col => (col.field === field ? { ...col, ...changes } : col))
     );

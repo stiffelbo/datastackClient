@@ -11,6 +11,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { operatorsByType } from './utils';
 import MultiSelectFilter from './multiSelectFilter';
+import MultiSelectOptionsFilter from './multiSelectOptionsFilter';
 
 const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => {
   const { field, type } = column;
@@ -49,6 +50,18 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
         return renderDateValue();
       case 'boolean':
         return renderBooleanValue();
+      case 'fk':
+      case 'FK':
+        return (
+          <MultiSelectOptionsFilter
+            field={field}
+            data={data}
+            id={id}
+            columnsSchema={columnsSchema}
+            value={value}
+            onChange={(val) => handleChange('value', val)}
+          />
+        );
       default:
         return (
           <Filter.ValueInput
@@ -78,6 +91,7 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
     if (['isEmpty', 'notEmpty'].includes(op)) {
       return null;
     }
+
     return (
       <Filter.ValueInput
         type="text"
@@ -135,6 +149,7 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
       />
     );
   };
+
 
   // --- MAIN RETURN ---
   return (
@@ -212,3 +227,4 @@ Filter.BooleanSelect = ({ value, onChange }) => (
 );
 
 Filter.MultiSelect = MultiSelectFilter;
+Filter.MultiSelectOptions = MultiSelectOptionsFilter;

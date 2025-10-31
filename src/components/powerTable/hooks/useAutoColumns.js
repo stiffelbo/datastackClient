@@ -133,6 +133,7 @@ const useAutoColumns = (data = [], dev = {}) => {
         editable: false, // lub (params) => bool
         validationFn: null, // (val, params) => true | false | 'error message'
         options: [], // dla selectów / lookupów
+        optionsMap: {}, // dla selectów / lookupów
 
         /* 📒 Formatowanie i wygląd */
         styleFn: null, // (val, params) => sx

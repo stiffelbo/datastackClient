@@ -1,28 +1,31 @@
-import { isBefore, isAfter, isEqual, startOfDay, subDays, addDays, parseDate } from './dateUtils';
+import { startOfDay, parseDate } from './dateUtils';
 
 export const operatorsByType = {
     string: ['contains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'isEmpty', 'notEmpty', 'multiSelect'],
     number: ['equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'between', 'isEmpty', 'notEmpty'],
     date: ['between', 'isEmpty', 'notEmpty', 'isPast', 'isFuture'],
-    boolean: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty']
+    boolean: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty'],
+    fk: ['fk']
 };
 
 export const defaultFilterValue = (op, type) => {
     if (op === 'between') return { min: '', max: '' };
+    if (op === 'fk' || op === 'FK') return { include: [], exclude: [] };
     if (op === 'multiSelect') return { include: [], exclude: [] };
     if (['isEmpty', 'notEmpty', 'isTrue', 'isFalse'].includes(op)) return null;
     return type === 'number' ? 0 : '';
 };
 
 export const createFilter = (field, type = 'string') => {
-    const firstOp = operatorsByType[type][0];
-    return {
+    const firstOp = operatorsByType[type] ? operatorsByType[type][0] : null;
+    const newFilter = {
         id: Date.now(),                          // 👈 timestamp jako unikalne id
         field,
         type,
         op: firstOp,
         value: defaultFilterValue(firstOp, type),
     };
+    return newFilter;
 };
 
 export const getUniqueOptions = (data, field) => {
@@ -46,6 +49,16 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     const isEmpty = rawValue === null || rawValue === undefined || rawValue === '';
     if (op === 'isEmpty') return isEmpty;
     if (op === 'notEmpty') return !isEmpty;
+
+    //FK
+    if(type = 'fk'){
+        if (op === 'fk') {
+            const { include = [], exclude = [] } = value || {};
+            if (include.length && !include.includes(rawValue)) return false;
+            if (exclude.length && exclude.includes(rawValue)) return false;
+            return true;
+        }
+    }
 
     // STRING
     if (type === 'string') {
@@ -147,9 +160,26 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
 export const applyFilters = ({data = [], columnsSchema = {}, omit = [], selectedIds = []}) => {
 
+    const fieldsNotToJoinForSlug = ['created_by', 'deleted_by', 'updated_by'];
+
     const columns = columnsSchema.columns || [];
     const globalSearch = columnsSchema.globalSearch;
     const showSelected = columnsSchema.showSelected;
+
+    const optionsDict = {
+        //field : {val : label, val : label, val : label...},
+        //field : {val : label, val : label, val : label...},
+    };
+
+    columns.forEach(column => {
+        if(column.optionsMap && Object.keys(column.optionsMap).length > 0){
+            if(!fieldsNotToJoinForSlug.includes(column.field)){
+                optionsDict[column.field] = column.optionsMap;
+            }
+        }
+    });
+
+    const fieldsToJoin = Object.keys(optionsDict) || [];
 
     return data.filter((row) => {
         if(showSelected){
@@ -166,8 +196,10 @@ export const applyFilters = ({data = [], columnsSchema = {}, omit = [], selected
         if (globalSearch && globalSearch.trim()) {
             const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
             const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
-
-            const rowSlug = Object.values(row).join(' ').toLowerCase();
+            let rowSlug = Object.values(row).join(' ').toLowerCase();
+            fieldsToJoin.forEach(field => {
+                rowSlug += ` ${optionsDict[field][row[field]]}`;
+            });
 
             const matchGlobal = orGroups.some(group => {
                 const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
