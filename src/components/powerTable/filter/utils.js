@@ -1,7 +1,7 @@
 import { startOfDay, parseDate } from './dateUtils';
 
 export const operatorsByType = {
-    string: ['contains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'isEmpty', 'notEmpty', 'multiSelect'],
+    string: ['multiSelect', 'contains', 'isEmpty', 'notEmpty'],
     number: ['equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'between', 'isEmpty', 'notEmpty'],
     date: ['between', 'isEmpty', 'notEmpty', 'isPast', 'isFuture'],
     boolean: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty'],
@@ -47,11 +47,12 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     const { op, value } = filter;
 
     const isEmpty = rawValue === null || rawValue === undefined || rawValue === '';
+    console.log(filter, value, rawValue);
     if (op === 'isEmpty') return isEmpty;
     if (op === 'notEmpty') return !isEmpty;
 
     //FK
-    if(type = 'fk'){
+    if(type === 'fk'){
         if (op === 'fk') {
             const { include = [], exclude = [] } = value || {};
             if (include.length && !include.includes(rawValue)) return false;
@@ -64,7 +65,7 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     if (type === 'string') {
         const val = String(rawValue ?? '').toLowerCase();
         const fval = String(value ?? '').toLowerCase();
-
+        
         if (op === 'equals') return val === fval;
         if (op === 'notEquals') return val !== fval;
         if (op === 'contains') return val.includes(fval);
@@ -73,6 +74,7 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
         if (op === 'multiSelect') {
             const { include = [], exclude = [] } = value || {};
+            console.log(include, exclude, value);
             if (include.length && !include.includes(rawValue)) return false;
             if (exclude.length && exclude.includes(rawValue)) return false;
             return true;

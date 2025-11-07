@@ -10,11 +10,13 @@ const ColumnFilters = ({ data, columnsSchema, field, column, onClose }) => {
 
   const handleChange = (id, newFilter) => {
     const updated = [...filters.filter(item => item.id !== id), newFilter];
+    console.log(updated);
     columnsSchema.setFilters(field, updated);
   };
 
   const handleAdd = () => {
-    const newFilter = createFilter(column.field, column.type, )
+    const newFilter = createFilter(column.field, column.type);
+    console.log(newFilter);
     columnsSchema.setFilters(field, [...filters, newFilter]);
   };
 

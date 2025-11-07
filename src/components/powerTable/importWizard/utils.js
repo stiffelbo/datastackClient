@@ -130,39 +130,77 @@ const excelToDate = (n) => {
 export function normalizeToIsoDate(val) {
   if (val == null || val === '') return val;
 
-  // 1) już Date
-  if (val instanceof Date && !isNaN(val)) return ymdUTC(val);
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const toIsoYmd = (y, m, d) => `${y}-${pad2(m)}-${pad2(d)}`;
 
-  // 2) spróbuj wprost new Date(...)
+  // 1) Już Date -> potraktuj jako lokalny dzień, ale zwróć bez przesunięć:
+  if (val instanceof Date && !isNaN(val)) {
+    return toIsoYmd(val.getFullYear(), val.getMonth() + 1, val.getDate());
+  }
+
+  // zamień do stringa jednolicie
+  const s = typeof val === 'string' ? val.trim() : String(val).trim();
+
+  // 2) ISO "YYYY-MM-DD" -> zwróć wprost (bez konwersji do Date)
+  const isoDateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoDateOnly) {
+    return `${isoDateOnly[1]}-${isoDateOnly[2]}-${isoDateOnly[3]}`;
+  }
+
+  // 3) DMY: dd[/.-]mm[/.-](yyyy|yy) – EU format
   {
-    const s = typeof val === 'string' ? val.trim() : val;
-    const try1 = new Date(s);
-    if (!isNaN(try1)) return ymdUTC(try1);
-  }
-
-  // 3) Excel serial (number lub string-liczba)
-  if (typeof val === 'number' || (typeof val === 'string' && /^\d+(\.\d+)?$/.test(val.trim()))) {
-    const num = typeof val === 'number' ? val : Number(val.trim());
-    if (isExcelSerial(num)) return ymdUTC(excelToDate(num));
-  }
-
-  // 4) DMY: dd[/.-]mm[/.-]yyyy -> y-m-d (EU format, np. 28/05/2025, 1.7.24)
-  if (typeof val === 'string') {
-    const m = val.trim().match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2}|\d{4})$/);
+    const m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/);
     if (m) {
-      let [ , d, mth, y ] = m;
+      let [, d, mo, y] = m;
       if (y.length === 2) y = (Number(y) >= 70 ? '19' : '20') + y;
-      const dNum = Number(d), mNum = Number(mth);
+      const dNum = Number(d), mNum = Number(mo), yNum = Number(y);
       if (mNum >= 1 && mNum <= 12 && dNum >= 1 && dNum <= 31) {
-        const dt = new Date(Date.UTC(Number(y), mNum - 1, dNum));
-        if (!isNaN(dt)) return ymdUTC(dt);
+        // Użyj Date.UTC, żeby uniknąć przesunięć strefy
+        const dt = new Date(Date.UTC(yNum, mNum - 1, dNum));
+        if (!isNaN(dt)) return `${yNum}-${pad2(mNum)}-${pad2(dNum)}`;
       }
     }
   }
 
-  // 5) nie rozpoznano — oddaj oryginał (nie psujemy danych)
+  // 4) Excel serial (number lub string-liczba)
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const num = Number(s);
+    if (isExcelSerial(num)) {
+      const dt = excelToDate(num); // Twoja funkcja
+      return toIsoYmd(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate());
+    }
+  }
+
+  // 5) Pełne ISO/timestamp z T/Z/offsetem -> wtedy dopuszczamy new Date
+  if (/[TzZ+\-]\d{2}:?\d{2}?/.test(s) || /^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const tryIso = new Date(s);
+    if (!isNaN(tryIso)) {
+      return toIsoYmd(tryIso.getUTCFullYear(), tryIso.getUTCMonth() + 1, tryIso.getUTCDate());
+    }
+  }
+
+  // 6) Opcjonalnie: bezpieczny MDY (US) jeśli ktoś jednak poda MM/DD/YYYY
+  //    Uwaga: tylko jeżeli miesiąc > 12 lub dzień > 12 rozstrzyga kolizję,
+  //    w przeciwnym razie lepiej zwrócić oryginał, żeby nic nie zepsuć.
+  {
+    const mdy = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
+    if (mdy) {
+      const mm = Number(mdy[1]);
+      const dd = Number(mdy[2]);
+      const yyyy = Number(mdy[3]);
+      // parsuj jako MDY tylko jeśli jednoznaczne (np. 13/02/2025)
+      if ((mm > 12 && dd <= 31) || (dd > 12 && mm <= 12)) {
+        const y = yyyy, m = mm, d = dd;
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        if (!isNaN(dt)) return toIsoYmd(y, m, d);
+      }
+    }
+  }
+
+  // 7) Nie rozpoznano — oddaj oryginał
   return val;
 }
+
 
 
 /**
