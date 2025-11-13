@@ -17,7 +17,8 @@ const VirtualizedGroupedBody = ({
   overscan = 20,
   height = 600,
   scrollTop = 0,
-  actionsApi
+  actionsApi,
+  editing
 }) => {
   const visibleCount = Math.ceil(height / rowHeight);
   const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
@@ -110,6 +111,7 @@ const VirtualizedGroupedBody = ({
             settings={{...settings, rowHeight: rowHeight}}
             actionsApi={actionsApi}
             parent="grouprow"
+            editing={editing}
           />
         );
       })}

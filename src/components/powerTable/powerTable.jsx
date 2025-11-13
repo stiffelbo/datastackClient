@@ -254,7 +254,6 @@ const PowerTable = ({
           )}
         </Box>
       </Box>
-
       {renderModalContent()}
     </>
   );

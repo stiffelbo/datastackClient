@@ -48,7 +48,7 @@ const App = () => (
         <Route path="jiraissue" element={<JiraIssue />} />
         <Route path="costitemdict" element={<CostItemDict />} />
         <Route path="contractor" element={<Contractor />} />
-        <Route path="issue/:id" element={<Issue />} />
+        <Route path="issue/:sygn" element={<Issue />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>
