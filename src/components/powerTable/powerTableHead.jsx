@@ -44,7 +44,10 @@ const PowerTableHead = ({
   onHeightChange,
   height,
   actionsApi,
-  data = []
+  data = [],
+  // 🔹 NOWE:
+  isTree = false,
+  treeColumnWidth = 40,
 }) => {
   const ref = useRef(null);
 
@@ -53,9 +56,9 @@ const PowerTableHead = ({
   useEffect(() => {
     if (ref.current && onHeightChange) {
       const calcHeight = ref.current.getBoundingClientRect().height;
-      if (height === calcHeight) onHeightChange(calcHeight);
+      if (height !== calcHeight) onHeightChange(calcHeight);
     }
-  }, [height]);
+  }, [height, onHeightChange]);
 
   // === Drag & drop columns ===
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -69,11 +72,38 @@ const PowerTableHead = ({
     setDraggedIndex(null);
   };
 
+  const visibleCols = columnsSchema.getVisibleColumns();
+
   return (
     <>
       <TableHead ref={ref}>
         <TableRow>
-          {columnsSchema.getVisibleColumns().map((col) => {
+          {/* 🔹 Systemowa pierwsza kolumna dla trybu TREE */}
+          {isTree && (
+            <TableCell
+              sx={{
+                width: treeColumnWidth,
+                minWidth: treeColumnWidth,
+                maxWidth: treeColumnWidth,
+                overflow: 'hidden',
+                backgroundColor: '#f8f8f8ff',
+                fontWeight: 'bold',
+                fontSize: '0.8em',
+                position: 'sticky',
+                top: 0,
+                zIndex: 3, // trochę wyżej niż zwykłe head cells
+                whiteSpace: 'nowrap',
+                borderRight: '1px solid #ddd',
+              }}
+              // tu możesz kiedyś wrzucić np. ikonę drzewa / expand-all
+              title="Struktura drzewa"
+            >
+              {/* Na razie pusto lub jakiś symbol, np.: */}
+              {/* <span>🌳</span> */}
+            </TableCell>
+          )}
+
+          {visibleCols.map((col) => {
             const sortDir = columnsSchema.getSortDirection(col.field);
             const groupIndex = col.groupIndex;
             const isGrouped = typeof groupIndex === 'number';
@@ -86,27 +116,29 @@ const PowerTableHead = ({
             );
 
             const cellSX = getCellSX(col);
-                       
+
             const bgColor = col.editable ? "#e3f2fd" : 'white';
             cellSX['backgroundColor'] = bgColor;
+
             let cellTitle = col.headerName
               ? [col.headerName, col.fieldGroup].filter(Boolean).join(' - ')
               : [col.field, col.fieldGroup].filter(Boolean).join(' - ');
-            
-            if(col.editable) cellTitle += ' edytowalne';
-            
+
+            if (col.editable) cellTitle += ' edytowalne';
 
             if (col.type === 'action') {
-              return <ActionCell
-                key={col.field}
-                column={col}
-                columnsSchema={columnsSchema}
-                params={{}}
-                parent="header"
-                actionsApi={actionsApi}
-                cellSX={cellSX}
-                data={data}
-              />
+              return (
+                <ActionCell
+                  key={col.field}
+                  column={col}
+                  columnsSchema={columnsSchema}
+                  params={{}}
+                  parent="header"
+                  actionsApi={actionsApi}
+                  cellSX={cellSX}
+                  data={data}
+                />
+              );
             } else {
               return (
                 <TableCell
@@ -197,8 +229,6 @@ const PowerTableHead = ({
                 </TableCell>
               );
             }
-
-
           })}
         </TableRow>
       </TableHead>

@@ -2,23 +2,38 @@ import React, { useRef, useEffect } from 'react';
 
 import { createCellParams } from './cell/cellParams';
 
-import { TableFooter, TableRow } from '@mui/material';
+import { TableFooter, TableRow, TableCell } from '@mui/material';
 
 import PowerTableCell from './powerTableCell';
 
-
-const PowerTableFooter = ({ data, columnsSchema, settings = {}, actionsApi = {}, onHeightChange, height }) => {
+const PowerTableFooter = ({
+  data,
+  columnsSchema,
+  settings = {},
+  actionsApi = {},
+  onHeightChange,
+  height,
+  // 🔹 jak w headerze:
+  isTree = false,
+  treeColumnWidth = 40,
+}) => {
   const ref = useRef(null);
 
   useEffect(() => {
     if (ref.current && onHeightChange) {
       const calcheight = ref.current.getBoundingClientRect().height;
-      if(height === calcheight) onHeightChange(calcheight);
+      // lepiej reagować na zmianę wysokości niż na równość
+      if (height !== calcheight) onHeightChange(calcheight);
     }
-  }, [height]);
-  const aggregates = columnsSchema.getAggregatedValues(data);
+  }, [height, onHeightChange]);
 
-   
+  const aggregates = columnsSchema.getAggregatedValues(data);
+  const visibleCols = columnsSchema.getVisibleColumns();
+
+  // pozwalamy, żeby isTree przyszło też z settings, jeśli ktoś nie podał propsa
+  const effectiveIsTree = typeof isTree === 'boolean' ? isTree : !!settings.isTree;
+  const effectiveTreeColWidth =
+    treeColumnWidth || settings.treeColumnWidth || 40;
 
   return (
     <TableFooter ref={ref}>
@@ -30,9 +45,28 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, actionsApi = {},
           zIndex: 1,
         }}
       >
-        {columnsSchema.getVisibleColumns().map((col) => {
+        {/* 🔹 systemowa pierwsza kolumna dla drzewa */}
+        {effectiveIsTree && (
+          <TableCell
+            sx={{
+              width: effectiveTreeColWidth,
+              minWidth: effectiveTreeColWidth,
+              maxWidth: effectiveTreeColWidth,
+              backgroundColor: '#f9f9f9',
+              borderRight: '1px solid #ddd',
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {/* Tu możesz dać np. label "SUMA" / "AGG" itd., na razie puste */}
+          </TableCell>
+        )}
+
+        {visibleCols.map((col) => {
           const raw = aggregates[col.field];
           const params = createCellParams({ value: raw, row: {}, column: col });
+
           return (
             <PowerTableCell
               key={col.field}
@@ -49,7 +83,7 @@ const PowerTableFooter = ({ data, columnsSchema, settings = {}, actionsApi = {},
                 ...settings,
                 sx: { fontWeight: 'bold', ...(settings.sx || {}) },
               }}
-              parent={'footer'}
+              parent="footer"
               actionsApi={actionsApi}
               params={params}
             />

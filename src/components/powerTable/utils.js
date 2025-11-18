@@ -368,3 +368,130 @@ export const computeViewSelection = ({ data = [], selectedIds = [] }) => {
   const notSelectedInView = viewIds.filter((id) => !selSet.has(id));
   return { viewIds, selectedInView, notSelectedInView };
 };
+
+//TRee data
+// utils.js
+
+/**
+ * Buduje drzewo po parentField.
+ * Zwraca:
+ *  - roots: tablica węzłów root
+ *  - map:   id -> node
+ *
+ * node ma postać: { ...row, children: [] }
+ */
+export const buildTreeByParent = (
+  data = [],
+  {
+    idField = 'id',
+    parentField = 'parent_id',
+    rootValue = null, // np. null albo 0
+  } = {}
+) => {
+  const map = {};
+  const roots = [];
+
+  // Tworzymy węzły
+  data.forEach((row) => {
+    const id = row[idField];
+    if (id == null) return;
+    map[id] = { ...row, children: [] };
+  });
+
+  // Łączymy parent → children
+  data.forEach((row) => {
+    const id = row[idField];
+    const parentId = row[parentField];
+    const node = map[id];
+    if (!node) return;
+
+    const isRoot =
+      parentId === rootValue ||
+      parentId == null ||
+      !map[parentId]; // brak rodzica w danych → też root
+
+    if (isRoot) {
+      roots.push(node);
+    } else {
+      map[parentId].children.push(node);
+    }
+  });
+
+  // 🔹 policz wszystkich potomków dla każdego node'a
+  const countDescendants = (node) => {
+    let count = 0;
+    if (Array.isArray(node.children) && node.children.length > 0) {
+      node.children.forEach((child) => {
+        count += 1; // samo dziecko
+        count += countDescendants(child); // jego potomkowie
+      });
+    }
+    node.__totalDescendants = count; // zapisujemy meta na node'cie
+    return count;
+  };
+
+  roots.forEach((root) => {
+    countDescendants(root);
+  });
+
+  return [roots, map];
+};
+
+
+/**
+ * Spłaszcza drzewo do listy, z poziomem i path.
+ * collapseState: { [path]: true } oznacza ZWINIĘTY węzeł.
+ *
+ * Zwraca tablicę "węzłów": {
+ *   row:      obiekt danych z meta,
+ *   level:    number,
+ *   path:     string,
+ *   hasChildren: boolean,
+ * }
+ */
+export const flattenTree = (
+  roots = [],
+  collapseState = {},
+  { idField = 'id' } = {}
+) => {
+  const result = [];
+
+  const walk = (nodes, level = 0, ancestorPath = []) => {
+    nodes.forEach((node) => {
+      const id = node[idField];
+      const pathArr = [...ancestorPath, id];
+      const path = pathArr.join('/');
+      const children = node.children || [];
+      const hasChildren = children.length > 0;
+      const collapsed = collapseState[path] === true;
+
+      const totalDescendants = node.__totalDescendants ?? 0;
+
+      // wzbogacamy row o meta (nie mutujemy oryginału z zewnątrz)
+      const rowWithMeta = {
+        ...node,
+        __treeLevel: level,
+        __treePath: path,
+        __treeHasChildren: hasChildren,
+        __childrenCount: totalDescendants,  // 🔹 liczba wszystkich potomków
+        __treeCollapsed: collapsed,
+      };
+
+      result.push({
+        type: 'node',
+        row: rowWithMeta,
+        level,
+        path,
+        hasChildren,
+      });
+
+      if (!collapsed && hasChildren) {
+        walk(children, level + 1, pathArr);
+      }
+    });
+  };
+
+  walk(roots, 0, []);
+  return result;
+};
+

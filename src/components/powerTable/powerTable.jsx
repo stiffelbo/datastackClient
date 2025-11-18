@@ -15,6 +15,7 @@ import { exportToXLSWithSchema } from './utils';
 import PowerSidebar from './powerSidebar';
 import FlatTable from './flatTable';
 import GroupedTableV from './groupedTableV';
+import TreeTableV from './treeTableV';
 
 import SettingsModal from './settingsModal';
 import PresetsModal from './presetsModal';
@@ -23,6 +24,12 @@ import UploadModal from './uploadModal';
 import AddFormModal from './addFormModal';
 
 const V_N_COUNT = 10000;
+
+const defaultTree = {
+  parentField: 'parent_id',
+  idField: 'id',
+  rootValue: null,          // węzły root (parent_id === null)
+};
 
 const PowerTable = ({
   //misc
@@ -33,15 +40,16 @@ const PowerTable = ({
   //core table
   data = [],
   columnSchema = [],
+  treeConfig = { defaultTree },
   //Form Schemas
-  addFormSchema = {label : '', schema: [] },
-  bulkEditFormSchema = {label : '', schema: [] },
+  addFormSchema = { label: '', schema: [] },
+  bulkEditFormSchema = { label: '', schema: [] },
   importSchema = null,
   //Crud Callbacks
   onRefresh,
   onPost = null,
   onEdit = null,
-  onUpload= null,
+  onUpload = null,
   onBulkEdit = null,
   onDelete = null,
   onBulkDelete = null,
@@ -56,12 +64,12 @@ const PowerTable = ({
 }) => {
 
   const devColumnsLookup = {};
-  if(Array.isArray(columnSchema)){
+  if (Array.isArray(columnSchema)) {
     columnSchema.forEach(col => devColumnsLookup[col.field] = col);
   }
 
   const presets = usePresets({ entityName });
-  const actionsApi = useSelection({onSelect, selectedInit : selected, onSelectItems, selectedItems, onDelete, onBulkEdit, onBulkDelete});
+  const actionsApi = useSelection({ onSelect, selectedInit: selected, onSelectItems, selectedItems, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns(data, devColumnsLookup);
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions });
@@ -153,14 +161,33 @@ const PowerTable = ({
   const handleExport = () => {
     exportToXLSWithSchema(filteredData, columnsSchema.columns, `${entityName}.xlsx`);
   };
+  const isTree = !!treeConfig && !isGrouped; // jeśli chcesz, żeby grupowanie miało priorytet
 
-  const renderTable = () =>
+  const settingsWithTree = {
+    ...settings,
+    isTree,
+    treeColumnWidth: settings?.treeColumnWidth ?? 140,
+    treeIndentStep: settings?.treeIndentStep ?? 2,
+    height
+  };
+
+   const renderTable = () =>
     isGrouped ? (
       <GroupedTableV
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
-        settings={{ height }}
+        settings={settingsWithTree}
+        editing={editing}
+        actionsApi={actionsApi}
+      />
+    ) : isTree ? (
+      <TreeTableV
+        initialData={data}
+        data={sortedData}
+        columnsSchema={columnsSchema}
+        settings={settingsWithTree}
+        treeConfig={treeConfig}
         editing={editing}
         actionsApi={actionsApi}
       />
@@ -171,6 +198,7 @@ const PowerTable = ({
         columnsSchema={columnsSchema}
         isVirtualized={isVirtualized}
         height={height}
+        settings={settingsWithTree}
         editing={editing}
         actionsApi={actionsApi}
       />

@@ -31,6 +31,11 @@ const Structures = () => {
             loading={entity.loading}
             data={entity.rows}
             columnSchema={entity.schema.columns}
+            treeConfig={{
+                parentField: 'parent_id',
+                idField: 'id',
+                rootValue: null
+            }}
 
             addFormSchema={entity.schema.addForm}
             bulkEditFormSchema={entity.schema.bulkEditForm}
