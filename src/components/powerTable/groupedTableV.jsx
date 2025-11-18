@@ -128,7 +128,6 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
   // ZBIORCZE zwijanie/rozwijanie poziomu – kaskadowo od tego poziomu w dół
   const toggleCollapseLevel = useCallback((level) => {
     setGroupCollapseState((prev) => {
-      console.log(groupCollapseState, level, prev);
       const entries = Object.entries(prev);
 
       // wszystkie grupy DOKŁADNIE na tym poziomie (0-based)
@@ -148,7 +147,6 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
       for (const [path] of levelEntries) {
         updated = setBranchState(updated, path, shouldCollapse);
       }
-      console.log(prev, updated);
       return updated;
     });
   }, []);
@@ -160,8 +158,7 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
   );
 
   const handleScroll = (e) => setScrollTop(e.target.scrollTop);
-  const handleHeightChange = (section, value) =>
-    setHeightMap((prev) => ({ ...prev, [section]: value }));
+  const handleHeightChange = (section, value) => {setHeightMap((prev) => ({ ...prev, [section]: value }))};
 
   const bodyHeight = (settings?.height || 600) - (heightMap.header + heightMap.footer);
   return (
@@ -185,6 +182,7 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
             onToggleCollapse={toggleCollapseLevel}
             onHeightChange={(h) => handleHeightChange('header', h)}
             actionsApi={actionsApi}
+            height={heightMap.header}
           />
           <VirtualizedGroupedBody
             flatData={flatData}

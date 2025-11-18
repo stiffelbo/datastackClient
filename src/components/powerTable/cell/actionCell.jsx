@@ -46,7 +46,7 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
   //SINGLE SELECT
 
   if (type === "select") {
-    if (parent === "body" || parent === "grouprow") {
+    if (parent === "body" || parent === "grouprow" || parent === "tree") {
       if (selected === params.id) {
         button.icon = <CircleIcon fontSize="small" />;
         button.color = "primary";
@@ -150,7 +150,7 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
       }
     }
 
-    else if (parent === "body") {
+    else if (parent === "body"  || parent === "tree") {
       if (selectedIds.includes(params.id)) {
         button.icon = <CheckCircleIcon fontSize="small" />;
         button.color = "secondary";
@@ -168,7 +168,7 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
   //DELETE
 
   else if (type === "delete") {
-    if (parent === "body" || parent === "grouprow") {
+    if (parent === "body" || parent === "grouprow"  || parent === "tree") {
       button.icon = <DeleteIcon fontSize="small" />;
       button.color = "error";
       button.title = "Usuń wiersz";

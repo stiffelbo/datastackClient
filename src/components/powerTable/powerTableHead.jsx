@@ -56,7 +56,10 @@ const PowerTableHead = ({
   useEffect(() => {
     if (ref.current && onHeightChange) {
       const calcHeight = ref.current.getBoundingClientRect().height;
-      if (height !== calcHeight) onHeightChange(calcHeight);
+      if (height !==  calcHeight){
+        console.log(height, calcHeight);
+        onHeightChange(calcHeight);
+      } 
     }
   }, [height, onHeightChange]);
 
