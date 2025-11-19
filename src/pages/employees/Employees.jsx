@@ -1,31 +1,40 @@
 import React from 'react';
 
-//Hooks
+// Hooks
 import useEntity from '../../hooks/useEntity';
+import {useRwd} from '../../context/RwdContext';
+import useDashboardState from '../../hooks/useDashboardState';
 
 // Comp
 import PowerTable from '../../components/powerTable/powerTable';
+import DashboardLayout from '../../components/dashboard/DashboardLayout';
+import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
-const enityName = 'Employees';
+const entityName = 'Employees';
 
-const selected = null;
-const onSelected = (val) => {
-  console.log(val)
-}
+const Employees = () => {
+  const { width, height } = useRwd(); // RWD z poziomu app
+  const entity = useEntity({ endpoint: '/employees/' });
 
-const selectedItems = [];
-const onSelectItems = (val) => {
-  console.log(val);
-}
+  const {
+    currentId,
+    setCurrentId,
+    tab,
+    setTab,
+  } = useDashboardState({ entityName });
 
-const Users = () => {
-  const entity = useEntity({endpoint : '/employees/'});
+  const selectedRow =
+    currentId != null
+      ? entity.rows?.find((r) => +r.id === +currentId)
+      : null;
 
-  return (
+  const showRight = !!selectedRow;
+
+  const listNode = (
     <PowerTable
-      entityName={enityName}
-      width={window.innerWidth}
-      height={window.innerHeight - 90}
+      entityName={entityName}
+      width={width}
+      height={height - 90}
       loading={entity.loading}
       data={entity.rows}
       columnSchema={entity.schema.columns}
@@ -45,12 +54,41 @@ const Users = () => {
       error={entity.error}
       clearError={entity.clearError}
 
-      selected={selected}
-      onSelect={onSelected}
-      selectedItems={selectedItems}
-      onSelectItems={onSelectItems}
+      selected={currentId}
+      onSelect={setCurrentId}
+      selectedItems={[]}
+      onSelectItems={null}
+      // selectedItems / onSelectItems możesz dalej obsłużyć jeśli potrzebne
+    />
+  );
+
+  const pageNode = showRight ? (
+    <BaseEntityPage
+      entityName={entityName}
+      id={currentId}
+      row={selectedRow}
+      rows={entity.rows}
+      schema={entity.schema}
+      tab={tab}
+      setTab={setTab}
+      onChangeId={setCurrentId}
+    />
+  ) : null;
+
+  return (
+    <DashboardLayout
+      showRight={showRight}
+      left={listNode}
+      right={pageNode}
+      initialLeftRatio={0.4}
+      minLeftRatio={0.2}
+      maxLeftRatio={0.8}
+      onResizeEnd={(ratio) => {
+        // TODO: później zapiszesz to w userPages / localStorage
+        console.log('Employees leftRatio:', ratio);
+      }}
     />
   );
 };
 
-export default Users;
+export default Employees;

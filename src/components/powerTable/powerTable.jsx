@@ -40,7 +40,7 @@ const PowerTable = ({
   //core table
   data = [],
   columnSchema = [],
-  treeConfig = { defaultTree },
+  treeConfig = null,
   //Form Schemas
   addFormSchema = { label: '', schema: [] },
   bulkEditFormSchema = { label: '', schema: [] },

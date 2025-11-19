@@ -8,12 +8,7 @@ import App from './App';
 
 import { AuthProvider } from './context/AuthContext';
 import { NavProvider } from './context/NavContext';
-import { CurrentProvider } from './context/CurrentContext';
-import { TabsProvider } from './context/TabsContext';
-import { FiltersProvider } from './context/FiltersContext';
-import { PresetsProvider } from './context/PresetsContext';
-
-
+import { RwdProvider } from './context/RwdContext';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -21,19 +16,13 @@ const basename = '/datastack';
 
 root.render(
   <BrowserRouter basename={basename} >
-    <AuthProvider>
-      <NavProvider>
-        <CurrentProvider>
-          <TabsProvider>
-            <FiltersProvider>
-              <PresetsProvider >
-                <App />
-                <ToastContainer position="bottom-right" autoClose={3000} />
-              </PresetsProvider>
-            </FiltersProvider>
-          </TabsProvider>
-        </CurrentProvider>
-      </NavProvider>
-    </AuthProvider>
+    <RwdProvider>
+      <AuthProvider>
+        <NavProvider>      
+          <App />
+          <ToastContainer position="bottom-right" autoClose={3000} />
+        </NavProvider>
+      </AuthProvider>
+    </RwdProvider>
   </BrowserRouter>
 );

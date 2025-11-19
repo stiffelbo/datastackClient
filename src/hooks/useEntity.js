@@ -26,6 +26,7 @@ const defaultSchema = {
     relations: {},
     options: {},      // { [fieldName]: Option[] }
     importSchema: [],
+    heightSpan : 90,
 };
 
 /**
@@ -626,20 +627,6 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
             setLoading(false);
         }
     }, [resolveEndpoint, http, getOne, setLoading, setError, toast, fetchRows]);
-
-
-    // permissions helper (simple booleans based on resolved endpoints)
-    const permissions = {
-        canCreate: !!resolveEndpoint('create'),
-        canUpdate: !!resolveEndpoint('update'),
-        canUpdateField: !!resolveEndpoint('updateField'),
-        canUpdateMany: !!resolveEndpoint('updateMany'),
-        canDelete: !!resolveEndpoint('delete'),
-        canDeleteMany: !!resolveEndpoint('deleteMany'),
-        canUpload: !!resolveEndpoint('upload'),
-    };
-
-    const actions = schema.actions || [];
 
     // final return — expose handlers as function or null (so UI can easily check)
     return {

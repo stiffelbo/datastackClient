@@ -1,23 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import ApiLoader from '../../components/ApiLoader';
+import React from 'react';
 import PowerTable from '../../components/powerTable/powerTable';
 
 //Mui
 import { Alert } from '@mui/material';
 
-const IssueClockify = ({ sygn }) => {
-  if (!sygn) {
-    return <Alert severity='error'>Brak Sygnatury</Alert>
+const IssueClockify = ({ data }) => {
+  if (!data) {
+    return <Alert severity='error'>Brak danych clockify</Alert>
   }
 
   return (
-    <ApiLoader
-      url="/clockify/getByIssue.php"
-      params={{ sygn }}
-      deps={[sygn]}
-      immediate={true}
-    >
-    </ApiLoader>
+      <PowerTable 
+        entity="JiraIssue_clockify"
+        data={data}
+        seleted={null}
+        selectedItems={null}
+      />
   );
 };
 

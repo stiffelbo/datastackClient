@@ -19,9 +19,11 @@ const FlatTable = ({
   const [heightMap, setHeightMap] = useState({ header: 0, footer: 0 });
   const [scrollTop, setScrollTop] = useState(0);
 
-  const handleHeightChange = useCallback((section, value) => {
-    setHeightMap(prev => ({ ...prev, [section]: value }));
-  }, []);
+  const handleHeightChange = (section, value) => {
+    if(heightMap[section] !== value){
+      setHeightMap(prev => ({ ...prev, [section]: value }));
+    }
+  };
 
   const handleScroll = (e) => {
     setScrollTop(e.target.scrollTop);

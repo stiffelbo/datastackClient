@@ -53,7 +53,9 @@ const TreeTableV = ({
   const [scrollTop, setScrollTop] = useState(0);
 
   const handleHeightChange = useCallback((section, value) => {
-    setHeightMap((prev) => ({ ...prev, [section]: value }));
+    if(heightMap[section] !== value){
+      setHeightMap(prev => ({ ...prev, [section]: value }));
+    }
   }, []);
 
   const handleScroll = (e) => {
