@@ -36,6 +36,7 @@ const PowerTable = ({
   entityName = 'default',
   width = 1500,
   height = 600,
+  rowHeight = 100,
   loading = false,
   //core table
   data = [],
@@ -166,7 +167,8 @@ const PowerTable = ({
     isTree,
     treeColumnWidth: settings?.treeColumnWidth ?? 140,
     treeIndentStep: settings?.treeIndentStep ?? 2,
-    height
+    height,
+    rowHeight
   };
 
    const renderTable = () =>

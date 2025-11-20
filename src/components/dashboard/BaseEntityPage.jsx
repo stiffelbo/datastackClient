@@ -1,37 +1,59 @@
-import React, { useMemo } from 'react';
+// components/dashboard/BaseEntityPage.jsx
+import React, { useMemo, useEffect } from 'react';
 import { Box, Tabs, Tab, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAuth } from '../../context/AuthContext';
 
 const DEFAULT_TABS = [
-  { key: 'details', label: 'Szczegóły', type: 'default' },
+  {
+    key: 'details',
+    label: 'Szczegóły',
+    component: ({ row }) => (
+      <pre style={{ fontSize: 11 }}>{JSON.stringify(row, null, 2)}</pre>
+    ),
+  },
 ];
 
+/**
+ * BaseEntityPage
+ *
+ * Props:
+ * - entityName: string
+ * - id: number|string
+ * - row: object
+ * - rows: array
+ * - onChangeId: (nextId|null) => void
+ * - tabs: [{ key, label, pageKey?, component, getProps? }]
+ * - tab: string (aktualny klucz taba)
+ * - setTab: (key) => void
+ */
 const BaseEntityPage = ({
   entityName,
   id,
   row,
   rows = [],
-  schema,
-  tabsConfig,
+  onChangeId,
+  tabs = [],
   tab,
   setTab,
-  onChangeId,
 }) => {
-  const tabs = useMemo(
-    () => (tabsConfig && tabsConfig.length ? tabsConfig : DEFAULT_TABS),
-    [tabsConfig]
-  );
-  const activeTab = tabs.find((t) => t.key === tab) || tabs[0];
 
-  if (!row) {
+  console.log(tabs, tab, setTab, rows, row, id, entityName);
+
+  if (!tabs.length) {
     return (
       <Box sx={{ p: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          Brak danych rekordu #{id}
+          Brak dostępnych zakładek dla encji {entityName}.
         </Typography>
       </Box>
     );
   }
+
+  const activeTab =
+    tabs.find((t) => t.key === tab) || tabs[0];
+
+  const ActiveComponent = activeTab.component;
 
   const handleTabChange = (e, value) => {
     setTab?.(value);
@@ -41,8 +63,9 @@ const BaseEntityPage = ({
     onChangeId?.(null);
   };
 
-  const currentIndex = rows.findIndex((r) => +r.id === +id);
-  const prevId = currentIndex > 0 ? rows[currentIndex - 1]?.id : null;
+  const currentIndex = rows.findIndex((r) => String(r.id) === String(id));
+  const prevId =
+    currentIndex > 0 ? rows[currentIndex - 1]?.id : null;
   const nextId =
     currentIndex >= 0 && currentIndex < rows.length - 1
       ? rows[currentIndex + 1]?.id
@@ -50,6 +73,17 @@ const BaseEntityPage = ({
 
   const goPrev = () => prevId && onChangeId?.(prevId);
   const goNext = () => nextId && onChangeId?.(nextId);
+
+  const baseContext = {
+    entityName,
+    id,
+    row,
+    rows,
+  };
+
+  const componentProps = activeTab.getProps
+    ? activeTab.getProps(baseContext)
+    : baseContext;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -91,20 +125,19 @@ const BaseEntityPage = ({
           onChange={handleTabChange}
           variant="scrollable"
         >
-          {tabs.map((t) => (
+          {availableTabs.map((t) => (
             <Tab key={t.key} value={t.key} label={t.label} />
           ))}
         </Tabs>
       </Box>
 
-      {/* CONTENT – generyczny fallback */}
+      {/* CONTENT */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
-        <Typography variant="caption" color="text.secondary">
-          (Generyczna strona encji {entityName} – podmień na custom renderPage)
-        </Typography>
-        <pre style={{ fontSize: 11, marginTop: 8 }}>
-          {JSON.stringify(row, null, 2)}
-        </pre>
+        {ActiveComponent ? (
+          <ActiveComponent {...componentProps} />
+        ) : (
+          <div>Brak komponentu dla zakładki {activeTab.key}</div>
+        )}
       </Box>
     </Box>
   );

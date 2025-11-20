@@ -13,7 +13,7 @@ import { valueFormatters } from "../valueFormatters";
  * - onDoubleClick
  * - editing (optional) - hook object returned by useTableEditing (to detect other edits and stop them)
  */
-const DisplayCell = ({ value, column = {}, settings = {}, params = {}, onDoubleClick, editing }) => {
+const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, onDoubleClick, editing }) => {
   const {
     sx = {},
     densityPadding = "6px 10px",
@@ -76,14 +76,25 @@ const DisplayCell = ({ value, column = {}, settings = {}, params = {}, onDoubleC
   }
 
   // 1️⃣ renderCell has highest priority (it receives params)
-  if (typeof column.renderCell === "function" && params) {
+  if (typeof column.renderCell === "function" && parent != 'footer' && params) {
     try {
-      // renderCell expected to return React node or string
-      const rc = column.renderCell(params);
-      // if renderCell returned something explicit, render that
+      // ja bym tu przekazał trochę bogatszy kontekst niż same params,
+      // ale jeśli u Ciebie renderCell oczekuje params – zostaw jak jest:
+      // const rc = column.renderCell(params);
+
+      const rc = column.renderCell({
+        value,
+        row: params.row,
+        column,
+        params,
+        parent
+      });
+
       return (
         <TableCell
           sx={{
+            height: '100%',
+            maxHeight: '100%',
             width: column.width,
             minWidth: column.minWidth,
             maxWidth: column.maxWidth,
@@ -92,9 +103,9 @@ const DisplayCell = ({ value, column = {}, settings = {}, params = {}, onDoubleC
             lineHeight: 1.3,
             verticalAlign: "top",
             textAlign: align,
-            whiteSpace: wrap ? "normal" : "nowrap",
-            overflow: ellipsis ? "hidden" : "visible",
-            textOverflow: ellipsis ? "ellipsis" : "clip",
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
             ...sx,
             ...conditionalSx,
           }}

@@ -12,22 +12,20 @@ const VirtualizedGroupedBody = ({
   settings,
   groupCollapseState,
   toggleCollapse,
-  rowHeight = 60,
-  groupHeight = 60,
   overscan = 20,
   height = 600,
   scrollTop = 0,
   actionsApi,
   editing
 }) => {
-  const visibleCount = Math.ceil(height / rowHeight);
-  const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+  const visibleCount = Math.ceil(height / settings.rowHeight);
+  const startIndex = Math.max(0, Math.floor(scrollTop / settings.rowHeight) - overscan);
   const endIndex = Math.min(flatData.length, startIndex + visibleCount + overscan * 2);
 
   const visibleRows = useMemo(() => flatData.slice(startIndex, endIndex), [flatData, startIndex, endIndex]);
 
-  const paddingTop = startIndex * rowHeight;
-  const paddingBottom = (flatData.length - endIndex) * rowHeight;
+  const paddingTop = startIndex * settings.rowHeight;
+  const paddingBottom = (flatData.length - endIndex) * settings.rowHeight;
   const visibleColumns = columnsSchema.getVisibleColumns();
 
   return (
@@ -43,7 +41,7 @@ const VirtualizedGroupedBody = ({
           const open = !groupCollapseState[item.path];
           const groupRows = flatData.filter(i => i.type === "row" && i.path.includes(item.path));
           return (
-            <TableRow key={`group-${idx}`} sx={{ backgroundColor: '#f3f3f3', height : groupHeight }}>
+            <TableRow key={`group-${idx}`} sx={{ backgroundColor: '#f3f3f3', height : settings.rowHeight }}>
               {visibleColumns.map((col) => {
                 if(col.type === 'action'){
                   return <ActionCell 
@@ -108,7 +106,7 @@ const VirtualizedGroupedBody = ({
             row={item.row}
             columnsSchema={columnsSchema}
             rowRules={rowRules}
-            settings={{...settings, rowHeight: rowHeight}}
+            settings={{...settings}}
             actionsApi={actionsApi}
             parent="grouprow"
             editing={editing}

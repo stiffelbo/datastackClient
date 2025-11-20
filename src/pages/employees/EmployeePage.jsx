@@ -1,45 +1,50 @@
+// pages/Employees/EmployeePage.jsx
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
-//Componnents / sub pages imports
+const BlankComponent = (props) => {
+    console.log(props);
+    return <div>
+        <p>Blank Komponent</p>
+        <pre>{JSON.stringify(props)}</pre>
+    </div>
+}
 
+const EmployeePage = ({
+  entityName,
+  entity,
+  dashboard,
+  id,
+  row,
+  rows,
+  schema,
+  onChangeId,
+}) => {
+  const { tab, setTab } = dashboard;
 
+  // tu definicje tabsów i propsy dla subkomponentów
+  const tabs = [
+    {
+      key: 'details',
+      label: 'Edytuj',
+      pageKey: 'employees', // klucz z rejestru stron
+      component: ({ id, row }) => <BlankComponent id={id} row={row}/>,
+    },
+    // itd...
+  ];
 
-/**
- * EmployeePage
- *
- * Props dostarczane przez BaseEntityDashboard (cloneElement):
- * - entity: wynik useEntity (masz rows, schema, metody)
- * - dashboard: useDashboard(entityName) → currentId, tab, filters, itd.
- * - id: aktualne id rekordu
- * - row: aktualny rekord (z entity.rows)
- * - rows: wszystkie rekordy
- * - schema: entity.schema
- * - onChangeId: (nextId|null) => void
- */
-const EmployeePage = ({ entityName, entity, dashboard}) => {
-    // tu możesz robić wszystko:
-    // - FormTemplate z schema.editForm
-    // - CommentsTab, FilesTab, mappingi
-    // - dodatkowe ApiLoader-y
-    // - używać dashboard.viewMode / dashboard.filters jeśli chcesz
-    const { currentId, setCurrentId, tab, setTab } = dashboard;
-
-    const tabs = [
-        //tutaj definicje tabsów i implementacja sub komponentów wstrzikwanie propsów.
-    ];
-
-    return (
-        <BaseEntityPage 
-            entityName={entityName}
-            id={currentId}
-            rows={entity.rows}
-            row={entity.rows.find(i => i.id === currentId)}
-            onChangeId={setCurrentId}
-            tabs={tabs}
-            //ten komponent powinien sie połączyć z auth kontekstem po entityName i sobie sam odfiltrowac tabsy. 
-        />
-    );
+  return (
+    <BaseEntityPage
+      entityName={entityName}
+      id={id}
+      rows={rows}
+      row={row}
+      onChangeId={onChangeId}
+      tabs={tabs}
+      tab={tab}
+      setTab={setTab}
+    />
+  );
 };
 
 export default EmployeePage;

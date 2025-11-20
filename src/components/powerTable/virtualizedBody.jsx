@@ -39,6 +39,7 @@ const VirtualizedBody = ({
           settings={{ ...settings, rowHeight: rowHeight }}
           editing={editing}
           actionsApi={actionsApi}
+          parent='body'
         />
       ))}
 

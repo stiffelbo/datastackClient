@@ -10,9 +10,12 @@ const enityName = 'Clockify';
 
 const Clockify = () => {
     const entity = useEntity({ endpoint: '/clockify/' });
+
     useEffect(() => {
         entity.refresh();
     }, []);
+
+
     return (
         <PowerTable
             entityName={enityName}
@@ -20,8 +23,7 @@ const Clockify = () => {
             height={window.innerHeight - 90}
             loading={entity.loading}
             data={entity.rows}
-            columnSchema={entity.schema.columns}
-
+            columnSchema={entity.schema.columnSchema}
             addFormSchema={entity.schema.addForm}
             bulkEditFormSchema={entity.schema.bulkEditForm}
             importSchema={entity.schema.importSchema}

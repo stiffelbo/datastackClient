@@ -227,6 +227,8 @@ const ActionCell = ({ column, params, parent = "body", actionsApi, cellSX = {}, 
         padding: "4px",
         verticalAlign: "middle",
         borderRight: "1px solid #eee",
+        maxHeight: '100%',
+        overflowY: 'scroll'
       }}
     >
       {getButton({ parent, column, params, actionsApi, data })}
