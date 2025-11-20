@@ -651,5 +651,6 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         refresh,
         fetchSchema,
         fetchRows,
+        heightSpan : schema.heightSpan ? schema.heightSpan : defaultSchema.heightSpan
     };
 }

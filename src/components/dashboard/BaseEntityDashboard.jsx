@@ -1,89 +1,141 @@
-// dashboard/BaseEntityDashboard.jsx
-import React from 'react';
-import DashboardLayout from './DashboardLayout';
-import useEntity from '../../hooks/useEntity';
+// components/dashboard/BaseEntityDashboard.jsx
+import React, { useEffect, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+
+import { useRwd } from '../../context/RwdContext';
+import { useDashboard } from '../../context/DashboardContext';
+
 import PowerTable from '../../components/powerTable/powerTable';
+import DashboardLayout from './DashboardLayout';
 import BaseEntityPage from './BaseEntityPage';
-import useDashboardState from '../../hooks/useDashboardState';
 
 const BaseEntityDashboard = ({
   entityName,
-  endpoint,
-  width,
-  height,
-  renderPage,
-  tableProps = {},
+  entity,
+  renderPage,   // <EmployeePage entity={entity} />
+  basePath,     // np. "/employees"
 }) => {
-  const ds = useDashboardState({ entityName });
-  const { currentId, setCurrentId, viewMode, filters, setFilter, tab, setTab } = ds;
+  const { width, height } = useRwd();
+  const dashboard = useDashboard(entityName);
+  const { currentId, setCurrentId, tab, setTab } = dashboard;
 
-  const entity = useEntity({ endpoint });
+  const rows = entity?.rows || [];
+  const schema = entity?.schema || {};
 
   const selectedRow =
-    currentId != null
-      ? entity.rows?.find(r => +r.id === +currentId)
-      : null;
+    currentId != null ? rows.find((r) => +r.id === +currentId) : null;
 
   const showRight = !!selectedRow;
 
-  const pageNode = showRight && (
-    renderPage ? (
-      renderPage({
-        id: currentId,
-        row: selectedRow,
-        rows: entity.rows,
-        schema: entity.schema,
-        onChangeId: setCurrentId,
-        tab,
-        setTab,
-      })
-    ) : (
-      <BaseEntityPage
-        id={currentId}
-        row={selectedRow}
-        rows={entity.rows}
-        schema={entity.schema}
-        entityName={entityName}
-        tab={tab}
-        setTab={setTab}
-        onChangeId={setCurrentId}
-      />
-    )
-  );
+  // --- URL sync ---
+  const { id: urlId, tab: urlTab } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initializedRef = useRef(false);
 
-  // na razie tylko viewMode === 'table'; później dołożysz calendar/cards
+  // 1) Na pierwsze wejście – zaciągamy id/tab z URL do stanu dashboardu
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    if (urlId) {
+      setCurrentId(Number(urlId));
+    }
+    if (urlTab) {
+      setTab(urlTab);
+    }
+  }, [urlId, urlTab, setCurrentId, setTab]);
+
+  // 2) Na zmiany stanu dashboardu – aktualizujemy URL
+  useEffect(() => {
+    const base = basePath || `/${entityName.toLowerCase()}`;
+
+    const segments = [base.replace(/\/+$/, '')]; // bez trailing slash
+
+    if (currentId != null) {
+      segments.push(String(currentId));
+      if (tab) {
+        segments.push(tab);
+      }
+    }
+
+    const newPath = segments.join('/');
+
+    if (location.pathname !== newPath) {
+      navigate(newPath, { replace: true });
+    }
+  }, [basePath, entityName, currentId, tab, location.pathname, navigate]);
+
+  // --- LISTA ---
   const listNode = (
     <PowerTable
       entityName={entityName}
       width={width}
-      height={height}
+      height={height - 90}
       loading={entity.loading}
-      data={entity.rows}
-      columnSchema={entity.schema.columns}
-      addFormSchema={entity.schema.addForm}
-      bulkEditFormSchema={entity.schema.bulkEditForm}
-      importSchema={entity.schema.importSchema}
+      data={rows}
+      columnSchema={schema.columns}
+      
+      addFormSchema={schema.addForm}
+      bulkEditFormSchema={schema.bulkEditForm}
+      importSchema={schema.importSchema}
+      
       onRefresh={entity.refresh}
       onPost={entity.create}
       onEdit={entity.updateField}
       onUpload={entity.upload}
       onBulkEdit={entity.updateMany}
       onDelete={entity.remove}
-      onBulkDelete={entity.removeMany}
+      onBulkDelete={entity.removeMany}      
+
       error={entity.error}
       clearError={entity.clearError}
+
       selected={currentId}
       onSelect={setCurrentId}
-      // TODO: filtry można później spiąć z PowerTable / applyFilters
-      {...tableProps}
     />
   );
+
+  // --- STRONA ---
+  let pageContent = null;
+
+  if (showRight) {
+    if (renderPage && React.isValidElement(renderPage)) {
+      pageContent = React.cloneElement(renderPage, {
+        id: currentId,
+        row: selectedRow,
+        rows,
+        schema,
+        dashboard,
+        onChangeId: setCurrentId,
+      });
+    } else {
+      pageContent = (
+        <BaseEntityPage
+          entityName={entityName}
+          id={currentId}
+          row={selectedRow}
+          rows={rows}
+          schema={schema}
+          tab={tab}
+          setTab={setTab}
+          onChangeId={setCurrentId}
+        />
+      );
+    }
+  }
 
   return (
     <DashboardLayout
       showRight={showRight}
       left={listNode}
-      right={pageNode}
+      right={pageContent}
+      initialLeftRatio={0.4}
+      minLeftRatio={0.2}
+      maxLeftRatio={0.8}
+      onResizeEnd={(ratio) => {
+        console.log(`[Dashboard][${entityName}] leftRatio:`, ratio);
+      }}
     />
   );
 };

@@ -6,59 +6,82 @@ const extractSortModel = (overrides = []) =>
     .map(o => (o?.sort?.direction ? { field: o.field, direction: o.sort.direction } : null))
     .filter(Boolean);
 
-// ZAMIANA / UZUPEŁNIENIE: na końcu mergeColumns
-const mergeColumns = (auto, user, actions = []) => {
-  const map = new Map();
+const applyOverrides = (map, overrides = [], { allowCreate = true } = {}) => {
+  overrides.forEach(o => {
+    if (!o?.field) return;
 
-  // 1️⃣ Najpierw wstaw kolumny auto (lub już wstępnie zmergowane)
-  auto?.forEach((col) => map.set(col.field, { ...col }));
+    const existing = map.get(o.field);
 
-  // 2️⃣ Potem user overrides — ale robimy *bezpieczne* scalanie:
-  user?.forEach((u) => {
+    // dla stored: pomijamy nieznane pola
+    if (!existing && !allowCreate) return;
 
-    if(u.field === 'is_active'){
-      //console.log(u);
-    }
-    
-    const existing = map.get(u.field) || {};
-    // shallow merge (user overrides)
-    const merged = { ...existing, ...u };
+    const base = existing || {};
+    const merged = { ...base, ...o };
 
     // zachowaj input jeśli override nie dostarcza wartości
-    if (existing.input) {
-      merged.input = existing.input;
-      if(u.field === 'is_active'){
-        //console.log(merged.input, existing.input);
-      }
+    if (base.input && o.input === undefined) {
+      merged.input = base.input;
     }
 
     // zachowaj options jeśli override nie dostarcza listy (lub dał pustą)
     if (
-      (merged.options === null || merged.options === undefined || (Array.isArray(merged.options) && merged.options.length === 0)) &&
-      Array.isArray(existing.options) && existing.options.length > 0
+      (merged.options === null || merged.options === undefined ||
+        (Array.isArray(merged.options) && merged.options.length === 0)) &&
+      Array.isArray(base.options) && base.options.length > 0
     ) {
-      merged.options = existing.options;
+      merged.options = base.options;
     }
 
     // zachowaj renderCell, styleFn, formatterKey/formatterOptions, aggregationFn itp.
-    if (!merged.renderCell && existing.renderCell) merged.renderCell = existing.renderCell;
-    if (!merged.styleFn && existing.styleFn) merged.styleFn = existing.styleFn;
-    if ((merged.formatterOptions == null || (typeof merged.formatterOptions === 'object' && Object.keys(merged.formatterOptions || {}).length === 0))
-        && existing.formatterOptions) merged.formatterOptions = existing.formatterOptions;
-    if ((merged.formatterKey == null || merged.formatterKey === '') && existing.formatterKey) merged.formatterKey = existing.formatterKey;
-    if ((merged.aggregationFn == null || merged.aggregationFn === '') && existing.aggregationFn) merged.aggregationFn = existing.aggregationFn;
+    if (!merged.renderCell && base.renderCell) merged.renderCell = base.renderCell;
+    if (!merged.styleFn && base.styleFn) merged.styleFn = base.styleFn;
 
-    map.set(u.field, merged);
+    if (
+      (merged.formatterOptions == null ||
+        (typeof merged.formatterOptions === 'object' &&
+          Object.keys(merged.formatterOptions || {}).length === 0)) &&
+      base.formatterOptions
+    ) {
+      merged.formatterOptions = base.formatterOptions;
+    }
+
+    if ((merged.formatterKey == null || merged.formatterKey === '') && base.formatterKey) {
+      merged.formatterKey = base.formatterKey;
+    }
+
+    if ((merged.aggregationFn == null || merged.aggregationFn === '') && base.aggregationFn) {
+      merged.aggregationFn = base.aggregationFn;
+    }
+
+    map.set(o.field, merged);
   });
+};
 
-  // 3️⃣ Wyliczamy aktualną maksymalną wartość order w zbiorze
+const mergeColumns = ({ auto = [], dev = [], base = [], stored = [], actions = [] }) => {
+  const map = new Map();
+
+  // 1️⃣ Wybieramy zestaw bazowy:
+  // - jeżeli podane jest base → to jest nasz punkt wyjścia (drugi bieg)
+  // - w przeciwnym razie auto → pierwszy bieg
+  const initial = (base && base.length > 0) ? base : auto;
+
+  initial?.forEach(col => map.set(col.field, { ...col }));
+
+  // 2️⃣ dev: override + *może dodawać nowe kolumny*
+  applyOverrides(map, dev, { allowCreate: true });
+
+  // 3️⃣ stored: override tylko istniejących (preset nie wprowadza nowych pól)
+  applyOverrides(map, stored, { allowCreate: false });
+
+  // 4️⃣ Wyliczamy aktualną maksymalną wartość order w zbiorze
   const currentMaxOrder = Math.max(
     0,
     ...Array.from(map.values()).map((c) =>
       Number.isFinite(c.order) ? c.order : 0
     )
   );
-  // 4️⃣ Wstawiamy kolumny akcji (unikalne i z nowym offsetem)
+
+  // 5️⃣ Wstawiamy kolumny akcji (unikalne i z nowym offsetem)
   if (Array.isArray(actions) && actions.length > 0) {
     actions.forEach((a, idx) => {
       if (!map.has(a.field)) {
@@ -70,18 +93,18 @@ const mergeColumns = (auto, user, actions = []) => {
     });
   }
 
-  // 5️⃣ Tworzymy listę i sortujemy wg. order
+  // 6️⃣ Lista + sort po order
   const merged = Array.from(map.values());
-
   merged.sort((a, b) => {
     const ao = Number.isFinite(a.order) ? a.order : Number.MAX_SAFE_INTEGER;
     const bo = Number.isFinite(b.order) ? b.order : Number.MAX_SAFE_INTEGER;
     return ao - bo;
   });
 
-  // 6️⃣ Nadajemy ostateczne indeksy (ciągłość 0..N)
+  // 7️⃣ Ciągłe indeksy 0..N
   return merged.map((c, idx) => ({ ...c, order: idx }));
 };
+
 
 const reindexGroupBy = (columns) => {
   const grouped = columns
@@ -121,15 +144,22 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const activeName = presets?.activeName;
 
   useEffect(() => {
-    let base = mergeColumns(autoColumns, devSchema, columnActions);
+    let base = mergeColumns({
+      auto: autoColumns,
+      dev: devSchema,
+      actions: columnActions,
+    });
 
     // === 🔹 Dodajemy kolumny akcji tylko, jeśli nie ma zapisanych presetów ===
     const hasSaved = savedCols.length > 0;
 
     let restored;
-
     if (hasSaved) {
-      restored = mergeColumns(base, savedCols);
+      restored = mergeColumns({
+        base,           // wynik pierwszego biegu
+        stored: savedCols,
+        // actions: opcjonalnie, jak chcesz dorzucać kolumny akcji też po presiecie
+      });
     } else {
       restored = base;
     }
@@ -354,7 +384,11 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     reorderColumn,
     setType: (field, type) => updateField(field, { type }),
     resetColumnState: () => {
-      const base = mergeColumns(autoColumns, devSchema);
+      const base = mergeColumns({
+        auto: autoColumns,
+        dev: devSchema,
+        actions: columnActions,
+      });
       setColumns(base);
     },
     toggleColumnHidden,

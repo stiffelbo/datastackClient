@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { createSelectionColumns } from "./useAutoColumns";
 
 /* -------------------------------------------------------------------------- */
@@ -9,50 +9,34 @@ export const useSelection = ({
   onBulkDelete,
   onBulkEdit,
 
-  selectedInit,           // initial single id (uncontrolled)
+  selected,           // initial single id (uncontrolled)
   onSelect,               // (nextSelected, meta) => void
-
-  selectedItems = [],     // initial multi ids (uncontrolled)
-  onSelectItems,          // (nextIds, meta) => void
 }) => {
   /* local state seeded from props; stays source of truth in this hook */
-  const [selected, setSelected] = useState(selectedInit ?? null);
-  const [selectedIds, setSelectedIds] = useState(Array.isArray(selectedItems) ? selectedItems : []);
-
-  /* keep state in sync if parent changes initial values later */
-  useEffect(() => {
-    setSelected(selectedInit ?? null);
-  }, [selectedInit]);
-
-  useEffect(() => {
-    setSelectedIds(Array.isArray(selectedItems) ? selectedItems : []);
-  }, [selectedItems]);
-
+  const [selectedIds, setSelectedIds] = useState([]);
   /* ---------------------------------------------------------------------- */
   /* 🔸 Single select                                                       */
   /* ---------------------------------------------------------------------- */
-  const toggleSelect = useCallback((id) => {
-    if (id === null || id === undefined) return; // allow id=0
-    setSelected(prev => {
-      const next = (prev === id ? null : id);
-      onSelect?.(next, { reason: "toggleSelect", prev, next });
-      return next;
-    });
-  }, [onSelect]);
+  const toggleSelect = (id) => {
+    if(typeof onSelect === 'function'){
+      if(id !== selected){
+        onSelect(id);
+      }else{
+        onSelect(null);
+      }
+    }    
+  };
 
-  const clearSelect = useCallback(() => {
-    setSelected(prev => {
-      if (prev == null) return prev;
-      const next = null;
-      onSelect?.(next, { reason: "clearSelect", prev, next });
-      return next;
-    });
-  }, [onSelect]);
+  const clearSelect =() => {
+    if(typeof onSelect === 'function'){
+      onSelect(null);
+    }  
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 🔹 Multi select                                                        */
   /* ---------------------------------------------------------------------- */
-  const toggleMultiSelect = useCallback((idOrIds) => {
+  const toggleMultiSelect = (idOrIds) => {
     if (idOrIds === null || idOrIds === undefined) return;
     let nextRef;
     setSelectedIds(prev => {
@@ -65,52 +49,46 @@ export const useSelection = ({
       nextRef = Array.from(set);
       return nextRef;
     });
-    onSelectItems?.(nextRef ?? [], { reason: "toggleMultiSelect", changed: Array.isArray(idOrIds) ? idOrIds : [idOrIds] });
-  }, [onSelectItems]);
+  }
 
-  const clearMultiSelect = useCallback(() => {
+  const clearMultiSelect = () => {
     setSelectedIds(prev => {
       if (!prev.length) return prev;
-      onSelectItems?.([], { reason: "clearMultiSelect", prev });
       return [];
     });
-  }, [onSelectItems]);
+  }
 
-  const addManyToMultiSelect = useCallback((ids = []) => {
+  const addManyToMultiSelect = (ids = []) => {
     if (!Array.isArray(ids) || !ids.length) return;
     let nextRef;
     setSelectedIds(prev => {
       nextRef = Array.from(new Set([...prev, ...ids]));
       return nextRef;
     });
-    onSelectItems?.(nextRef, { reason: "addManyToMultiSelect", changed: ids });
-  }, [onSelectItems]);
+  }
 
-  const removeManyFromMultiSelect = useCallback((ids = []) => {
+  const removeManyFromMultiSelect = (ids = []) => {
     if (!Array.isArray(ids) || !ids.length) return;
     let nextRef;
     setSelectedIds(prev => {
       nextRef = prev.filter(id => !ids.includes(id));
       return nextRef;
     });
-    onSelectItems?.(nextRef, { reason: "removeManyFromMultiSelect", changed: ids });
-  }, [onSelectItems]);
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 🗑️ Single DELETE helper (optional tidy-up of selections)               */
   /* ---------------------------------------------------------------------- */
-  const deleteOne = useCallback((id) => {
+  const deleteOne = (id) => {
     if (id === null || id === undefined) return;
     if (typeof onDelete !== "function") return;
 
     onDelete(id);
 
     // if the deleted one was selected, clear it & notify
-    setSelected(prev => {
-      if (prev !== id) return prev;
-      onSelect?.(null, { reason: "deleteOne.clearedSingle", removed: id });
-      return null;
-    });
+    if (typeof onSelect === 'function' && selected === id) {
+      onSelect(null);
+    }
 
     // if the deleted one was in multi, remove it & notify
     let nextRef;
@@ -119,10 +97,7 @@ export const useSelection = ({
       nextRef = prev.filter(x => x !== id);
       return nextRef;
     });
-    if (nextRef) {
-      onSelectItems?.(nextRef, { reason: "deleteOne.pruneMulti", removed: id });
-    }
-  }, [onDelete, onSelect, onSelectItems]);
+  }
 
   /* ---------------------------------------------------------------------- */
   /* 🧱 Columns flags                                                       */
@@ -131,8 +106,7 @@ export const useSelection = ({
   const isSelectCol = typeof onSelect === 'function';
   const isSelectedItemsCol =
     typeof onBulkDelete === 'function' ||
-    typeof onBulkEdit === 'function' ||
-    typeof onSelectItems === 'function';
+    typeof onBulkEdit === 'function'
 
   const columnActions = createSelectionColumns({ isDeleteCol, isSelectCol, isSelectedItemsCol });
 

@@ -59,8 +59,6 @@ const PowerTable = ({
   //Select
   selected = null,
   onSelect = null,
-  selectedItems = [],
-  onSelectItems = null
 }) => {
 
   const devColumnsLookup = {};
@@ -69,7 +67,7 @@ const PowerTable = ({
   }
 
   const presets = usePresets({ entityName });
-  const actionsApi = useSelection({ onSelect, selectedInit: selected, onSelectItems, selectedItems, onDelete, onBulkEdit, onBulkDelete });
+  const actionsApi = useSelection({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns(data, devColumnsLookup);
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions });

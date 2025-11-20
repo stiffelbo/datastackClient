@@ -8,16 +8,6 @@ import PowerTable from '../../components/powerTable/powerTable';
 
 const enityName = 'Clockify';
 
-const selected = null;
-const onSelected = (val) => {
-    console.log(val)
-}
-
-const selectedItems = [];
-const onSelectItems = (val) => {
-    console.log(val);
-}
-
 const Clockify = () => {
     const entity = useEntity({ endpoint: '/clockify/' });
     useEffect(() => {
@@ -46,11 +36,6 @@ const Clockify = () => {
 
             error={entity.error}
             clearError={entity.clearError}
-
-            selected={selected}
-            onSelect={onSelected}
-            selectedItems={selectedItems}
-            onSelectItems={onSelectItems}
         />
     );
 };

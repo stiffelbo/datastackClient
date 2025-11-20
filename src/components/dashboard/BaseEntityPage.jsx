@@ -3,7 +3,7 @@ import { Box, Tabs, Tab, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 const DEFAULT_TABS = [
-  { key: 'details', label: 'Szczegóły', type: 'form' },
+  { key: 'details', label: 'Szczegóły', type: 'default' },
 ];
 
 const BaseEntityPage = ({
@@ -97,19 +97,14 @@ const BaseEntityPage = ({
         </Tabs>
       </Box>
 
-      {/* CONTENT */}
+      {/* CONTENT – generyczny fallback */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
-        {activeTab.type === 'form' && (
-          <>
-            {/* tu później FormTemplate, na razie podgląd */}
-            <Typography variant="caption" color="text.secondary">
-              (TODO: FormTemplate dla encji {entityName})
-            </Typography>
-            <pre style={{ fontSize: 11, marginTop: 8 }}>
-              {JSON.stringify(row, null, 2)}
-            </pre>
-          </>
-        )}
+        <Typography variant="caption" color="text.secondary">
+          (Generyczna strona encji {entityName} – podmień na custom renderPage)
+        </Typography>
+        <pre style={{ fontSize: 11, marginTop: 8 }}>
+          {JSON.stringify(row, null, 2)}
+        </pre>
       </Box>
     </Box>
   );

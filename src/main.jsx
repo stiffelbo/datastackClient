@@ -9,6 +9,7 @@ import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { NavProvider } from './context/NavContext';
 import { RwdProvider } from './context/RwdContext';
+import { DashboardProvider } from './context/DashboardContext';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -19,8 +20,10 @@ root.render(
     <RwdProvider>
       <AuthProvider>
         <NavProvider>      
-          <App />
-          <ToastContainer position="bottom-right" autoClose={3000} />
+          <DashboardProvider>
+            <App />
+            <ToastContainer position="bottom-right" autoClose={3000} />
+          </DashboardProvider>
         </NavProvider>
       </AuthProvider>
     </RwdProvider>
