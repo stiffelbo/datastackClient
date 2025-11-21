@@ -23,6 +23,16 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
     align = column.align || "left",
   } = settings || {};
 
+  const isVirtual = settings.isVirtualized && settings.rowHeight;
+
+  const virtualizedClampSx = isVirtual
+    ? {
+        height: settings.rowHeight,
+        maxHeight: settings.rowHeight,
+        overflow: "hidden",
+      }
+    : {};
+
   const formatter =
     column.formatterKey && valueFormatters[column.formatterKey]
       ? valueFormatters[column.formatterKey]
@@ -93,8 +103,8 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
       return (
         <TableCell
           sx={{
-            height: '100%',
-            maxHeight: '100%',
+            height: settings.rowHeight,
+            maxHeight: settings.rowHeight,
             width: column.width,
             minWidth: column.minWidth,
             maxWidth: column.maxWidth,
@@ -168,6 +178,8 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
     return (
       <TableCell
         sx={{
+          height: settings.rowHeight,
+          maxHeight: settings.rowHeight,
           width: column.width,
           minWidth: column.minWidth,
           maxWidth: column.maxWidth,
@@ -203,16 +215,24 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
   if (displayValue == null) displayValue = "";
 
-  const title =
+  let title =
     column.showTitle === false
       ? undefined
       : typeof displayValue === "string" && ellipsis
-      ? String(displayValue)
-      : undefined;
+        ? String(displayValue)
+        : undefined;
+
+  if(parent === 'footer'){
+    if(column.aggregationFn){
+      title = `${column.headerName} ${column.aggregationFn}`;
+    }
+  }
 
   return (
     <TableCell
       sx={{
+        height: settings.rowHeight,
+        maxHeight: settings.rowHeight,
         width: column.width,
         minWidth: column.minWidth,
         maxWidth: column.maxWidth,
@@ -221,11 +241,11 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         lineHeight: 1.3,
         verticalAlign: "top",
         textAlign: align,
-        whiteSpace: "normal", // <-- NAJWAŻNIEJSZE!
-        overflowWrap: "break-word", // <-- DLA PEWNOŚCI (albo wordBreak)
-        wordBreak: "break-word", // <-- DLA PEWNOŚCI
+        overflowWrap: "break-word",
+        wordBreak: "break-word",
         ...sx,
         ...conditionalSx,
+        ...virtualizedClampSx,     // <--- DODANE
       }}
       title={title}
       onClick={handleClick}

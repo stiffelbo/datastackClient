@@ -28,7 +28,7 @@ const EmployeePage = ({
       key: 'details',
       label: 'Edytuj',
       pageKey: 'employees', // klucz z rejestru stron
-      component: ({ id, row }) => <BlankComponent id={id} row={row}/>,
+      component: <BlankComponent id={id} row={row}/>,
     },
     // itd...
   ];

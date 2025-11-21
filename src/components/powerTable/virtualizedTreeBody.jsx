@@ -8,15 +8,14 @@ const VirtualizedTreeBody = ({
   columnsSchema,
   rowRules,
   settings,
-  rowHeight = 60,
   overscan = 20,
   height = 600,
   scrollTop = 0,
   editing,
   actionsApi
 }) => {
-  const visibleCount = Math.ceil(height / rowHeight);
-  const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+  const visibleCount = Math.ceil(height / settings.rowHeight);
+  const startIndex = Math.max(0, Math.floor(scrollTop / settings.rowHeight) - overscan);
   const endIndex = Math.min(flatData.length, startIndex + visibleCount + overscan * 2);
 
   const visibleRows = useMemo(
@@ -24,8 +23,8 @@ const VirtualizedTreeBody = ({
     [flatData, startIndex, endIndex]
   );
 
-  const paddingTop = startIndex * rowHeight;
-  const paddingBottom = (flatData.length - endIndex) * rowHeight;
+  const paddingTop = startIndex * settings.rowHeight;
+  const paddingBottom = (flatData.length - endIndex) * settings.rowHeight;
 
   const visibleColumns = columnsSchema.getVisibleColumns();
 
@@ -43,7 +42,7 @@ const VirtualizedTreeBody = ({
           row={item.row}
           columnsSchema={columnsSchema}
           rowRules={rowRules}
-          settings={{ ...settings, rowHeight }}
+          settings={settings}
           editing={editing}
           actionsApi={actionsApi}
           parent="tree"

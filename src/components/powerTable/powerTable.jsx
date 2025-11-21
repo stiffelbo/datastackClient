@@ -168,7 +168,8 @@ const PowerTable = ({
     treeColumnWidth: settings?.treeColumnWidth ?? 140,
     treeIndentStep: settings?.treeIndentStep ?? 2,
     height,
-    rowHeight
+    rowHeight,
+    isVirtualized
   };
 
    const renderTable = () =>
@@ -177,6 +178,7 @@ const PowerTable = ({
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
+        height={height}
         settings={settingsWithTree}
         editing={editing}
         actionsApi={actionsApi}
@@ -186,6 +188,7 @@ const PowerTable = ({
         initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}
+        height={height}
         settings={settingsWithTree}
         treeConfig={treeConfig}
         editing={editing}

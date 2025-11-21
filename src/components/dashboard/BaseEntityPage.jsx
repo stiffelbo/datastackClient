@@ -37,9 +37,6 @@ const BaseEntityPage = ({
   tab,
   setTab,
 }) => {
-
-  console.log(tabs, tab, setTab, rows, row, id, entityName);
-
   if (!tabs.length) {
     return (
       <Box sx={{ p: 2 }}>
@@ -50,22 +47,14 @@ const BaseEntityPage = ({
     );
   }
 
-  const activeTab =
-    tabs.find((t) => t.key === tab) || tabs[0];
+  const activeTab = tabs.find((t) => t.key === tab) || tabs[0];
+  const activeNode = activeTab.component; // to jest ReactElement
 
-  const ActiveComponent = activeTab.component;
-
-  const handleTabChange = (e, value) => {
-    setTab?.(value);
-  };
-
-  const handleClose = () => {
-    onChangeId?.(null);
-  };
+  const handleTabChange = (e, value) => setTab?.(value);
+  const handleClose = () => onChangeId?.(null);
 
   const currentIndex = rows.findIndex((r) => String(r.id) === String(id));
-  const prevId =
-    currentIndex > 0 ? rows[currentIndex - 1]?.id : null;
+  const prevId = currentIndex > 0 ? rows[currentIndex - 1]?.id : null;
   const nextId =
     currentIndex >= 0 && currentIndex < rows.length - 1
       ? rows[currentIndex + 1]?.id
@@ -73,17 +62,6 @@ const BaseEntityPage = ({
 
   const goPrev = () => prevId && onChangeId?.(prevId);
   const goNext = () => nextId && onChangeId?.(nextId);
-
-  const baseContext = {
-    entityName,
-    id,
-    row,
-    rows,
-  };
-
-  const componentProps = activeTab.getProps
-    ? activeTab.getProps(baseContext)
-    : baseContext;
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -125,7 +103,7 @@ const BaseEntityPage = ({
           onChange={handleTabChange}
           variant="scrollable"
         >
-          {availableTabs.map((t) => (
+          {tabs.map((t) => (
             <Tab key={t.key} value={t.key} label={t.label} />
           ))}
         </Tabs>
@@ -133,14 +111,15 @@ const BaseEntityPage = ({
 
       {/* CONTENT */}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
-        {ActiveComponent ? (
-          <ActiveComponent {...componentProps} />
-        ) : (
-          <div>Brak komponentu dla zakładki {activeTab.key}</div>
+        {activeNode ?? (
+          <Typography variant="body2" color="text.secondary">
+            Brak komponentu dla zakładki {activeTab.key}
+          </Typography>
         )}
       </Box>
     </Box>
   );
 };
+
 
 export default BaseEntityPage;

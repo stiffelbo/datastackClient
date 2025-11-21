@@ -10,7 +10,7 @@ const Employees = () => {
   const entity = useEntity({ endpoint: '/employees/' });
   return (
     <BaseEntityDashboard
-      renderPage={dashboard => <EmployeePage entity={entity} dashboard={dashboard} entityName={entityName}/>}
+      renderPage={(props) => <EmployeePage entity={entity} entityName={entityName} {...props} />}
       entity={entity}
       entityName={entityName}
       basePath="/employees"

@@ -8,20 +8,23 @@ const PowerTableBody = ({
   columnsSchema,
   rowRules = [],
   settings = {},
-  isVirtualized = false,
-  height = 400,
+  height,
+  scrollHeight,
   scrollTop = 0,
   editing,
-  actionsApi
+  actionsApi,
 }) => {
-  if (isVirtualized) {
+  const viewportHeight =
+    scrollHeight || height || settings.height || 400;
+
+  if (settings.isVirtualized) {
     return (
       <VirtualizedBody
         data={data}
         columnsSchema={columnsSchema}
         rowRules={rowRules}
         settings={settings}
-        height={height}
+        height={viewportHeight}     // ← viewport, nie bodyHeight
         scrollTop={scrollTop}
         editing={editing}
         actionsApi={actionsApi}

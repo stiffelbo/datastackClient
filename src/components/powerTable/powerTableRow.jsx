@@ -48,11 +48,17 @@ const PowerTableRow = ({
     actionsApi.toggleTreeNode?.(path);
   };
 
+  const rowHeight = settings.isVirtualized && settings.rowHeight
+    ? settings.rowHeight
+    : 'auto';
+
   return (
     <TableRow
       sx={{
-        height: settings.rowHeight || 'auto',
-        backgroundColor: baseBgColor,
+        height: rowHeight,
+        '& > td': settings.isVirtualized
+          ? { paddingTop: 0.5, paddingBottom: 0.5 }
+          : {},
       }}
     >
       {/* 🔹 Systemowa pierwsza kolumna dla TREE */}

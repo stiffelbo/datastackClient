@@ -71,7 +71,8 @@ const BaseEntityDashboard = ({
     <PowerTable
       entityName={entityName}
       width={width}
-      height={height - 90}
+      height={height - entity.heightSpan}
+      rowHeight={45}
       loading={entity.loading}
       data={rows}
       columnSchema={schema.columns}
@@ -100,8 +101,8 @@ const BaseEntityDashboard = ({
   let pageContent = null;
 
   if (showRight) {
-    if (renderPage && React.isValidElement(renderPage)) {
-      pageContent = React.cloneElement(renderPage, {
+    if (renderPage && typeof renderPage === 'function') {
+      pageContent = renderPage({
         id: currentId,
         row: selectedRow,
         rows,
@@ -111,16 +112,11 @@ const BaseEntityDashboard = ({
       });
     } else {
       pageContent = (
-        <BaseEntityPage
-          entityName={entityName}
-          id={currentId}
-          row={selectedRow}
-          rows={rows}
-          schema={schema}
-          tab={tab}
-          setTab={setTab}
-          onChangeId={setCurrentId}
-        />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            Brak dostępnych zakładek dla encji {entityName}.
+          </Typography>
+        </Box>
       );
     }
   }

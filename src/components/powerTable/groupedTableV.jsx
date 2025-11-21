@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Table, Box, TableContainer, Paper
 } from '@mui/material';
@@ -57,7 +57,7 @@ const setBranchState = (state, basePath, value) => {
 /**
  * Główna tabela zgrupowana z pełną wirtualizacją (GroupedTableV)
  */
-const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings, rowRules, editing }) => {
+const GroupedTableV = ({ initialData, data, columnsSchema, height, actionsApi, settings, rowRules, editing }) => {
   const groupedTree = useMemo(
     () => groupDataHierarchical(data, columnsSchema.columns),
     [data, columnsSchema.columns]
@@ -69,6 +69,27 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
   const [groupCollapseState, setGroupCollapseState] = useState(groupPaths);
   const [scrollTop, setScrollTop] = useState(0);
   const [heightMap, setHeightMap] = useState({ header: 0, footer: 0 });
+  const [viewportHeight, setViewportHeight] = useState(0);
+
+  const containerRef = useRef(null);
+
+  // VIEWPORT: tylko przez ResizeObserver (albo raz przy mount)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const h = el.clientHeight;
+      setViewportHeight(prev => (prev === h ? prev : h));
+    };
+
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+
+    return () => observer.disconnect();
+  }, []);
 
   // helper: rodzic ścieżki "79/12/84" -> "79/12"
   const getParentPath = (key) => {
@@ -118,6 +139,20 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
     }
   }, [data]);
 
+  // Flatten grouped tree to a flat list for virtual rendering
+  const flatData = useMemo(
+    () => flattenGroupedData(groupedTree, groupCollapseState),
+    [groupedTree, groupCollapseState]
+  );
+
+  useEffect(() => {
+    const rowHeight = settings?.rowHeight || 45;
+    const totalHeight = flatData.length * rowHeight;
+    const maxScroll = Math.max(totalHeight - viewportHeight, 0);
+    console.log(maxScroll, rowHeight);
+    setScrollTop(prev => (prev > maxScroll ? maxScroll : prev));
+  }, [flatData.length, viewportHeight, settings?.rowHeight]);
+
   // Toggle collapse for a specific group path
   const toggleCollapse = useCallback((path) => {
     setGroupCollapseState((prev) =>
@@ -151,22 +186,19 @@ const GroupedTableV = ({ initialData, data, columnsSchema, actionsApi, settings,
     });
   }, []);
 
-  // Flatten grouped tree to a flat list for virtual rendering
-  const flatData = useMemo(
-    () => flattenGroupedData(groupedTree, groupCollapseState),
-    [groupedTree, groupCollapseState]
-  );
+  
 
   const handleScroll = (e) => setScrollTop(e.target.scrollTop);
   const handleHeightChange = (section, value) => {setHeightMap((prev) => ({ ...prev, [section]: value }))};
 
   const bodyHeight = (settings?.height || 600) - (heightMap.header + heightMap.footer);
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <TableContainer
         component={Paper}
         sx={{
-          flex: 1,
+          height: '100%',
           width: '100%',
           overflowY: 'auto',
           overflowX: 'auto',
