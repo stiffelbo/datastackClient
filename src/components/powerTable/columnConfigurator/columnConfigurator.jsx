@@ -2,7 +2,8 @@ import React from 'react';
 import {
   Box,
   Slider,
-  Modal
+  Modal,
+  Typography
 } from '@mui/material';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 import FunctionsIcon from '@mui/icons-material/Functions';
@@ -153,6 +154,7 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
             columnsSchema={columnsSchema}
           />
         </ConfigMenuSection>
+        <Typography variant="caption" sx={{textAlign: 'right'}}>Nazwa pola: {field}</Typography>
       </Box>
     </Modal>
   );

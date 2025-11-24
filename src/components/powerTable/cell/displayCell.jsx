@@ -17,8 +17,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
   const {
     sx = {},
     densityPadding = "6px 10px",
-    fontSize = "0.8rem",
-    wrap = true,
+    fontSize = "0.7rem",
     ellipsis = false,
     align = column.align || "left",
   } = settings || {};
@@ -233,7 +232,6 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
       title={title}
       onClick={handleClick}
       onDoubleClick={onDoubleClick}
-      sx={{...virtualizedClampSx}}
     >
       <Box sx={{
         width: column.width,
@@ -248,55 +246,12 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         wordBreak: "break-word",
         ...sx,
         ...conditionalSx,
+        ...virtualizedClampSx
       }}>
         {String(displayValue)}
       </Box>
     </TableCell>
   );
-};
-
-/* -------------------------------------------------------------------------- */
-/* 🔹 Registry display typów (docelowo do rozbudowy)                         */
-/* -------------------------------------------------------------------------- */
-DisplayCell.displayMap = {
-  text: ({ value }) => <>{value}</>,
-  numeric: ({ value, column }) => (
-    <Box sx={{ textAlign: column?.align || "right" }}>
-      {value != null ? Number(value ?? 0).toLocaleString("pl-PL") : ""}
-    </Box>
-  ),
-  bool: ({ value, column }) => {
-    const v = value === 1 || value === '1' || value === true || value === 'true';
-    return (
-      <Box sx={{ textAlign: column?.align || "center" }}>
-        <span style={{ color: v ? 'green' : 'crimson' }}>{v ? '✓' : '✕'}</span>
-      </Box>
-    );
-  },
-  date: ({ value }) => (
-    <Box sx={{ textAlign: "left" }}>
-      {value ? new Date(value).toLocaleDateString("pl-PL") : ""}
-    </Box>
-  ),
-  chip: ({ value }) => (
-    <Box
-      component="span"
-      sx={{
-        background: "#eee",
-        borderRadius: "8px",
-        px: 1,
-        py: "2px",
-        fontSize: "0.75em",
-      }}
-    >
-      {value}
-    </Box>
-  ),
-  currency: ({ value, column }) => (
-    <Box sx={{ textAlign: column?.align || "right" }}>
-      {value != null ? `${Number(value ?? 0).toLocaleString("pl-PL")} zł` : ""}
-    </Box>
-  ),
 };
 
 export default DisplayCell;

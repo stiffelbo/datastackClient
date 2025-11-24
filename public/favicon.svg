@@ -1,0 +1,6 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ikona stosu z większym odstępem między warstwami -->
+  <rect x="3" y="3" width="22" height="6" rx="2" fill="#2563EB"/>
+  <rect x="5" y="13" width="20" height="6" rx="2" fill="#1D4ED8"/>
+  <rect x="7" y="23" width="18" height="6" rx="2" fill="#0F766E"/>
+</svg>
