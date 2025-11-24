@@ -1,58 +1,27 @@
-import React, { useEffect } from 'react';
-
-//Hooks
+import React, {useEffect} from 'react';
 import useEntity from '../../hooks/useEntity';
 
-// Comp
-import PowerTable from '../../components/powerTable/powerTable';
+import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 
-const enityName = 'JiraIssue';
+import JiraIssuePage from './JiraIssuePage';
 
-const selected = null;
-const onSelected = (val) => {
-    console.log(val)
-}
+const entityName = 'JiraIssue';
+const basePath = "/jiraissue";
 
-const selectedItems = [];
-const onSelectItems = (val) => {
-    console.log(val);
-}
-
-const Costs = () => {
+const JiraIssue = () => {
     const entity = useEntity({ endpoint: '/jira_issue/' });
     useEffect(() => {
         entity.refresh();
     }, []);
+
     return (
-        <PowerTable
-            entityName={enityName}
-            width={window.innerWidth}
-            height={window.innerHeight - 90}
-            loading={entity.loading}
-            data={entity.rows}
-            columnSchema={entity.schema.columns}
-
-            addFormSchema={entity.schema.addForm}
-            bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={entity.schema.importSchema}
-
-            onRefresh={entity.refresh}
-            onPost={entity.create}
-            onEdit={entity.updateField}
-            onUpload={entity.upload}
-            onBulkEdit={entity.updateMany}
-            onDelete={entity.remove}
-            onBulkDelete={entity.removeMany}
-
-            error={entity.error}
-            clearError={entity.clearError}
-
-            selected={selected}
-            onSelect={onSelected}
-            selectedItems={selectedItems}
-            onSelectItems={onSelectItems}
+        <BaseEntityDashboard
+            renderPage={(props) => <JiraIssuePage entity={entity} entityName={entityName} {...props} />}
+            entity={entity}
+            entityName={entityName}
+            basePath={basePath}
         />
     );
 };
 
-export default Costs;
+export default JiraIssue;

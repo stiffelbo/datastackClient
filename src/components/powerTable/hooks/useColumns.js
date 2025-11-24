@@ -130,7 +130,7 @@ const applyDefaultAlign = (col) => {
 const fieldsSig = (cols = []) =>
   cols.map(c => c.field).sort().join('|');
 
-const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default', columnActions = [] }) => {
+const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default', columnActions = [], enableEdit = true }) => {
   const [columns, setColumns] = useState([]);
   const [sortModel, setSortModelState] = useState([]);
   const [globalSearch, setGlobalSearch] = useState('');

@@ -21,8 +21,6 @@ import JiraIssue from './pages/jiraIssue/JiraIssue';
 import CostItemDict from './pages/costItemDict/CostItemDict';
 import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
 
-import Issue from './pages/issue/Issue';
-
 const App = () => (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -47,10 +45,13 @@ const App = () => (
         <Route path="deptcosts" element={<Costs />} />
         <Route path="periods" element={<Periods />} />
         <Route path="jiraissuecosts" element={<JiraIssueCosts />} />
+
+        <Route path="jiraissue/:id/:tab" element={<JiraIssue />} />
+        <Route path="jiraissue/:id" element={<JiraIssue />} />
         <Route path="jiraissue" element={<JiraIssue />} />
+        
         <Route path="costitemdict" element={<CostItemDict />} />
         <Route path="contractor" element={<Contractor />} />
-        <Route path="issue/:sygn" element={<Issue />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

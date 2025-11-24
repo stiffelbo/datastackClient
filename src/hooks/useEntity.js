@@ -26,7 +26,7 @@ const defaultSchema = {
     relations: {},
     options: {},      // { [fieldName]: Option[] }
     importSchema: [],
-    heightSpan : 90,
+    heightSpan: 90,
 };
 
 /**
@@ -116,13 +116,13 @@ function organizeSchema(input = defaultSchema) {
                 if (opts) {
                     const optMap = {};
                     opts.forEach(option => {
-                        if(option.value && option.label){
+                        if (option.value && option.label) {
                             optMap[option.value] = option.label;
                         }
                     });
                     const finalColumn = {
                         ...col,
-                        optionsMap : optMap,
+                        optionsMap: optMap,
                         options: Array.isArray(col.options) ? col.options : opts,
                         // overwrite if empty or missing
                         ...(Array.isArray(col.options) && col.options.length === 0
@@ -143,7 +143,7 @@ function organizeSchema(input = defaultSchema) {
 }
 
 
-export default function useEntity({ endpoint, entityName = '', processRows = null }) {
+export default function useEntity({ endpoint, entityName = '', query = {}, readOnly = false, processRows = null }) {
     // UI / network state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -153,10 +153,6 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
 
     // rows (single source of truth; optional frontend processing applied on fetch)
     const [rows, setRows] = useState([]);
-
-    // entityEndpoints: merged endpoints coming from backend (so we can honor explicit nulls)
-    const [entityEndpoints, setEntityEndpoints] = useState({ ...defaultEndpoints });
-
 
     const fetchedRef = useRef(false);
 
@@ -175,8 +171,8 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         }
 
         // 2) then check entityEndpoints (merged state)
-        if (entityEndpoints && Object.prototype.hasOwnProperty.call(entityEndpoints, name)) {
-            const file = entityEndpoints[name];
+        if (defaultEndpoints && Object.prototype.hasOwnProperty.call(defaultEndpoints, name)) {
+            const file = defaultEndpoints[name];
             if (file === null) return null;
             if (!file) return null;
             if (/^\/|^https?:\/\//.test(file)) return file;
@@ -188,7 +184,7 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         if (!file) return null;
         if (/^\/|^https?:\/\//.test(file)) return file;
         return `${endpoint.replace(/\/+$/, '')}/${file}`;
-    }, [endpoint, schema, entityEndpoints]);
+    }, [endpoint, schema, defaultEndpoints]);
 
     // fetch schema (getEntitySchema endpoint)
     const fetchSchema = useCallback(async () => {
@@ -199,7 +195,9 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
                 throw new Error('Endpoint getEntitySchema is not available for this entity.');
             }
 
-            const res = await http.get(url);
+            const urlWithParams = url + `?readOnly=${readOnly}`;
+
+            const res = await http.get(urlWithParams);
             const payload = res.data ?? defaultSchema;
             const procesedSchema = organizeSchema(payload);
             setSchema(procesedSchema);
@@ -218,16 +216,31 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async () => {
         setLoading(true);
+        console.log(query);
         try {
             const url = resolveEndpoint('get');
             if (!url) {
-                // no 'get' endpoint => empty dataset
                 setRows([]);
                 return [];
             }
-            const res = await http.get(url);
-            const data = res.data ?? [];
 
+            // 🔹 budujemy query params:
+            let params = {};
+
+            // 1) query przekazane z zewnątrz
+            if (query && typeof query === 'object') {
+                params = { ...params, ...query };
+            }
+
+            // 2) itemId (na przyszłość, gdy dodasz mapper.itemField)
+            if (schema?.mapper?.itemField && itemId != null) {
+                params[schema.mapper.itemField] = itemId;
+            }
+
+            // 🔹 wykonujemy GET z params
+            const res = await http.get(url, { params });
+
+            const data = res.data ?? [];
             let final = Array.isArray(data) ? data : [];
 
             if (typeof processRows === 'function') {
@@ -237,9 +250,11 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
                     console.warn('processRows error', procErr);
                 }
             }
+
             setRows(final);
             setError(null);
             return final;
+
         } catch (err) {
             console.error('fetchRows error', err);
             toast.error('Błąd pobierania danych encji');
@@ -249,7 +264,8 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, processRows]);
+    }, [resolveEndpoint, processRows, query, schema]);
+
 
     // refresh: fetch schema then rows
     const refresh = useCallback(async () => {
@@ -266,11 +282,16 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         }
     }, [fetchSchema, fetchRows]);
 
+    const queryKey = JSON.stringify(query || {});
+
     useEffect(() => {
         // initial load when endpoint (entity folder) changes
+        if(queryKey){
+            setRows([]);
+        }
         refresh().catch(e => console.error(e));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [endpoint]);
+    }, [endpoint, queryKey]);
 
     useEffect(() => {
         const ep = resolveEndpoint('get');
@@ -636,7 +657,6 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         clearError: () => setError(null),
         rows,
         schema,
-        entityEndpoints,
 
         // handlers (return null for handlers that are disabled)
         create: resolveEndpoint('create') ? create : null,
@@ -651,6 +671,6 @@ export default function useEntity({ endpoint, entityName = '', processRows = nul
         refresh,
         fetchSchema,
         fetchRows,
-        heightSpan : schema.heightSpan ? schema.heightSpan : defaultSchema.heightSpan
+        heightSpan: schema.heightSpan ? schema.heightSpan : defaultSchema.heightSpan
     };
 }

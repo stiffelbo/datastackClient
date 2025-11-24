@@ -13,7 +13,7 @@ const VirtualizedGroupedBody = ({
   settings,
   groupCollapseState,
   toggleCollapse,
-  overscan = 10,
+  overscan = 5,
   height = 600,
   scrollTop = 0,
   actionsApi,

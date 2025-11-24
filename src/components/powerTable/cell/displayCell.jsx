@@ -230,9 +230,12 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
   return (
     <TableCell
-      sx={{
-        height: settings.rowHeight,
-        maxHeight: settings.rowHeight,
+      title={title}
+      onClick={handleClick}
+      onDoubleClick={onDoubleClick}
+      sx={{...virtualizedClampSx}}
+    >
+      <Box sx={{
         width: column.width,
         minWidth: column.minWidth,
         maxWidth: column.maxWidth,
@@ -245,13 +248,9 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         wordBreak: "break-word",
         ...sx,
         ...conditionalSx,
-        ...virtualizedClampSx,     // <--- DODANE
-      }}
-      title={title}
-      onClick={handleClick}
-      onDoubleClick={onDoubleClick}
-    >
-      {String(displayValue)}
+      }}>
+        {String(displayValue)}
+      </Box>
     </TableCell>
   );
 };

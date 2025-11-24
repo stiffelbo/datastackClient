@@ -16,7 +16,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, allowAdd = false, allowUpload = false }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false , showExport = false, showPresets = false}) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -67,7 +67,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   };
 
   const renderAdd = () => {
-    if(!allowAdd) return;
+    if(!showAdd) return;
     return <Tooltip title="Dodaj">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='primary' onClick={() => onOpenSettings('addForm')}>
         <AddCircleOutlineIcon fontSize="small" />
@@ -120,6 +120,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   }
 
   const renderPresetControl = () => {
+    if(!showPresets) return;
     return <Tooltip title="Preset">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={() => onOpenSettings('presets')}>
         <TuneIcon fontSize="small" />
@@ -135,16 +136,17 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
     </Tooltip>
   );
 
-  const renderExportControl = () => (
-    <Tooltip title="Export Data">
+  const renderExportControl = () => {
+    if(!showExport) return;
+    return <Tooltip title="Export Data">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={onExport}>
         <FileDownloadIcon fontSize="small" />
       </IconButton>
-    </Tooltip>
-  );
+    </Tooltip> 
+  }
 
   const renderUploadControl = () => {
-    if(!allowUpload) return;
+    if(!showUpload) return;
     return <Tooltip title="Upload XSLSX">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={() => onOpenSettings('uploadData')}>
         <UploadFileIcon fontSize="small" />

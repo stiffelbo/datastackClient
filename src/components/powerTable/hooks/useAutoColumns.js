@@ -104,7 +104,7 @@ const inferAlign = (type) => {
 /* 🔹 HOOK                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const useAutoColumns = (data = [], dev = {}) => {
+const useAutoColumns = ({data = [], dev = {}}) => {
   //console.log(dev);
   return useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) return [];

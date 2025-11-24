@@ -7,7 +7,7 @@ const VirtualizedBody = ({
   columnsSchema,
   rowRules,
   settings,
-  overscan = 10,
+  overscan = 5,
   height,
   scrollTop = 0,
   editing,

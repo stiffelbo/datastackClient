@@ -1,61 +1,32 @@
-import React, { useEffect } from 'react';
-
-//Hooks
+import React, {useEffect} from 'react';
 import useEntity from '../../hooks/useEntity';
 
-// Comp
-import PowerTable from '../../components/powerTable/powerTable';
+import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 
-const enityName = 'Structures';
-
-const selected = null;
-const onSelected = (val) => {
-    console.log(val)
-}
-
-const selectedItems = [];
-const onSelectItems = (val) => {
-    console.log(val);
-}
+const entityName = 'Structures';
+const basePath = "/structures";
 
 const Structures = () => {
     const entity = useEntity({ endpoint: '/structures/' });
     useEffect(() => {
         entity.refresh();
     }, []);
+
     return (
-        <PowerTable
-            entityName={enityName}
-            width={window.innerWidth}
-            height={window.innerHeight - 90}
-            loading={entity.loading}
-            data={entity.rows}
-            columnSchema={entity.schema.columns}
-            treeConfig={{
-                parentField: 'parent_id',
-                idField: 'id',
-                rootValue: null
-            }}
-
-            addFormSchema={entity.schema.addForm}
-            bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={entity.schema.importSchema}
-
-            onRefresh={entity.refresh}
-            onPost={entity.create}
-            onEdit={entity.updateField}
-            onUpload={entity.upload}
-            onBulkEdit={entity.updateMany}
-            onDelete={entity.remove}
-            onBulkDelete={entity.removeMany}
-
-            error={entity.error}
-            clearError={entity.clearError}
-
-            selected={selected}
-            onSelect={onSelected}
-            selectedItems={selectedItems}
-            onSelectItems={onSelectItems}
+        <BaseEntityDashboard
+            renderPage={null}
+            entity={entity}
+            entityName={entityName}
+            basePath={basePath}
+            listProps={
+                {
+                    treeConfig: {
+                        parentField: 'parent_id',
+                        idField: 'id',
+                        rootValue: null
+                    }
+                }
+            }
         />
     );
 };

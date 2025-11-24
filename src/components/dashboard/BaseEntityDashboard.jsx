@@ -2,18 +2,21 @@
 import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
+//Mui
+import { Box, Typography } from '@mui/material';
+
 import { useRwd } from '../../context/RwdContext';
 import { useDashboard } from '../../context/DashboardContext';
 
 import PowerTable from '../../components/powerTable/powerTable';
 import DashboardLayout from './DashboardLayout';
-import BaseEntityPage from './BaseEntityPage';
 
 const BaseEntityDashboard = ({
   entityName,
   entity,
   renderPage,   // <EmployeePage entity={entity} />
-  basePath,     // np. "/employees"
+  basePath,// np. "/employees"
+  listProps = {} 
 }) => {
   const { width, height } = useRwd();
   const dashboard = useDashboard(entityName);
@@ -92,8 +95,9 @@ const BaseEntityDashboard = ({
       error={entity.error}
       clearError={entity.clearError}
 
-      selected={currentId}
-      onSelect={setCurrentId}
+      selected={renderPage ? currentId : null}
+      onSelect={renderPage ? setCurrentId : null}
+      {...listProps}
     />
   );
 
@@ -108,6 +112,7 @@ const BaseEntityDashboard = ({
         rows,
         schema,
         dashboard,
+        rwd : {width, height},
         onChangeId: setCurrentId,
       });
     } else {

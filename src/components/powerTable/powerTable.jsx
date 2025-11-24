@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 import useAutoColumns from './hooks/useAutoColumns';
 import { useSelection } from './hooks/useSelection';
@@ -23,7 +23,7 @@ import BulkFormModal from './bulkFormModal';
 import UploadModal from './uploadModal';
 import AddFormModal from './addFormModal';
 
-const V_N_COUNT = 10000;
+const V_N_COUNT = 6000;
 
 const defaultTree = {
   parentField: 'parent_id',
@@ -60,16 +60,23 @@ const PowerTable = ({
   //Select
   selected = null,
   onSelect = null,
+
+  //Utitlity Controls
+  enablePresets = true,
+  enableUpload = true,
+  enableExport = true,
+  showSidebar = true,
 }) => {
+
 
   const devColumnsLookup = {};
   if (Array.isArray(columnSchema)) {
     columnSchema.forEach(col => devColumnsLookup[col.field] = col);
   }
 
-  const presets = usePresets({ entityName });
+  const presets = usePresets({ entityName, enablePresets });
   const actionsApi = useSelection({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
-  const autoColumns = useAutoColumns(data, devColumnsLookup);
+  const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit});
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions });
   const editing = useTableEditing(onEdit);
@@ -207,76 +214,109 @@ const PowerTable = ({
       />
     );
 
+    if (data === null) {
+    return <Alert severity="info">Brak danych dla PowerTable w {entityName}</Alert>;
+  }
+  if (data === undefined) {
+    return <Alert severity="warning">Prop Data jest undefined w PowerTable {entityName}</Alert>;
+  }
+
+  const renderSidebar = () => {
+    if (!showSidebar) return null;
+
+    return (
+      <PowerSidebar
+        onOpenSettings={openModal}
+        presets={presets}
+        columnsSchema={columnsSchema}
+        actionsApi={actionsApi}
+        onExport={handleExport}
+        onRefresh={onRefresh}
+        onBulkDelete={onBulkDelete}
+        loading={loading}
+        bulkEdit={Array.isArray(bulkEditFormSchema?.schema)}
+        showExport={enableExport}
+        showUpload={(importSchema && typeof onUpload === 'function') && enableUpload}
+        showAdd={(addFormSchema && typeof onPost === 'function')}
+        showPresets={enablePresets}
+      />
+    );
+  };
+
   return (
     <>
       <Box
         sx={{
-          display: "flex",
+          display: 'flex',
           height,
-          width,
-          maxWidth: width,
-          overflow: "hidden",
-          overflowX: "scroll",
-          marginRight: "1em",
+          width: '100%',          // ⬅️ zawsze wypełnia rodzica
+          maxWidth: '100%',
+          overflow: 'hidden',
           bgcolor:
-            settings.background === "light"
-              ? "#f9f9f9"
-              : settings.background === "dark"
-                ? "#1e1e1e"
-                : "transparent",
+            settings.background === 'light'
+              ? '#f9f9f9'
+              : settings.background === 'dark'
+              ? '#1e1e1e'
+              : 'transparent',
         }}
       >
-        {/* Sidebar */}
-        <PowerSidebar
-          onOpenSettings={openModal}
-          presets={presets}
-          columnsSchema={columnsSchema}
-          actionsApi={actionsApi}
-          onExport={handleExport}
-          onRefresh={onRefresh}
-          onBulkDelete={onBulkDelete}
-          loading={loading}
-          bulkEdit={Array.isArray(bulkEditFormSchema?.schema)}
-          allowUpload={(importSchema && typeof onUpload === 'function')}
-          allowAdd={(addFormSchema && typeof onPost === 'function')}
-        />
+        {/* Sidebar (opcjonalnie) */}
+        {showSidebar && (
+          <Box
+            sx={{
+              flex: '0 0 auto',
+              // szerokość trzymasz w samym PowerSidebar (ikonki)
+            }}
+          >
+            {renderSidebar()}
+          </Box>
+        )}
 
-        {/* Table Section */}
+        {/* Sekcja tabeli */}
         <Box
           sx={{
-            flex: "1 1 auto",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            position: "relative", // <-- pozwala overlayowi przykryć tylko tę sekcję
+            flex: '1 1 auto',
+            minWidth: 0,
+            height: '100%',
+            position: 'relative',
+            overflow: 'hidden',
           }}
           aria-busy={loading ? true : undefined}
         >
-          {renderTable()}
+          {/* Wewnętrzny kontener na poziomy scroll tabeli */}
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+            }}
+          >
+            {renderTable()}
+          </Box>
 
-          {/* Overlay spinner - wyświetlany tylko nad sekcją tabeli */}
+          {/* Overlay spinner - tylko nad sekcją tabeli */}
           {loading && (
             <Box
               sx={{
-                position: "absolute",
+                position: 'absolute',
                 inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 zIndex: 10,
-                pointerEvents: "all", // blokuje interakcje z tabelą
+                pointerEvents: 'all',
               }}
             >
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
                   gap: 1,
                 }}
               >
                 <CircularProgress color="primary" />
-                {/* Opcjonalny tekst pod spinnerem — zakomentuj/usun jeśli nie chcesz */}
                 <Typography variant="caption" sx={{ mt: 0.5 }}>
                   Ładowanie...
                 </Typography>
@@ -285,9 +325,10 @@ const PowerTable = ({
           )}
         </Box>
       </Box>
+
       {renderModalContent()}
     </>
   );
-};
+}
 
 export default PowerTable;

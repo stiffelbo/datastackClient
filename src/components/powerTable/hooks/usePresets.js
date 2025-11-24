@@ -284,8 +284,14 @@ const saveEnvelope = (ns, entity, env) => {
   localStorage.setItem(KEY(ns, entity), JSON.stringify(toSave));
 };
 
-function usePresets({ entityName, storageNS = 'powerTable' }) {
-  const [env, setEnv] = useState(() => loadEnvelope(storageNS, entityName) || createEnvelope('default'));
+function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true }) {
+  const [env, setEnv] = useState(() => {
+    // 🔹 gdy presety wyłączone – nie dotykamy localStorage
+    if (!enablePresets) {
+      return createEnvelope('default');
+    }
+    return loadEnvelope(storageNS, entityName) || createEnvelope('default');
+  });
   const [staged, setStaged] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [diff, setDiff] = useState(null);
@@ -319,7 +325,10 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
           [prev.activePreset]: toWrite,
         },
       };
-      saveEnvelope(storageNS, entityName, next);
+      // 🔹 zapisujemy do LS tylko gdy presety są włączone
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
       return next;
     });
     setDirty(false);
@@ -342,7 +351,10 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
         },
         activePreset: name,
       };
-      saveEnvelope(storageNS, entityName, next);
+      // 🔹 zapisujemy do LS tylko gdy presety są włączone
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
       return next;
     });
     setDirty(false);
@@ -355,7 +367,9 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
   const setActive = (name) => {
     const next = { ...env, activePreset: name };
     setEnv(next);
-    saveEnvelope(storageNS, entityName, next);
+    if (enablePresets) {
+      saveEnvelope(storageNS, entityName, next);
+    }
     setStaged(null);
     setDirty(false);
   };
@@ -370,7 +384,9 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
         presets: Object.keys(rest).length ? rest : createEnvelope('default').presets,
         activePreset: fallback,
       };
-      saveEnvelope(storageNS, entityName, next);
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
       return next;
     });
     if (env.activePreset === name) { setStaged(null); setDirty(false); }
@@ -386,7 +402,9 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
         presets: { ...rest, [newName]: data },
         activePreset: prev.activePreset === oldName ? newName : prev.activePreset,
       };
-      saveEnvelope(storageNS, entityName, next);
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
       return next;
     });
   };
@@ -394,7 +412,9 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
   const reset = () => {
     const fresh = createEnvelope('default');
     setEnv(fresh);
-    saveEnvelope(storageNS, entityName, fresh);
+    if (enablePresets) {
+      saveEnvelope(storageNS, entityName, fresh);
+    }
     setStaged(null);
     setDirty(false);
   };
@@ -418,8 +438,9 @@ function usePresets({ entityName, storageNS = 'powerTable' }) {
       if (prev.activePreset === 'default') {
         next.activePreset = 'default';
       }
-
-      saveEnvelope(storageNS, entityName, next);
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
       return next;
     });
 

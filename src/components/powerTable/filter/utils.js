@@ -52,7 +52,7 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     if (op === 'notEmpty') return !isEmpty;
 
     //FK
-    if(type === 'fk'){
+    if (type === 'fk') {
         if (op === 'fk') {
             const { include = [], exclude = [] } = value || {};
             if (include.length && !include.includes(rawValue)) return false;
@@ -65,7 +65,7 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     if (type === 'string') {
         const val = String(rawValue ?? '').toLowerCase();
         const fval = String(value ?? '').toLowerCase();
-        
+
         if (op === 'equals') return val === fval;
         if (op === 'notEquals') return val !== fval;
         if (op === 'contains') return val.includes(fval);
@@ -160,7 +160,7 @@ export const applyFilterToValue = (rawValue, filter, type) => {
  * Filtruj cały dataset
  */
 
-export const applyFilters = ({data = [], columnsSchema = {}, omit = [], selectedIds = []}) => {
+export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selectedIds = [] }) => {
 
     const fieldsNotToJoinForSlug = ['created_by', 'deleted_by', 'updated_by'];
 
@@ -174,56 +174,60 @@ export const applyFilters = ({data = [], columnsSchema = {}, omit = [], selected
     };
 
     columns.forEach(column => {
-        if(column.optionsMap && Object.keys(column.optionsMap).length > 0){
-            if(!fieldsNotToJoinForSlug.includes(column.field)){
+        if (column.optionsMap && Object.keys(column.optionsMap).length > 0) {
+            if (!fieldsNotToJoinForSlug.includes(column.field)) {
                 optionsDict[column.field] = column.optionsMap;
             }
         }
     });
 
     const fieldsToJoin = Object.keys(optionsDict) || [];
-
-    return data.filter((row) => {
-        if(showSelected){
-            if(!selectedIds.length){
-                columnsSchema.setShowSelected(false);
-            }else{
-                if(!selectedIds.includes(+row.id)){
-                    return false;
-                };
-            }            
-        }
-
-        // --- GLOBAL SLUG SEARCH ---
-        if (globalSearch && globalSearch.trim()) {
-            const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
-            const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
-            let rowSlug = Object.values(row).join(' ').toLowerCase();
-            fieldsToJoin.forEach(field => {
-                rowSlug += ` ${optionsDict[field][row[field]]}`;
-            });
-
-            const matchGlobal = orGroups.some(group => {
-                const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
-                return terms.every(term => rowSlug.includes(term));
-            });
-
-            if (!matchGlobal) return false;
-        }
-
-        // --- COLUMN FILTERS ---
-        for (const col of columns) {
-            const filters = (col.filters || []).filter(f => !omit.includes(f.id));
-            if (!filters.length) continue;
-
-            const rawValue = row[col.field];
-            if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string'))) {
-                return false;
+    if (data && Array.isArray(data)) {
+        return data.filter((row) => {
+            if (showSelected) {
+                if (!selectedIds.length) {
+                    columnsSchema.setShowSelected(false);
+                } else {
+                    if (!selectedIds.includes(+row.id)) {
+                        return false;
+                    };
+                }
             }
-        }
 
-        return true;
-    });
+            // --- GLOBAL SLUG SEARCH ---
+            if (globalSearch && globalSearch.trim()) {
+                const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
+                const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
+                let rowSlug = Object.values(row).join(' ').toLowerCase();
+                fieldsToJoin.forEach(field => {
+                    rowSlug += ` ${optionsDict[field][row[field]]}`;
+                });
+
+                const matchGlobal = orGroups.some(group => {
+                    const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+                    return terms.every(term => rowSlug.includes(term));
+                });
+
+                if (!matchGlobal) return false;
+            }
+
+            // --- COLUMN FILTERS ---
+            for (const col of columns) {
+                const filters = (col.filters || []).filter(f => !omit.includes(f.id));
+                if (!filters.length) continue;
+
+                const rawValue = row[col.field];
+                if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string'))) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+    }else{
+        return [];
+    }
+
 };
 
 

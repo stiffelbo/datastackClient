@@ -36,6 +36,8 @@ const BaseEntityPage = ({
   tabs = [],
   tab,
   setTab,
+  rwd,
+  heightSpan
 }) => {
   if (!tabs.length) {
     return (
@@ -63,8 +65,10 @@ const BaseEntityPage = ({
   const goPrev = () => prevId && onChangeId?.(prevId);
   const goNext = () => nextId && onChangeId?.(nextId);
 
+  const height = rwd.height - heightSpan;
+
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height, display: 'flex', flexDirection: 'column' }}>
       {/* HEADER */}
       <Box
         sx={{

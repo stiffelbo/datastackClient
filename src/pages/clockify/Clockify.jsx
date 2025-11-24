@@ -23,6 +23,7 @@ const Clockify = () => {
             entity={entity}
             entityName={entityName}
             basePath={basePath}
+            listProps={{}}
         />
     );
 };
