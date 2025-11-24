@@ -10,7 +10,7 @@ const BlankComponent = (props) => {
     </div>
 }
 
-const EmployeePage = ({
+const CostItemPage = ({
   entityName,
   entity,
   dashboard,
@@ -28,7 +28,7 @@ const EmployeePage = ({
     {
       key: 'details',
       label: 'Edytuj',
-      pageKey: 'employees', // klucz z rejestru stron
+      pageKey: 'costItemDict.details', // klucz z rejestru stron
       component: <BlankComponent id={id} row={row}/>,
     },
     // itd...
@@ -49,4 +49,4 @@ const EmployeePage = ({
   );
 };
 
-export default EmployeePage;
+export default CostItemPage;

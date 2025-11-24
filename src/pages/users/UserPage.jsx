@@ -10,7 +10,7 @@ const BlankComponent = (props) => {
     </div>
 }
 
-const EmployeePage = ({
+const UsersPage = ({
   entityName,
   entity,
   dashboard,
@@ -49,4 +49,4 @@ const EmployeePage = ({
   );
 };
 
-export default EmployeePage;
+export default UsersPage;

@@ -3,21 +3,19 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 const BlankComponent = (props) => {
-    console.log(props);
     return <div>
         <p>Blank Komponent</p>
         <pre>{JSON.stringify(props)}</pre>
     </div>
 }
 
-const EmployeePage = ({
+const ContractorPage = ({
   entityName,
   entity,
   dashboard,
   id,
   row,
   rows,
-  rwd,
   schema,
   onChangeId,
 }) => {
@@ -44,9 +42,8 @@ const EmployeePage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
-      rwd={rwd}
     />
   );
 };
 
-export default EmployeePage;
+export default ContractorPage;

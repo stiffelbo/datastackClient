@@ -3,6 +3,7 @@ import React, { useMemo, useEffect } from 'react';
 import { Box, Tabs, Tab, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../context/AuthContext';
+import { useRwd } from '../../context/RwdContext';
 
 const DEFAULT_TABS = [
   {
@@ -36,9 +37,10 @@ const BaseEntityPage = ({
   tabs = [],
   tab,
   setTab,
-  rwd,
   heightSpan
 }) => {
+  const rwd = useRwd();
+  
   if (!tabs.length) {
     return (
       <Box sx={{ p: 2 }}>

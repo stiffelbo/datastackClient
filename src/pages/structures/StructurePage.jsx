@@ -1,23 +1,15 @@
-
+// pages/Employees/StructurePage.jsx
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
-const BlankComponent = (props) => {
-    console.log(props);
-    return <div>
-        <p>Blank Komponent</p>
-        <pre>{JSON.stringify(props)}</pre>
-    </div>
-}
-
-const EmployeePage = ({
+const StructurePage = ({
   entityName,
   entity,
   dashboard,
+  rwd,
   id,
   row,
   rows,
-  rwd,
   schema,
   onChangeId,
 }) => {
@@ -25,12 +17,7 @@ const EmployeePage = ({
 
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
-    {
-      key: 'details',
-      label: 'Edytuj',
-      pageKey: 'employees', // klucz z rejestru stron
-      component: <BlankComponent id={id} row={row}/>,
-    },
+  
     // itd...
   ];
 
@@ -45,8 +32,9 @@ const EmployeePage = ({
       tab={tab}
       setTab={setTab}
       rwd={rwd}
+      heightSpan={190}
     />
   );
 };
 
-export default EmployeePage;
+export default StructurePage;

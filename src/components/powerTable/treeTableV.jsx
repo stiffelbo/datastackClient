@@ -54,7 +54,7 @@ const TreeTableV = ({
     }));
   }, []);
 
-  const [heightMap, setHeightMap] = useState({ header: 0, footer: 0 });
+  const [heightMap, setHeightMap] = useState({ header: 60, footer: 60 });
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
 

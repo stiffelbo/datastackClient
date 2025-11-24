@@ -36,13 +36,14 @@ const PowerTableFooter = ({
     treeColumnWidth || settings.treeColumnWidth || 40;
 
   return (
-    <TableFooter ref={ref}>
+    <TableFooter ref={ref} sx={{height}}>
       <TableRow
         sx={{
           backgroundColor: '#f9f9f9',
           position: 'sticky',
           bottom: 0,
           zIndex: 1,
+          height
         }}
       >
         {/* 🔹 systemowa pierwsza kolumna dla drzewa */}
@@ -81,6 +82,7 @@ const PowerTableFooter = ({
               columnsSchema={columnsSchema}
               settings={{
                 ...settings,
+                height,
                 sx: { fontWeight: 'bold', ...(settings.sx || {}) },
               }}
               parent="footer"
