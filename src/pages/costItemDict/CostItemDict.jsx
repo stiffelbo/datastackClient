@@ -13,14 +13,9 @@ const entityName = 'CostItemDict';
 const basePath = '/costitemdict';
 const endpoint = '/cost_item_dict/';
 
-
 const CostItemDict = () => {
     const entity = useEntity({ endpoint });
     
-    useEffect(() => {
-        entity.refresh();
-    }, []);
-
     return (
         <BaseEntityDashboard
              renderPage={(props) => <CostItemPage entity={entity} entityName={entityName} {...props} />}

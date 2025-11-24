@@ -13,10 +13,6 @@ const endpoint = '/clockify/';
 const Clockify = () => {
     const entity = useEntity({ endpoint });
 
-    useEffect(() => {
-        entity.refresh();
-    }, []);
-
     return (
         <BaseEntityDashboard
             renderPage={null}

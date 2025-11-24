@@ -8,12 +8,10 @@ import StructurePage from './StructurePage';
 
 const entityName = 'Structures';
 const basePath = "/structures";
+const endpoint = "/structures/";
 
 const Structures = () => {
-    const entity = useEntity({ endpoint: '/structures/' });
-    useEffect(() => {
-        entity.refresh();
-    }, []);
+    const entity = useEntity({ endpoint });
 
     return (
         <BaseEntityDashboard

@@ -3,14 +3,15 @@ import React from 'react';
 //Hooks
 import useEntity from '../../hooks/useEntity';
 
-
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 import UserPage from './UserPage';
 
+const entityName = "Users"
+const basePath = "/users";
+const endpoint = "/user/";
+
 const Users = () => {
-  const entityName = "Users"
-  const entity = useEntity({ endpoint: '/user/' });
-  const basePath = "/users";
+  const entity = useEntity({ endpoint });
 
   return (
     <BaseEntityDashboard

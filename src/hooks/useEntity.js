@@ -289,6 +289,7 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         if(queryKey){
             setRows([]);
         }
+        
         refresh().catch(e => console.error(e));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [endpoint, queryKey]);

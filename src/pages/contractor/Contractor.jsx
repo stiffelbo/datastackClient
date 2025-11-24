@@ -7,10 +7,14 @@ import useEntity from '../../hooks/useEntity';
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 import ContractorPage from './ContractorPage';
 
+const entityName = "Contractor";
+const basePath = "/contractor";
+const endpoint = "/contractor/";
+
 const Contractor = () => {
-    const entityName = 'Contractor';
-    const entity = useEntity({ endpoint: '/contractor/' });
-    const basePath = "/contractor";
+    
+    const entity = useEntity({ endpoint });
+    
     return (
         <BaseEntityDashboard
             renderPage={(props) => <ContractorPage entity={entity} entityName={entityName} {...props} />}

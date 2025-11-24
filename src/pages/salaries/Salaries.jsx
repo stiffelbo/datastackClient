@@ -1,56 +1,22 @@
-import React, { useEffect } from 'react';
-
-//Hooks
+import React, {useEffect} from 'react';
 import useEntity from '../../hooks/useEntity';
 
-// Comp
-import PowerTable from '../../components/powerTable/powerTable';
+import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 
-const enityName = 'Salaries';
 
-const selected = null;
-const onSelected = (val) => {
-    console.log(val)
-}
-
-const selectedItems = [];
-const onSelectItems = (val) => {
-    console.log(val);
-}
+const entityName = "Salaries";
+const basePath = "/salaries";
+const endpoint = "/salaries/";
 
 const Salaries = () => {
-    const entity = useEntity({ endpoint: '/salaries/' });
-    useEffect(() => {
-        entity.refresh();
-    }, []);
+    const entity = useEntity({ endpoint });
+        
     return (
-        <PowerTable
-            entityName={enityName}
-            width={window.innerWidth}
-            height={window.innerHeight - 90}
-            loading={entity.loading}
-            data={entity.rows}
-            columnSchema={entity.schema.columns}
-
-            addFormSchema={entity.schema.addForm}
-            bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={entity.schema.importSchema}
-
-            onRefresh={entity.refresh}
-            onPost={entity.create}
-            onEdit={entity.updateField}
-            onUpload={entity.upload}
-            onBulkEdit={entity.updateMany}
-            onDelete={entity.remove}
-            onBulkDelete={entity.removeMany}
-
-            error={entity.error}
-            clearError={entity.clearError}
-
-            selected={selected}
-            onSelect={onSelected}
-            selectedItems={selectedItems}
-            onSelectItems={onSelectItems}
+        <BaseEntityDashboard
+            renderPage={null}
+            entity={entity}
+            entityName={entityName}
+            basePath={basePath}
         />
     );
 };
