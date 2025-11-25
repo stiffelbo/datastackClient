@@ -47,7 +47,6 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     const { op, value } = filter;
 
     const isEmpty = rawValue === null || rawValue === undefined || rawValue === '';
-    console.log(filter, value, rawValue);
     if (op === 'isEmpty') return isEmpty;
     if (op === 'notEmpty') return !isEmpty;
 

@@ -96,7 +96,6 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
   return (
     <Box
       sx={{
-        p: 2,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -124,7 +123,7 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
         onEditLeft={handleEditLeft}
         onDeleteLeft={handleDeleteLeft}
 
-        height={rwd.height - 220}
+        height={rwd.height - 190}
         leftRowHeight={40}
         rightRowHeight={40}
       />

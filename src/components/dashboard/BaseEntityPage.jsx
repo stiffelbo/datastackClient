@@ -70,7 +70,7 @@ const BaseEntityPage = ({
   const height = rwd.height - heightSpan;
 
   return (
-    <Box sx={{ height, display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height, display: 'flex', flexDirection: 'column'}}>
       {/* HEADER */}
       <Box
         sx={{
@@ -116,7 +116,7 @@ const BaseEntityPage = ({
       </Box>
 
       {/* CONTENT */}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 2 }}>
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', p: 1 }}>
         {activeNode ?? (
           <Typography variant="body2" color="text.secondary">
             Brak komponentu dla zakładki {activeTab.key}

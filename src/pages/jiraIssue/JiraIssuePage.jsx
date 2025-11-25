@@ -60,7 +60,7 @@ const JiraIssuePage = ({
       tab={tab}
       setTab={setTab}
       rwd={rwd}
-      heightSpan={190}
+      heightSpan={entity.heightSpan}
     />
   );
 };

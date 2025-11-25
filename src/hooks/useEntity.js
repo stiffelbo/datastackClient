@@ -26,7 +26,7 @@ const defaultSchema = {
     relations: {},
     options: {},      // { [fieldName]: Option[] }
     importSchema: [],
-    heightSpan: 90,
+    heightSpan: 85,
 };
 
 /**
