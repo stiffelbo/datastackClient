@@ -224,7 +224,6 @@ const ActionCell = ({ column, params, parent = "body", actionsApi, cellSX = {}, 
       align={column.align || "center"}
       sx={{
         ...cellSX,
-        padding: "4px",
         verticalAlign: "middle",
         borderRight: "1px solid #eee",
         maxHeight: '100%',

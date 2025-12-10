@@ -59,6 +59,7 @@ const PowerTableCell = ({
         value={value}
         onCommit={handleCommit}
         onCancel={handleCancel}
+        settings={settings}
         column={column}
         params={params}
         parent={parent}

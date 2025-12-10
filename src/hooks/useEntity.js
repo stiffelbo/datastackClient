@@ -20,6 +20,7 @@ const defaultEndpoints = {
 // default shape, for safety
 const defaultSchema = {
     addForm: { schema: [], label: '' },
+    editForm: { schema: [], label: '' },
     bulkEditForm: { schema: [], label: '' },
     columns: [],
     endpoints: {},
@@ -41,6 +42,7 @@ function organizeSchema(input = defaultSchema) {
         ...defaultSchema,
         ...input,
         addForm: { ...(input.addForm || defaultSchema.addForm) },
+        editForm: { ...(input.editForm || defaultSchema.addForm) },
         bulkEditForm: { ...(input.bulkEditForm || defaultSchema.bulkEditForm) },
     };
 
@@ -59,6 +61,31 @@ function organizeSchema(input = defaultSchema) {
         schema.addForm = {
             ...schema.addForm,
             schema: schema.addForm.schema.map((item) => {
+                if (!item || typeof item !== 'object') return item;
+                const { name, type, selectOptions } = item;
+
+                // Rule: type === 'select' AND selectOptions === [] → fill from options[name]
+                if (
+                    type === 'select' &&
+                    Array.isArray(selectOptions) &&
+                    selectOptions.length === 0 &&
+                    name
+                ) {
+                    const opts = getOpts(name);
+                    if (opts) {
+                        return { ...item, selectOptions: opts };
+                    }
+                }
+                return item;
+            }),
+        };
+    }
+
+    // -------- editForm block --------
+    if (Array.isArray(schema.editForm.schema)) {
+        schema.editForm = {
+            ...schema.editForm,
+            schema: schema.editForm.schema.map((item) => {
                 if (!item || typeof item !== 'object') return item;
                 const { name, type, selectOptions } = item;
 
@@ -216,7 +243,6 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async () => {
         setLoading(true);
-        console.log(query);
         try {
             const url = resolveEndpoint('get');
             if (!url) {

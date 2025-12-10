@@ -13,6 +13,40 @@ import { valueFormatters } from "../valueFormatters";
  * - onDoubleClick
  * - editing (optional) - hook object returned by useTableEditing (to detect other edits and stop them)
  */
+
+const normalize = (x) => {
+  if (x === null || x === undefined || x === "") return null;
+  if (typeof x === "boolean") return x;
+  if (typeof x === "number") return x !== 0;
+  if (typeof x === "string") {
+    const s = x.trim().toLowerCase();
+    if (s === "1" || s === "true" || s === "yes" || s === "y") return true;
+    if (s === "0" || s === "false" || s === "no" || s === "n") return false;
+  }
+  return null;
+};
+
+const renderBool = (v, fontSize) => {
+
+  const nv = normalize(v);
+  if (nv === null) return "";
+  return (
+    <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+      <Typography component="span" sx={{ color: nv ? "success.main" : "error.main", fontSize: fontSize }}>
+        {nv ? "✓" : "✕"}
+      </Typography>
+      {/* optional textual hint */}
+      <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.8em" }}>
+        {nv ? "Tak" : "Nie"}
+      </Typography>
+    </Box>
+  );
+};
+
+const renderLink = (v) => {
+  return <a href={v}>{v}</a>
+}
+
 const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, onDoubleClick, editing }) => {
   const {
     sx = {},
@@ -26,10 +60,10 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
   const virtualizedClampSx = isVirtual
     ? {
-        height: settings.rowHeight,
-        maxHeight: settings.rowHeight,
-        overflow: "hidden",
-      }
+      height: settings.rowHeight,
+      maxHeight: settings.rowHeight,
+      overflow: "hidden",
+    }
     : {};
 
   const formatter =
@@ -74,6 +108,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
   // compute displayed value
   let displayValue = value ?? "";
+  let title = '';
 
   // 0️⃣ formatter applied first if provided (we'll try/catch)
   if (typeof formatter === "function") {
@@ -82,6 +117,48 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
     } catch (err) {
       console.warn(`Formatter error for ${column.field}`, err);
     }
+  }
+
+  if (parent === 'footer') {
+    if (column.aggregationFn) {
+      title = `${column.headerName} ${column.aggregationFn}`;
+    }
+
+    return (
+      <TableCell
+        title={title}
+        onClick={handleClick}
+        onDoubleClick={onDoubleClick}
+        sx={{
+              height: settings.rowHeight,
+              maxHeight: settings.rowHeight,
+              paddingTop: 0,
+              paddingBottom: 0,
+              // opcjonalnie:
+              overflow: 'hidden',
+            }}
+      >
+        <Box sx={{
+          width: column.width,
+          minWidth: column.minWidth,
+          maxWidth: column.maxWidth,
+          padding: densityPadding,
+          fontSize,
+          lineHeight: 1.3,
+          textAlign: align,
+          overflowWrap: "break-word",
+          wordBreak: "break-word",
+          ...sx,
+          ...conditionalSx,
+          ...virtualizedClampSx,
+          height: settings.rowHeight,
+          maxHeight: settings.rowHeight,
+        }}>
+          {String(displayValue)}
+        </Box>
+      </TableCell>
+    );
+
   }
 
   // 1️⃣ renderCell has highest priority (it receives params)
@@ -144,32 +221,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
   }
 
   // 3️⃣ If column.type or input indicates boolean -> pretty unicode
-  const renderBool = (v) => {
-    const normalize = (x) => {
-      if (x === null || x === undefined || x === "") return null;
-      if (typeof x === "boolean") return x;
-      if (typeof x === "number") return x !== 0;
-      if (typeof x === "string") {
-        const s = x.trim().toLowerCase();
-        if (s === "1" || s === "true" || s === "yes" || s === "y") return true;
-        if (s === "0" || s === "false" || s === "no" || s === "n") return false;
-      }
-      return null;
-    };
-    const nv = normalize(v);
-    if (nv === null) return "";
-    return (
-      <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-        <Typography component="span" sx={{ color: nv ? "success.main" : "error.main", fontSize: fontSize }}>
-          {nv ? "✓" : "✕"}
-        </Typography>
-        {/* optional textual hint */}
-        <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.8em" }}>
-          {nv ? "Tak" : "Nie"}
-        </Typography>
-      </Box>
-    );
-  };
+
 
   // If explicit type suggests boolean (or input is switch)
   if ((column.type === "bool" || column.type === "boolean" || column.input === "switch" || column.input === "bool")) {
@@ -197,7 +249,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         onClick={handleClick}
         onDoubleClick={onDoubleClick}
       >
-        {renderBool(value)}
+        {renderBool(value, fontSize)}
       </TableCell>
     );
   }
@@ -214,18 +266,19 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
   if (displayValue == null) displayValue = "";
 
-  let title =
+  //Value as jsx
+  if(column.formatterKey === 'link'){
+    displayValue = <a href={displayValue} target="_blank">{displayValue}</a>
+  }
+
+  title =
     column.showTitle === false
       ? undefined
       : typeof displayValue === "string" && ellipsis
         ? String(displayValue)
         : undefined;
 
-  if(parent === 'footer'){
-    if(column.aggregationFn){
-      title = `${column.headerName} ${column.aggregationFn}`;
-    }
-  }
+  
 
   return (
     <TableCell
@@ -248,7 +301,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         ...conditionalSx,
         ...virtualizedClampSx
       }}>
-        {String(displayValue)}
+        {displayValue}
       </Box>
     </TableCell>
   );

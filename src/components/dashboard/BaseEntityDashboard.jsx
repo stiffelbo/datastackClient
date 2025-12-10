@@ -16,7 +16,8 @@ const BaseEntityDashboard = ({
   entity,
   renderPage,   // <EmployeePage entity={entity} />
   basePath,// np. "/employees"
-  listProps = {} 
+  listProps = {},
+  refreshId = false
 }) => {
   const { width, height } = useRwd();
   const dashboard = useDashboard(entityName);
@@ -48,6 +49,14 @@ const BaseEntityDashboard = ({
       setTab(urlTab);
     }
   }, [urlId, urlTab, setCurrentId, setTab]);
+
+  useEffect(()=>{
+    if(refreshId){
+      if(typeof entity.getOne === 'function'){
+        entity.getOne(currentId);
+      }
+    }
+  }, [currentId]);
 
   // 2) Na zmiany stanu dashboardu – aktualizujemy URL
   useEffect(() => {

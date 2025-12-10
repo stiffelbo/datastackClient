@@ -42,16 +42,18 @@ const Mapper = ({
     entityName = 'defaultMapper',
     ownerLabel,
     owner,
-
+    
     leftData = [],
     leftColumns = [],
     leftSearchFields = [],
-
+    
     rightData = [],
     rightColumnsBase = [],
     rightSearchFields = [],
-
+    
+    distinct = false,
     idField = 'id',
+    distinctField = 'id',
     orderField = null, // na razie tylko info tekstowe – logika po Twojej stronie
 
     onAdd,        // ({ mappedItemData, prevElementData }) => ...
@@ -120,14 +122,35 @@ const Mapper = ({
         [needle]
     );
 
+    const usedIds = useMemo(() => {
+        if (!distinct) return null;
+
+        const ids = leftData
+            .map((row) => row?.[distinctField])
+            .filter((v) => v !== null && v !== undefined);
+
+        return new Set(ids);
+    }, [leftData, distinct, distinctField]);
+
     const filteredLeftData = useMemo(
         () => leftData.filter((row) => matchesSearch(row, leftSearchFields)),
         [leftData, leftSearchFields, matchesSearch]
     );
 
     const filteredRightData = useMemo(
-        () => rightData.filter((row) => matchesSearch(row, rightSearchFields)),
-        [rightData, rightSearchFields, matchesSearch]
+        () =>
+            rightData.filter((row) => {
+                // najpierw globalne szukanie
+                if (!matchesSearch(row, rightSearchFields)) return false;
+
+                // distinct: chowamy pozycje, które już są przypisane
+                if (distinct && usedIds && usedIds.has(row[idField])) {
+                    return false;
+                }
+
+                return true;
+            }),
+        [rightData, rightSearchFields, matchesSearch, distinct, usedIds, idField]
     );
 
     // 🔑 aktualny "prevElement" – np. pierwszy zaznaczony w filtrach

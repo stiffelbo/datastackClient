@@ -9,6 +9,11 @@ import ErrorAlerts from './errorAlerts';
 const AddFormModal = ({ open, onClose, addFormSchema, onPost, loading, entityName, error, clearError }) => {
   const [submitting, setSubmitting] = useState(false);
 
+  const handleClose = () => {
+     if (typeof clearError === 'function') clearError();
+     if (typeof onClose === 'function') onClose();
+  }
+
   const handleSubmit = async (data) => {
     if (submitting) return; // zabezpieczenie przed podwójnym wysłaniem
     if (typeof onPost !== 'function') {
@@ -36,7 +41,7 @@ const AddFormModal = ({ open, onClose, addFormSchema, onPost, loading, entityNam
 
       if (ok) {
         toast.success(`${entityName || 'Rekord'} zapisany`);
-        if (typeof onClose === 'function') onClose();
+        if (typeof onClose === 'function') handleClose();
       }
     } catch (err) {
       console.error(err);
@@ -52,7 +57,7 @@ const AddFormModal = ({ open, onClose, addFormSchema, onPost, loading, entityNam
   };
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <Modal open={open} onClose={handleClose}>
       <Box
         role="dialog"
         aria-modal="true"

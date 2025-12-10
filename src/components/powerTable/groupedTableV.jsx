@@ -194,7 +194,7 @@ const GroupedTableV = ({ initialData, data, columnsSchema, height, actionsApi, s
   const bodyHeight = (settings?.height || 600) - (heightMap.header + heightMap.footer);
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+
       <TableContainer
         component={Paper}
         sx={{
@@ -230,7 +230,6 @@ const GroupedTableV = ({ initialData, data, columnsSchema, height, actionsApi, s
           />
         </Table>
       </TableContainer>
-    </Box>
   );
 };
 

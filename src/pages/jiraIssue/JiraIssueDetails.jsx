@@ -17,12 +17,11 @@ const JiraIssueDetails = ({id, row, entity, rwd, dashboard}) => {
             formLabel={"Edytuj Jira Issue"}
             sendFormData={false}
             data={row}
-            schema={entity.schema.addForm.schema}    
+            schema={entity.schema.editForm.schema}    
             onSubmit={(data) => entity.update(id, data)}    
             onCancel={onCancel}
         />  
     </Box>
-
 }
 
 export default JiraIssueDetails;

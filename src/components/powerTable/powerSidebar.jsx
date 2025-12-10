@@ -158,13 +158,14 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
     <Box
       sx={{
         width: '48px',
-        backgroundColor: '#f7f7f7',
+        backgroundColor: '#ffffffff',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         py: 1,
         borderLeft: '1px solid #ddd',
         gap: 1,
+        height: '100%'
       }}
     >
       {renderSearchControl()}

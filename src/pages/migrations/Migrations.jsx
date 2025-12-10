@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 //Hooks
 import useEntity from '../../hooks/useEntity';
@@ -6,22 +6,22 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 
-const entityName = 'Clockify';
-const basePath = '/clockify';
-const endpoint = '/clockify/';
+const entityName = "Migrations";
+const basePath = "/migrations";
+const endpoint = "/migrations/";
 
-const Clockify = () => {
+const Dashboard = () => {
+    
     const entity = useEntity({ endpoint });
-    console.log(entity);
+    
     return (
         <BaseEntityDashboard
             renderPage={null}
             entity={entity}
             entityName={entityName}
             basePath={basePath}
-            listProps={{}}
         />
     );
 };
 
-export default Clockify;
+export default Dashboard;

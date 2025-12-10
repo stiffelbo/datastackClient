@@ -2,17 +2,18 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
+//Pages
 import PageUser from './PageUser';
 
-const UsersPage = ({
+const PagePage = ({
   entityName,
   entity,
   dashboard,
   id,
   row,
   rows,
-  rwd,
   schema,
+  rwd,
   onChangeId,
 }) => {
   const { tab, setTab } = dashboard;
@@ -20,10 +21,10 @@ const UsersPage = ({
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
-      key: 'pages',
-      label: 'Strony',
-      pageKey: 'user.pages', // klucz z rejestru stron
-      component: <PageUser id={id} row={row} rwd={rwd}/>,
+      key: 'pageUsers',
+      label: 'Użytkownicy',
+      pageKey: 'page.users', // klucz z rejestru stron
+      component: <PageUser id={id} data={row} rwd={rwd}/>,
     },
     // itd...
   ];
@@ -38,9 +39,8 @@ const UsersPage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
-      rwd={rwd}
     />
   );
 };
 
-export default UsersPage;
+export default PagePage;

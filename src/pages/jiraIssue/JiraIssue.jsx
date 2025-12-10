@@ -17,6 +17,7 @@ const JiraIssue = () => {
             entity={entity}
             entityName={entityName}
             basePath={basePath}
+            refreshId={true}
         />
     );
 };

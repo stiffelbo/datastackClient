@@ -16,7 +16,7 @@ const FlatTable = ({
   editing,
   actionsApi,
 }) => {
-  const [heightMap, setHeightMap] = useState({ header: 60, footer: 60 });
+  const [heightMap, setHeightMap] = useState({ header: 42.5, footer: 36 });
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
 
@@ -112,7 +112,7 @@ const FlatTable = ({
             data={data}
             columnsSchema={columnsSchema}
             settings={settingsWithVirtual}
-            onHeightChange={(val) => handleHeightChange('footer', val)}
+            //onHeightChange={(val) => handleHeightChange('footer', val)}
             height={heightMap.footer}            // UPEWNIJ SIĘ, ŻE TU JEST footer
             actionsApi={actionsApi}
           />

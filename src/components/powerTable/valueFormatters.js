@@ -1,4 +1,5 @@
-// valueFormatters.js
+import React from 'react';
+
 const DEFAULT_LOCALE = 'pl-PL';
 
 // --- Cache dla Intl.NumberFormat (żeby nie tworzyć na każdą komórkę)
@@ -111,4 +112,14 @@ export const valueFormatters = {
   uppercase: (val) => (val ? String(val).toUpperCase() : ''),
   lowercase: (val) => (val ? String(val).toLowerCase() : ''),
   booleanYesNo: (val) => booleanYesNo(val),
+  link: (value) => {
+    if (!value) return '';
+
+    const url = String(value).trim();
+
+    // prosta ochrona – tylko http/https
+    const safeUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+
+    return safeUrl;
+  },
 };

@@ -11,21 +11,12 @@ const PowerTableFooter = ({
   columnsSchema,
   settings = {},
   actionsApi = {},
-  onHeightChange,
   height,
   // 🔹 jak w headerze:
   isTree = false,
   treeColumnWidth = 40,
 }) => {
   const ref = useRef(null);
-
-  useEffect(() => {
-    if (ref.current && onHeightChange) {
-      const calcheight = ref.current.getBoundingClientRect().height;
-      // lepiej reagować na zmianę wysokości niż na równość
-      if (height !== calcheight) onHeightChange(calcheight);
-    }
-  }, [height, onHeightChange]);
 
   const aggregates = columnsSchema.getAggregatedValues(data);
   const visibleCols = columnsSchema.getVisibleColumns();
@@ -36,20 +27,23 @@ const PowerTableFooter = ({
     treeColumnWidth || settings.treeColumnWidth || 40;
 
   return (
-    <TableFooter ref={ref} sx={{height}}>
+    <TableFooter ref={ref} sx={{ height }}>
       <TableRow
         sx={{
           backgroundColor: '#f9f9f9',
           position: 'sticky',
           bottom: 0,
           zIndex: 1,
-          height
+          height,
+          maxHeight: height,
         }}
       >
         {/* 🔹 systemowa pierwsza kolumna dla drzewa */}
         {effectiveIsTree && (
           <TableCell
             sx={{
+              height,
+              maxHeight: height,
               width: effectiveTreeColWidth,
               minWidth: effectiveTreeColWidth,
               maxWidth: effectiveTreeColWidth,
@@ -82,7 +76,7 @@ const PowerTableFooter = ({
               columnsSchema={columnsSchema}
               settings={{
                 ...settings,
-                height,
+                rowHeight: height,
                 sx: { fontWeight: 'bold', ...(settings.sx || {}) },
               }}
               parent="footer"

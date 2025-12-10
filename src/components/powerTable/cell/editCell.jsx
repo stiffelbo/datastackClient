@@ -4,12 +4,22 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
 
-const EditCell = ({ value: initialValue, onCommit, onCancel, onChange, column = {}, params = {} }) => {
+const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange, column = {}, params = {} }) => {
   const [value, setValue] = useState(initialValue ?? "");
   const [error, setError] = useState(null);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const didFocusRef = useRef(false);
+
+  const isVirtual = settings.isVirtualized && settings.rowHeight;
+
+  const virtualizedClampSx = isVirtual
+    ? {
+        height: settings.rowHeight,
+        maxHeight: settings.rowHeight,
+        overflow: "hidden",
+      }
+    : {};
 
   useEffect(() => {
     setValue(initialValue ?? "");
@@ -241,7 +251,7 @@ const EditCell = ({ value: initialValue, onCommit, onCancel, onChange, column = 
   }
 
   return (
-    <TableCell ref={containerRef} sx={{ padding: "6px 8px" }}>
+    <TableCell ref={containerRef} sx={{ padding: "6px 8px", ...virtualizedClampSx }}>
       {inputElement}
     </TableCell>
   );

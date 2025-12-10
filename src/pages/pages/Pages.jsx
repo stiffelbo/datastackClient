@@ -5,23 +5,24 @@ import useEntity from '../../hooks/useEntity';
 
 // Comp
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
+import PagePage from './PagePage';
 
-const entityName = 'Clockify';
-const basePath = '/clockify';
-const endpoint = '/clockify/';
+const entityName = "Pages";
+const basePath = "/pages";
+const endpoint = "/pages/";
 
-const Clockify = () => {
+const Dashboard = () => {
+    
     const entity = useEntity({ endpoint });
-    console.log(entity);
+    
     return (
         <BaseEntityDashboard
-            renderPage={null}
+            renderPage={(props) => <PagePage entity={entity} entityName={entityName} {...props} />}
             entity={entity}
             entityName={entityName}
             basePath={basePath}
-            listProps={{}}
         />
     );
 };
 
-export default Clockify;
+export default Dashboard;

@@ -111,7 +111,12 @@ const VirtualizedGroupedBody = ({
 
                   return (
                     <TableCell key={col.field}>
-                      <Box sx={{ pl: item.level * 2, display: 'flex', alignItems: 'center' }}>
+                      <Box 
+                        sx={{ display: 'flex', alignItems: 'center', height: rowHeight, 
+                          maxHeight: rowHeight, overflow: 'hidden', fontSize: '0.8em' 
+                        }}
+                        title={displayValue}
+                      >
                         <IconButton size="small" onClick={() => toggleCollapse(item.path)}>
                           {open ? <ExpandMore /> : <ExpandLess />}
                         </IconButton>
