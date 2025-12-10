@@ -2,13 +2,8 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
-const BlankComponent = (props) => {
-    console.log(props);
-    return <div>
-        <p>Blank Komponent</p>
-        <pre>{JSON.stringify(props)}</pre>
-    </div>
-}
+//Pages
+import EmployeeProcess from './EmployeeProcess';
 
 const EmployeePage = ({
   entityName,
@@ -26,12 +21,11 @@ const EmployeePage = ({
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
-      key: 'details',
-      label: 'Edytuj',
-      pageKey: 'employees', // klucz z rejestru stron
-      component: <BlankComponent id={id} row={row}/>,
+      key: 'employee_process',
+      label: 'Procesy',
+      pageKey: 'employee_process', // klucz z rejestru stron
+      component: <EmployeeProcess id={id} data={row} rwd={rwd}/>,
     },
-    // itd...
   ];
 
   return (

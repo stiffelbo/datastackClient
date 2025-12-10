@@ -18,6 +18,8 @@ import Salaries from './pages/salaries/Salaries';
 import Costs from './pages/costs/Costs';
 import Periods from './pages/periods/Periods';
 import Contractor from './pages/contractor/Contractor';
+import Processes from './pages/processes/Processes';
+import Materials from './pages/materials/Materials';
 import Machines from './pages/machines/Machines';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
@@ -67,7 +69,6 @@ const App = () => (
         <Route path="users/:id" element={<Users />} />
         <Route path="users" element={<Users />} />
 
-
         <Route path="structures/:id/:tab" element={<Structures />} />
         <Route path="structures/:id" element={<Structures />} />
         <Route path="structures" element={<Structures />} />
@@ -91,6 +92,14 @@ const App = () => (
         <Route path="machines/:id/:tab" element={<Machines />} />
         <Route path="machines/:id" element={<Machines />} />
         <Route path="machines" element={<Machines />} />
+
+        <Route path="processes/:id/:tab" element={<Processes />} />
+        <Route path="processes/:id" element={<Processes />} />
+        <Route path="processes" element={<Processes />} />
+
+        <Route path="materials/:id/:tab" element={<Materials />} />
+        <Route path="materials/:id" element={<Materials />} />
+        <Route path="materials" element={<Materials />} />
 
         <Route path="*" element={<Home />} />
       </Route>

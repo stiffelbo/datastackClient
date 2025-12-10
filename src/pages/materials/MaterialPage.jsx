@@ -3,10 +3,10 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
-import MachineDetails from './MachineDetails';
-import MachineProcesses from './MachineProcesses';
+import MaterialProcesses from './MaterialProcesses';
+import MaterialDetails from './MaterialDetails';
 
-const MachinePage = ({
+const MaterialPage = ({
   entityName,
   entity,
   dashboard,
@@ -19,18 +19,19 @@ const MachinePage = ({
 }) => {
   const { tab, setTab } = dashboard;
 
+  // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
       key: 'details',
       label: 'Szczegóły',
-      pageKey: 'machine_details', // klucz z rejestru stron
-      component: <MachineDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+      pageKey: 'material_details', // klucz z rejestru stron
+      component: <MaterialDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
     {
       key: 'processes',
       label: 'Procesy',
-      pageKey: 'machine_processes', // klucz z rejestru stron
-      component: <MachineProcesses id={id} data={row} rwd={rwd}/>,
+      pageKey: 'material_process', // klucz z rejestru stron
+      component: <MaterialProcesses id={id} data={row} rwd={rwd} />,
     },
   ];
 
@@ -48,4 +49,4 @@ const MachinePage = ({
   );
 };
 
-export default MachinePage;
+export default MaterialPage;
