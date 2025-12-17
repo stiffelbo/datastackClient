@@ -30,6 +30,113 @@ const defaultSchema = {
     heightSpan: 85,
 };
 
+function addResolvedColumns(schema) {
+    const resolve = schema?.resolve && typeof schema.resolve === "object" ? schema.resolve : null;
+    if (!resolve || !Array.isArray(schema.columns)) return schema;
+
+    // Szybki lookup istniejących kolumn (żeby nie dublować)
+    const existing = new Set(schema.columns.map(c => c?.field).filter(Boolean));
+
+    // Mapowanie: fkField -> column (żeby odziedziczyć headerName/fieldGroup/width)
+    const fkColByField = {};
+    schema.columns.forEach(c => {
+        if (c && typeof c === "object" && c.field) fkColByField[c.field] = c;
+    });
+
+    const newCols = [];
+
+    Object.keys(resolve).forEach((fkField) => {
+        const r = resolve[fkField];
+        if (!r || typeof r !== "object") return;
+
+        const as = r.as;
+        if (!as || typeof as !== "string") return;
+
+        // jeśli FK kolumna nie istnieje (np. access ją wyciął) -> nie dodajemy label
+        const fkCol = fkColByField[fkField];
+        if (!fkCol) return;
+
+        // jeśli label już istnieje -> skip
+        if (existing.has(as)) return;
+
+        // budujemy nową kolumnę label
+        newCols.push({
+            field: as,
+            headerName: (r.resolveAs && typeof r.resolveAs === "string" && r.resolveAs.trim() !== "")
+                ? r.resolveAs
+                : `${fkCol.headerName} (label)`,
+            fieldGroup: fkCol.fieldGroup ?? null,
+            type: "string",
+            input: "text",
+            editable: false,
+            width: Math.max(120, (fkCol.width ?? 120)),
+            aggregation: "",
+            formatterKey: "",
+            // pomocniczo: żeby intake processor wiedział skąd brać value
+            resolvedFrom: fkField,
+        });
+    });
+
+    if (newCols.length > 0) {
+        schema.columns = [...schema.columns, ...newCols];
+    }
+
+    return schema;
+}
+
+export function processResolvedFields(schema, rows) {
+    if (!schema || !Array.isArray(rows)) return rows;
+
+    const resolve = schema.resolve && typeof schema.resolve === "object" ? schema.resolve : null;
+    if (!resolve) return rows;
+
+    // budujemy mapę fkField -> { as, optionsMap }
+    const fkColByField = {};
+    (schema.columns || []).forEach((c) => {
+        if (c && c.field) fkColByField[c.field] = c;
+    });
+
+    const rules = [];
+    Object.keys(resolve).forEach((fkField) => {
+        const r = resolve[fkField];
+        if (!r || !r.as) return;
+
+        const fkCol = fkColByField[fkField];
+        // prefer optionsMap z kolumny FK (bo organizeSchema już to buduje)
+        const optionsMap = fkCol?.optionsMap || null;
+
+        rules.push({
+            fkField,
+            as: r.as,
+            optionsMap,
+        });
+    });
+
+    if (rules.length === 0) return rows;
+
+    return rows.map((row) => {
+        if (!row || typeof row !== "object") return row;
+
+        const out = { ...row };
+
+        for (const rule of rules) {
+            const { fkField, as, optionsMap } = rule;
+
+            // jeśli backend już zwrócił label (np. JOIN) - nie nadpisujemy
+            if (out[as] != null && out[as] !== "") continue;
+
+            const fkVal = out[fkField];
+            if (fkVal == null || fkVal === "") continue;
+
+            if (optionsMap && Object.prototype.hasOwnProperty.call(optionsMap, fkVal)) {
+                out[as] = optionsMap[fkVal];
+            }
+        }
+
+        return out;
+    });
+}
+
 /**
  * Inject options into add/bulk forms & columns based on your rules.
  * - addForm/bulkForm: if type === 'select' AND selectOptions is an empty array, fill it from options[name].
@@ -165,12 +272,12 @@ function organizeSchema(input = defaultSchema) {
             return col;
         });
     }
-
+    addResolvedColumns(schema);
     return schema;
 }
 
 
-export default function useEntity({ endpoint, entityName = '', query = {}, readOnly = false, processRows = null }) {
+export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null }) {
     // UI / network state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -222,9 +329,16 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
                 throw new Error('Endpoint getEntitySchema is not available for this entity.');
             }
 
-            const urlWithParams = url + `?readOnly=${readOnly}`;
+            // Budujemy obiekt parametrów GET
+            const params = {
+                readOnly,
+            };
 
-            const res = await http.get(urlWithParams);
+            if (schemaQuery && typeof schemaQuery === 'object') {
+                Object.assign(params, schemaQuery);
+            }
+
+            const res = await http.get(url, { params });
             const payload = res.data ?? defaultSchema;
             const procesedSchema = organizeSchema(payload);
             setSchema(procesedSchema);
@@ -238,59 +352,62 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint]);
+    }, [resolveEndpoint, readOnly, schemaQuery]);
+
 
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async () => {
-        setLoading(true);
-        try {
-            const url = resolveEndpoint('get');
-            if (!url) {
+        if (!schemaOnly) {
+            setLoading(true);
+            try {
+                const url = resolveEndpoint('get');
+                if (!url) {
+                    setRows([]);
+                    return [];
+                }
+
+                // 🔹 budujemy query params:
+                let params = {};
+
+                // 1) query przekazane z zewnątrz
+                if (query && typeof query === 'object') {
+                    params = { ...params, ...query };
+                }
+
+                // 2) itemId (na przyszłość, gdy dodasz mapper.itemField)
+                if (schema?.mapper?.itemField && itemId != null) {
+                    params[schema.mapper.itemField] = itemId;
+                }
+
+                // 🔹 wykonujemy GET z params
+                const res = await http.get(url, { params });
+
+                const data = res.data ?? [];
+                let final = Array.isArray(data) ? processResolvedFields(schema, data) : [];
+
+                if (typeof processRows === 'function') {
+                    try {
+                        final = processRows(final) ?? final;
+                    } catch (procErr) {
+                        console.warn('processRows error', procErr);
+                    }
+                }
+
+                setRows(final);
+                setError(null);
+                return final;
+
+            } catch (err) {
+                console.error('fetchRows error', err);
+                toast.error('Błąd pobierania danych encji');
+                setError(err);
                 setRows([]);
                 return [];
+            } finally {
+                setLoading(false);
             }
-
-            // 🔹 budujemy query params:
-            let params = {};
-
-            // 1) query przekazane z zewnątrz
-            if (query && typeof query === 'object') {
-                params = { ...params, ...query };
-            }
-
-            // 2) itemId (na przyszłość, gdy dodasz mapper.itemField)
-            if (schema?.mapper?.itemField && itemId != null) {
-                params[schema.mapper.itemField] = itemId;
-            }
-
-            // 🔹 wykonujemy GET z params
-            const res = await http.get(url, { params });
-
-            const data = res.data ?? [];
-            let final = Array.isArray(data) ? data : [];
-
-            if (typeof processRows === 'function') {
-                try {
-                    final = processRows(final) ?? final;
-                } catch (procErr) {
-                    console.warn('processRows error', procErr);
-                }
-            }
-
-            setRows(final);
-            setError(null);
-            return final;
-
-        } catch (err) {
-            console.error('fetchRows error', err);
-            toast.error('Błąd pobierania danych encji');
-            setError(err);
-            setRows([]);
-            return [];
-        } finally {
-            setLoading(false);
         }
-    }, [resolveEndpoint, processRows, query, schema]);
+    }, [resolveEndpoint, processRows, query, schema, schemaOnly]);
 
 
     // refresh: fetch schema then rows
@@ -309,16 +426,17 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
     }, [fetchSchema, fetchRows]);
 
     const queryKey = JSON.stringify(query || {});
+    const schemaQueryKey = JSON.stringify(schemaQuery || {});
 
     useEffect(() => {
         // initial load when endpoint (entity folder) changes
-        if(queryKey){
+        if (queryKey) {
             setRows([]);
         }
-        
+
         refresh().catch(e => console.error(e));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [endpoint, queryKey]);
+    }, [endpoint, queryKey, schemaQueryKey]);
 
     useEffect(() => {
         const ep = resolveEndpoint('get');
@@ -371,7 +489,13 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
             const res = await http.get(finalUrl);
             // backend might return { data: { ... } } or { ... }
             const payload = res?.data ?? null;
-            const item = payload?.data ?? payload ?? null;
+            let item = payload?.data ?? payload ?? null;
+
+            // enrich resolved labels
+            if (item && typeof item === 'object') {
+                const enriched = processResolvedFields(schema, [item]);
+                item = Array.isArray(enriched) && enriched[0] ? enriched[0] : item;
+            }
 
             if (item && typeof item === 'object') {
                 // merge/replace in rows cache: if exists replace, else prepend
@@ -576,7 +700,6 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         }
     }, [resolveEndpoint, setRows, setLoading]);
 
-
     const removeMany = useCallback(async (ids = []) => {
         const url = resolveEndpoint('deleteMany');
         if (!url) {
@@ -635,7 +758,6 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         }
     }, [resolveEndpoint, setRows, setLoading, setError, toast]);
 
-
     const upload = useCallback(async (dataRows = []) => {
         const url = resolveEndpoint('upload');
         if (!url) {
@@ -676,6 +798,57 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         }
     }, [resolveEndpoint, http, getOne, setLoading, setError, toast, fetchRows]);
 
+    const uploadImg = useCallback(async (file, meta = {}) => {
+        const url = resolveEndpoint('uploadImg');
+        if (!url) {
+            toast.warning('Upload obrazków jest wyłączony dla tej encji.');
+            return null;
+        }
+        if (!file) return null;
+
+        const { ref_type, ref_id, ...rest } = meta || {};
+        if (!ref_type || !ref_id) {
+            throw new Error('uploadImg wymaga meta: { ref_type, ref_id }');
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('ref_type', String(ref_type));
+            fd.append('ref_id', String(ref_id));
+
+            // opcjonalne pola
+            Object.keys(rest).forEach((k) => {
+                if (rest[k] != null) fd.append(k, String(rest[k]));
+            });
+
+            // ważne: axios/http niech nie ustawia ręcznie boundary
+            const res = await http.post(url, fd, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            // zakładam, że http zwraca już `data` (u Ciebie create() tak wygląda).
+            const payload = res?.data ?? res;
+
+            if (!payload?.ok || !payload?.url) {
+                throw new Error(payload?.error || 'Upload obrazu nieudany');
+            }
+
+            return payload.url; // TinyMCE potrzebuje url
+        } catch (err) {
+            console.error('uploadImg error', err);
+            setError(err);
+            toast.error('Błąd uploadu obrazka');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [resolveEndpoint]);
+
+
     // final return — expose handlers as function or null (so UI can easily check)
     return {
         // state
@@ -693,6 +866,7 @@ export default function useEntity({ endpoint, entityName = '', query = {}, readO
         remove: resolveEndpoint('delete') ? remove : null,
         removeMany: resolveEndpoint('deleteMany') ? removeMany : null,
         upload: resolveEndpoint('upload') ? upload : null,
+        uploadImg: resolveEndpoint('uploadImg') ? uploadImg : null,
         getOne: resolveEndpoint('getOne') ? getOne : null,
         // misc
         refresh,

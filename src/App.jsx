@@ -26,6 +26,9 @@ import JiraIssue from './pages/jiraIssue/JiraIssue';
 import CostItemDict from './pages/costItemDict/CostItemDict';
 import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
 
+//DevOnly
+import Comments from './pages/_dev/Comments';
+
 const App = () => (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -101,6 +104,7 @@ const App = () => (
         <Route path="materials/:id" element={<Materials />} />
         <Route path="materials" element={<Materials />} />
 
+        <Route path="_dev" element={<Comments />} />
         <Route path="*" element={<Home />} />
       </Route>
     </Routes>

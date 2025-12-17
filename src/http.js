@@ -16,14 +16,34 @@ const http = axios.create({
 });
 
 http.interceptors.response.use(
-  response => response,
+  response => {
+    const meta = response?.data?.meta;
+
+    if (meta?.message) {
+      const level = meta.level || 'info';
+
+      switch (level) {
+        case 'info':
+          toast.info(meta.message);
+          break;
+        case 'warning':
+          toast.warn(meta.message);
+          break;
+        case 'success':
+        default:
+          toast.success(meta.message);
+      }
+    }
+
+    return response;
+  },
   error => {
     const message =
       error?.response?.data?.message ||
       error?.message ||
       'Błąd serwera lub brak połączenia';
 
-    toast.error(`❌ ${message}`);
+    toast.error(message);
     console.error('[HTTP ERROR]', error);
     return Promise.reject(error);
   }
