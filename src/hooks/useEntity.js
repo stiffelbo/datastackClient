@@ -284,6 +284,8 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
     // schema (merged UI from backend + defaults)
     const [schema, setSchema] = useState(defaultSchema);
+    const [schemaVersion, setSchemaVersion] = useState(0);
+
 
     // rows (single source of truth; optional frontend processing applied on fetch)
     const [rows, setRows] = useState([]);
@@ -342,6 +344,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             const payload = res.data ?? defaultSchema;
             const procesedSchema = organizeSchema(payload);
             setSchema(procesedSchema);
+            setSchemaVersion(v => v + 1);
             setError(null);
             return payload;
         } catch (err) {
@@ -857,6 +860,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         clearError: () => setError(null),
         rows,
         schema,
+        schemaVersion,
 
         // handlers (return null for handlers that are disabled)
         create: resolveEndpoint('create') ? create : null,

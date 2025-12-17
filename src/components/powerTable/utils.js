@@ -209,59 +209,73 @@ export const groupDataHierarchical = (data, columns) => {
 };
 
 export const sortData = (data = [], sortModel = [], columns = []) => {
-    if (!Array.isArray(data) || data.length === 0 || sortModel.length === 0) {
-        return data;
-    }
+  if (!Array.isArray(data) || data.length === 0 || sortModel.length === 0) return data;
 
-    const getColumnType = (field) =>
-        columns.find(col => col.field === field)?.type || 'string';
+  const getCol = (field) => columns.find(col => col.field === field) || null;
 
-    return [...data].sort((a, b) => {
-        for (let sort of sortModel) {
-            const { field, direction } = sort;
-            const type = getColumnType(field);
+  const resolveFkLabel = (col, raw) => {
+    if (!col?.optionsMap) return null;
+    if (raw == null || raw === '') return '';
+    // tolerancja: number vs string key
+    const mapped = col.optionsMap[raw] ?? col.optionsMap[String(raw)];
+    return mapped != null ? mapped : String(raw);
+  };
 
-            let aValue = a[field];
-            let bValue = b[field];
+  const normalizeString = (v) => String(v ?? '').toLowerCase();
 
-            // Null-safe fallback
-            if (aValue === null || aValue === undefined) aValue = '';
-            if (bValue === null || bValue === undefined) bValue = '';
+  return [...data].sort((a, b) => {
+    for (const sort of sortModel) {
+      const { field, direction } = sort;
+      const col = getCol(field);
+      const type = col?.type || 'string';
 
-            // Type-aware casting
-            switch (type) {
-                case 'fk':
-                case 'number':
-                    aValue = typeof aValue === 'number' ? aValue : parseFloat(String(aValue).replace(',', '.'));
-                    bValue = typeof bValue === 'number' ? bValue : parseFloat(String(bValue).replace(',', '.'));
-                    if (isNaN(aValue)) aValue = 0;
-                    if (isNaN(bValue)) bValue = 0;
-                    break;
+      let aValue = a?.[field];
+      let bValue = b?.[field];
 
-                case 'date':
-                    aValue = new Date(aValue).getTime() || 0;
-                    bValue = new Date(bValue).getTime() || 0;
-                    break;
+      // Null-safe
+      if (aValue === null || aValue === undefined) aValue = '';
+      if (bValue === null || bValue === undefined) bValue = '';
 
-                case 'boolean':
-                    aValue = aValue ? 1 : 0;
-                    bValue = bValue ? 1 : 0;
-                    break;
+      // 🔹 FK/select: sortujemy po label (string), nie po id
+      // (u Ciebie type 'fk' już istnieje w switchu)
+      if (type === 'fk' || (col?.optionsMap && col?.input === 'select')) {
+        aValue = normalizeString(resolveFkLabel(col, aValue));
+        bValue = normalizeString(resolveFkLabel(col, bValue));
+      } else {
+        // Type-aware casting
+        switch (type) {
+          case 'number':
+            aValue = typeof aValue === 'number' ? aValue : parseFloat(String(aValue).replace(',', '.'));
+            bValue = typeof bValue === 'number' ? bValue : parseFloat(String(bValue).replace(',', '.'));
+            if (isNaN(aValue)) aValue = 0;
+            if (isNaN(bValue)) bValue = 0;
+            break;
 
-                default:
-                    aValue = String(aValue).toLowerCase();
-                    bValue = String(bValue).toLowerCase();
-            }
+          case 'date':
+            aValue = new Date(aValue).getTime() || 0;
+            bValue = new Date(bValue).getTime() || 0;
+            break;
 
-            if (aValue === bValue) continue;
+          case 'boolean':
+            aValue = aValue ? 1 : 0;
+            bValue = bValue ? 1 : 0;
+            break;
 
-            const result = aValue > bValue ? 1 : -1;
-            return direction === 'asc' ? result : -result;
+          default:
+            aValue = normalizeString(aValue);
+            bValue = normalizeString(bValue);
         }
+      }
 
-        return 0;
-    });
+      if (aValue === bValue) continue;
+
+      const result = aValue > bValue ? 1 : -1;
+      return direction === 'asc' ? result : -result;
+    }
+    return 0;
+  });
 };
+
 
 
 /**
@@ -329,7 +343,6 @@ export const exportToXLSWithSchema = (
     return;
   }
 
-  // sortowanie kolumn po "order"
   const visibleColumns = columns
     .filter(col => col.type !== 'action')
     .filter(col => !col.hidden)
@@ -338,28 +351,37 @@ export const exportToXLSWithSchema = (
   const headers = visibleColumns.map(col => col.headerName);
   const fields = visibleColumns.map(col => col.field);
 
-  // przemodelowanie danych pod kolejność pól + konwersja liczb
+  const resolveExportValue = (row, col) => {
+    let value = row?.[col.field];
+
+    // FK/select: id -> label
+    if ((col?.type === 'fk' || col?.input === 'select') && col?.optionsMap) {
+      if (value == null || value === '') return '';
+      const mapped = col.optionsMap[value] ?? col.optionsMap[String(value)];
+      value = mapped != null ? mapped : value;
+    }
+
+    if (value == null) value = '';
+
+    // konwersja liczbowych stringów (ale tylko, jeśli finalnie jest stringiem liczbowym)
+    if (typeof value === 'string' && /^\d+([.,]\d+)?$/.test(value)) {
+      value = parseFloat(value.replace(',', '.'));
+    }
+
+    return value;
+  };
+
   const mappedData = data.map(row =>
-    fields.map(field => {
-      let value = row[field] ?? '';
-
-      // konwersja liczbowych stringów
-      if (typeof value === 'string' && /^\d+([.,]\d+)?$/.test(value)) {
-        value = parseFloat(value.replace(',', '.'));
-      }
-
-      return value;
-    })
+    visibleColumns.map(col => resolveExportValue(row, col))
   );
 
-  // budujemy arkusz
   const worksheet = XLSX.utils.aoa_to_sheet([headers, ...mappedData]);
-
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
   XLSX.writeFile(workbook, filename);
 };
+
 
 export const computeViewSelection = ({ data = [], selectedIds = [] }) => {
   const viewIds = Array.isArray(data) ? data.map((r) => (r.row ? r.row.id : r.id)) : [];

@@ -88,6 +88,7 @@ const BaseEntityDashboard = ({
       loading={entity.loading}
       data={rows}
       columnSchema={schema.columns}
+      schemaVersion={entity.schemaVersion}
       
       addFormSchema={schema.addForm}
       bulkEditFormSchema={schema.bulkEditForm}

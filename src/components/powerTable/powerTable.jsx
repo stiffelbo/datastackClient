@@ -41,6 +41,7 @@ const PowerTable = ({
   //core table
   data = [],
   columnSchema = [],
+  schemaVersion = 0,
   treeConfig = null,
   //Form Schemas
   addFormSchema = { label: '', schema: [] },
@@ -78,7 +79,7 @@ const PowerTable = ({
   const actionsApi = useSelection({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit});
 
-  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions });
+  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
   const editing = useTableEditing(onEdit);
 
   const { settings, updateSettings } = useTableSettings(entityName);
@@ -179,9 +180,14 @@ const PowerTable = ({
     isVirtualized
   };
 
-   const renderTable = () =>
+  const tableKey = `${entityName}:${schemaVersion}:${isGrouped?'g':'n'}:${isTree?'t':'n'}`;
+
+  console.log('PowerTable Render:', tableKey, columnSchema);
+
+  const renderTable = () =>
     isGrouped ? (
       <GroupedTableV
+        key={tableKey}
         initialData={data}
         data={filteredData}
         columnsSchema={columnsSchema}
@@ -192,6 +198,7 @@ const PowerTable = ({
       />
     ) : isTree ? (
       <TreeTableV
+        key={tableKey}
         initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}
@@ -203,6 +210,7 @@ const PowerTable = ({
       />
     ) : (
       <FlatTable
+        key={tableKey}
         initialData={data}
         data={sortedData}
         columnsSchema={columnsSchema}

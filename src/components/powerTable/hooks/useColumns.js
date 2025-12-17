@@ -130,7 +130,7 @@ const applyDefaultAlign = (col) => {
 const fieldsSig = (cols = []) =>
   cols.map(c => c.field).sort().join('|');
 
-const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default', columnActions = [], enableEdit = true }) => {
+const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'default', columnActions = [], enableEdit = true, schemaVersion }) => {
   const [columns, setColumns] = useState([]);
   const [sortModel, setSortModelState] = useState([]);
   const [globalSearch, setGlobalSearch] = useState('');
@@ -173,7 +173,9 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
 
     const initialSort = hasSaved ? extractSortModel(savedCols) : [];
     setSortModelState(initialSort);
-  }, [entityName, autoSig, devSig, savedSig, activeName]);
+  }, [entityName, autoSig, devSig, savedSig, activeName, schemaVersion]);
+
+
 
   // ---- helpers ----
   const updateField = (field, changes) => {
