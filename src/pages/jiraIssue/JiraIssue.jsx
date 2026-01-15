@@ -18,6 +18,15 @@ const JiraIssue = () => {
             entityName={entityName}
             basePath={basePath}
             refreshId={true}
+            listProps={
+                {
+                    treeConfig: {
+                        parentField: 'jira_parent_key',
+                        idField: 'jira_key',
+                        rootValue: null
+                    }
+                }
+            }
         />
     );
 };

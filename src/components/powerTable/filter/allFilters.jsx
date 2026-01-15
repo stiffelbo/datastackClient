@@ -52,6 +52,27 @@ const AllFilters = ({ columnsSchema }) => {
 
   const allFilters = columnsSchema.getAllFilters();
 
+  const shouldRenderClearAll = allFilters.length > 0 || (columnsSchema.globalSearch && columnsSchema.globalSearch.length > 0);
+
+  const renderClearAll = () => {
+    if (!shouldRenderClearAll) return null;
+    return (<Box sx={{ textAlign: "right", mt: 1 }}>
+        <Button
+          size="small"
+          variant="outlined"
+          color="error"
+          startIcon={<LayersClearIcon />}
+          onClick={() => {
+            setValue('');
+            columnsSchema.clearAllFilters();
+            columnsSchema.setGlobalSearch('');
+          }}
+        >
+          Wyczyść wszystko
+        </Button>
+      </Box>)  
+  }
+
   return (
     <Box sx={{ width: 480, p: 1 }}>
 
@@ -117,21 +138,7 @@ const AllFilters = ({ columnsSchema }) => {
       </Box>
 
       {/* clear all */}
-      <Box sx={{ textAlign: "right", mt: 1 }}>
-        <Button
-          size="small"
-          variant="outlined"
-          color="error"
-          startIcon={<LayersClearIcon />}
-          onClick={() => {
-            setValue('');
-            columnsSchema.clearAllFilters();
-            columnsSchema.setGlobalSearch('');
-          }}
-        >
-          Wyczyść wszystko
-        </Button>
-      </Box>
+      {renderClearAll()}
     </Box>
   );
 };

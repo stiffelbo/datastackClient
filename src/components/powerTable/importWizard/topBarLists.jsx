@@ -58,42 +58,39 @@ const TopBarLists = ({ lists = [], values = {}, onChange = () => {}, itemWidth =
           <Box key={field} sx={{ display: "flex", alignItems: "flexStart", gap: 0.5 }}>
             <FormControl size={size} sx={{ minWidth: itemWidth, maxWidth: itemWidth }}>
               <InputLabel sx={{ fontSize: "0.72rem", pl: 0.25 }}>{label}</InputLabel>
+              <span>
+                {/* span needed so Tooltip works with disabled elements */}
+                <Select
+                  size={size}
+                  value={typeof value === "undefined" || value === null ? "" : value}
+                  label={label}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                  required={required}
+                  disabled={disabled}
+                  sx={{
+                      width: '100%',
+                      fontSize: "0.78rem",
+                      "& .MuiSelect-select": { py: 0.4, px: 0.6 },
 
-              <Tooltip title={tip || (disabled ? "Wyłączone" : "")}>
-                <span>
-                  {/* span needed so Tooltip works with disabled elements */}
-                  <Select
-                    size={size}
-                    value={typeof value === "undefined" || value === null ? "" : value}
-                    label={label}
-                    onChange={(e) => handleChange(field, e.target.value)}
-                    required={required}
-                    disabled={disabled}
-                    sx={{
-                        width: '100%',
-                        fontSize: "0.78rem",
-                        "& .MuiSelect-select": { py: 0.4, px: 0.6 },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>—</em>
+                  </MenuItem>
 
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>—</em>
+                  {opts.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      <em>Brak opcji</em>
                     </MenuItem>
-
-                    {opts.length === 0 ? (
-                      <MenuItem value="" disabled>
-                        <em>Brak opcji</em>
+                  ) : (
+                    opts.map((o) => (
+                      <MenuItem key={String(o.value)} value={o.value} sx={{ fontSize: "0.78rem" }}>
+                        {o.label ?? String(o.value)}
                       </MenuItem>
-                    ) : (
-                      opts.map((o) => (
-                        <MenuItem key={String(o.value)} value={o.value} sx={{ fontSize: "0.78rem" }}>
-                          {o.label ?? String(o.value)}
-                        </MenuItem>
-                      ))
-                    )}
-                  </Select>
-                </span>
-              </Tooltip>
+                    ))
+                  )}
+                </Select>
+              </span>
             </FormControl>
 
             {l.tip ? (

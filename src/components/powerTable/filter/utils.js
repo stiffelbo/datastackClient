@@ -1,10 +1,11 @@
 import { startOfDay, parseDate } from './dateUtils';
 
 export const operatorsByType = {
-    string: ['multiSelect', 'contains', 'isEmpty', 'notEmpty'],
+    string: ['contains', 'multiSelect', 'isEmpty', 'notEmpty'],
     number: ['equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'between', 'isEmpty', 'notEmpty'],
     date: ['between', 'isEmpty', 'notEmpty', 'isPast', 'isFuture'],
     boolean: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty'],
+    bool: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty'],
     fk: ['fk']
 };
 
@@ -12,6 +13,7 @@ export const defaultFilterValue = (op, type) => {
     if (op === 'between') return { min: '', max: '' };
     if (op === 'fk' || op === 'FK') return { include: [], exclude: [] };
     if (op === 'multiSelect') return { include: [], exclude: [] };
+    if (op === 'constains') return '';
     if (['isEmpty', 'notEmpty', 'isTrue', 'isFalse'].includes(op)) return null;
     return type === 'number' ? 0 : '';
 };
@@ -34,6 +36,12 @@ export const getUniqueOptions = (data, field) => {
         if (row[field] !== undefined && row[field] !== null) set.add(row[field]);
     });
     return Array.from(set).sort();
+};
+
+export const rawValToBoolean = (val) => {
+    if (val === true || val === 'true' || val === 1 || val === '1') return true;
+    if (val === false || val === 'false' || val === 0 || val === '0') return false;
+    return null;
 };
 
 /* ============================================================
@@ -73,7 +81,6 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
         if (op === 'multiSelect') {
             const { include = [], exclude = [] } = value || {};
-            console.log(include, exclude, value);
             if (include.length && !include.includes(rawValue)) return false;
             if (exclude.length && exclude.includes(rawValue)) return false;
             return true;
@@ -146,9 +153,9 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
 
     // BOOLEAN
-    if (type === 'boolean') {
-        if (op === 'isTrue') return rawValue === true;
-        if (op === 'isFalse') return rawValue === false;
+    if (type === 'boolean' || type === 'bool') {
+        if (op === 'isTrue') return rawValToBoolean(rawValue) === true;
+        if (op === 'isFalse') return rawValToBoolean(rawValue) === false;
         return false;
     }
 

@@ -1,12 +1,19 @@
 import { useCallback, useMemo, useState } from 'react';
 
 const normalizeEditorPayload = (payload) => {
-    const content_html = payload?.contentHtml ?? payload?.content ?? '';
+    const content_html =
+        payload?.content_html ??
+        payload?.contentHtml ??
+        payload?.content ??
+        '';
+
     const mentions = payload?.mentions ?? [];
     return { content_html, mentions };
 };
 
 export function useCommentsController({
+    refType,
+    refId,
     onCreate,
     onUpdate,
     onDelete,
@@ -43,6 +50,19 @@ export function useCommentsController({
         setReplyTo(null);
         setEditorOpen(true);
     }, []);
+
+    const handleInlineImageUpload = useCallback(
+        async (file) => {
+            if (!onImageUpload) return null;
+
+            // podczas edycji istniejącego komentarza przypinamy od razu
+            const commentId = editing?.id ?? null;
+
+            // onImageUpload oczekuje (file, commentId) albo (file, meta) – zależy jak to związałeś
+            return await onImageUpload(file, commentId);
+        },
+        [onImageUpload, editing?.id]
+    );
 
     const handleSave = useCallback(
         async (rawPayload) => {
@@ -130,14 +150,6 @@ export function useCommentsController({
         [onUpdate, onRefresh],
     );
 
-
-    //missing handlers:
-
-    //onImageUpload -> we got it on props but wee need to control it here too
-    //handleTogglePin
-    //handleToggleThread
-    //openThreadRootId
-
     const cancelCompose = closeEditor
 
     return useMemo(
@@ -160,6 +172,9 @@ export function useCommentsController({
             handleSave,
             handleDelete,
 
+            // upload
+            handleInlineImageUpload,
+
             // DnD
             handleDrop,
             handleDragOver,
@@ -181,6 +196,8 @@ export function useCommentsController({
             handleTogglePin,
             handleSave,
             handleDelete,
+
+            handleInlineImageUpload,
 
             handleDrop,
             handleDragOver,

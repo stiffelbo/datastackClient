@@ -96,6 +96,7 @@ const TinyEditor = ({
 
     try {
       const url = await onImageUpload(file);
+      console.log(url);
       return url;
     } catch (error) {
       console.error('Image upload failed:', error);
@@ -114,18 +115,6 @@ const TinyEditor = ({
       </div>
     );
   };
-
-  console.log(
-    mode,
-    initialContent,
-    initialFormState,
-    mentionOptions,
-    onSave,
-    onContentChange,
-    onCancel,
-    onImageUpload,
-    onImageDelete
-  );
 
   const renderFooter = () => {
     const label =
@@ -181,10 +170,10 @@ const TinyEditor = ({
           content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
 
           // Image handling configuration
-          images_upload_handler: (blobInfo, success, failure) => {
-            handleLocalImageUpload(blobInfo.blob())
-              .then(url => success(url))
-              .catch(error => failure('Upload failed: ' + error.message));
+          images_upload_handler: async (blobInfo) => {
+            const url = await handleLocalImageUpload(blobInfo.blob());
+            if (!url) throw new Error('Upload nie zwrócił URL');
+            return url;
           },
 
           automatic_uploads: true,

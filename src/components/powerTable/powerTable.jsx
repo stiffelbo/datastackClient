@@ -182,8 +182,6 @@ const PowerTable = ({
 
   const tableKey = `${entityName}:${schemaVersion}:${isGrouped?'g':'n'}:${isTree?'t':'n'}`;
 
-  console.log('PowerTable Render:', tableKey, columnSchema);
-
   const renderTable = () =>
     isGrouped ? (
       <GroupedTableV

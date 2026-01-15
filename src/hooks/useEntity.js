@@ -276,7 +276,6 @@ function organizeSchema(input = defaultSchema) {
     return schema;
 }
 
-
 export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null }) {
     // UI / network state
     const [loading, setLoading] = useState(false);
@@ -825,31 +824,42 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
             // opcjonalne pola
             Object.keys(rest).forEach((k) => {
-                if (rest[k] != null) fd.append(k, String(rest[k]));
+                const v = rest[k];
+                if (v != null) fd.append(k, String(v));
             });
 
-            // ważne: axios/http niech nie ustawia ręcznie boundary
-            const res = await http.post(url, fd, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            console.log('uploadImg to', url, 'meta', meta, fd, file);
+            // Nie ustawiaj ręcznie Content-Type – axios sam doda boundary
+            const res = await http.upload(url, fd);
 
-            // zakładam, że http zwraca już `data` (u Ciebie create() tak wygląda).
-            const payload = res?.data ?? res;
+            // Ujednolicenie: http może zwracać res albo już res.data
+            const payload = res?.data ?? res ?? {};
+            const data = payload?.data ?? payload;
 
-            if (!payload?.ok || !payload?.url) {
-                throw new Error(payload?.error || 'Upload obrazu nieudany');
+            if (!data?.ok || !data?.url) {
+                // backend może zwrócić { ok:false, error:"..." } albo { error:"..." }
+                const msg =
+                    data?.error ||
+                    data?.message ||
+                    payload?.error ||
+                    payload?.message ||
+                    'Upload obrazu nieudany';
+                throw new Error(msg);
             }
 
-            return payload.url; // TinyMCE potrzebuje url
+            return data.url; // TinyMCE potrzebuje url
         } catch (err) {
             console.error('uploadImg error', err);
             setError(err);
-            toast.error('Błąd uploadu obrazka');
+
+            // TinyMCE i UI: toast + wyjątek
+            toast.error(err?.message ? String(err.message) : 'Błąd uploadu obrazka');
             throw err;
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint]);
+    }, [resolveEndpoint, http, toast]);
+
 
 
     // final return — expose handlers as function or null (so UI can easily check)

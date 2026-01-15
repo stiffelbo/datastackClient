@@ -36,16 +36,14 @@ export default function Comments({ refType = 'dev', refId = '123' }) {
   }, [comments]);
 
 
-  // DEV fallback: lokalny URL (w produkcji podepniesz swój upload i zwrócisz URL z backendu)
-  const onImageUpload = useCallback(async (file) => {
-    if (!file) return null;
-    return URL.createObjectURL(file);
-  }, []);
+
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
       <div style={{ marginTop: 16 }}>
         <CommentsRoll
+          refType={refType}
+          refId={refId} 
           data={comments.rows || []}
           loading={comments.loading}
           currentUser={userProfile}

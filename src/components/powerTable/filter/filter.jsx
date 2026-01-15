@@ -21,6 +21,9 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
     onChange({ ...filter, [key]: val });
   };
 
+  //Sefe get operators for type
+  const availableOperators = operatorsByType[type] || operatorsByType['string'];
+
   // 🔹 Operator select
   const renderOperator = () => (
     <TextField
@@ -31,7 +34,7 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
       onChange={(e) => handleChange('op', e.target.value)}
       sx={{ minWidth: 140 }}
     >
-      {operatorsByType[type || 'string'].map((o) => (
+      {availableOperators.map((o) => (
         <MenuItem key={o} value={o}>
           {o}
         </MenuItem>
@@ -49,7 +52,8 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
       case 'date':
         return renderDateValue();
       case 'boolean':
-        return renderBooleanValue();
+      case 'bool':
+        return null;
       case 'fk':
       case 'FK':
         return (
@@ -205,10 +209,10 @@ Filter.RangeInput = ({ type, value, onChange }) => (
       type={type}
       value={value?.max || ''}
       onChange={(e) => onChange({ ...value, max: e.target.value })}
-    InputProps={{
-            startAdornment: <span style={{ marginRight: 4, color: '#888' }}>Max:</span>
-        }}
-    />
+      InputProps={{
+              startAdornment: <span style={{ marginRight: 4, color: '#888' }}>Max:</span>
+          }}
+      />
   </Box>
 );
 

@@ -1,5 +1,5 @@
 // src/lib/commentsThread/CommentsRoll.jsx
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   Box,
   Stack,
@@ -39,6 +39,8 @@ import TinyEditor from './TinyEditor';
  *  - height?: number
  */
 export default function CommentsRoll({
+  refType,
+  refId,
   data = [],
   loading = false,
   onCreate,
@@ -88,12 +90,19 @@ export default function CommentsRoll({
     return base;
   }, [flatList, search, pinnedOnly]);
 
+  const boundImageUpload = useCallback(
+    (file, commentId) => onImageUpload?.(file, { ref_type: refType, ref_id: String(refId), attachment_of: commentId }),
+    [onImageUpload, refType, refId]
+  );
+
   const controller = useCommentsController({
+    refType,
+    refId,
     onCreate,
     onUpdate,
     onDelete,
     onRefresh,
-    onImageUpload,
+    onImageUpload: boundImageUpload,
     onMentions
   });
 
@@ -160,7 +169,7 @@ export default function CommentsRoll({
         }}
         onDragOver={(e) => controller.handleDragOver?.(e)}
         onDragLeave={() => controller.handleDragLeave?.()}
-        onDrop={(e) => controller.handleDropImage?.(e)}
+        onDrop={(e) => controller.handleDrop?.(e)} 
       >
         {loading && (
           <Box sx={{ p: 1 }}>
@@ -308,7 +317,7 @@ export default function CommentsRoll({
             mentionOptions={mentionOptions}
             onSave={controller.handleSave}
             onCancel={controller.cancelCompose}
-            onImageUpload={onImageUpload}
+            onImageUpload={controller.handleInlineImageUpload}
           />
         )}
       </Box>
