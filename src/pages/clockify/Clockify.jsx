@@ -11,8 +11,9 @@ const basePath = '/clockify';
 const endpoint = '/clockify/';
 
 const Clockify = () => {
+    
     const entity = useEntity({ endpoint });
-    console.log(entity);
+
     return (
         <BaseEntityDashboard
             renderPage={null}

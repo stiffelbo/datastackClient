@@ -151,7 +151,7 @@ const TinyEditor = ({
     <Box sx={{ position: 'relative' }}>
       {renderHeader()}
       <Editor
-        apiKey='dk8jh10jcugp7w2k9662l4zzphbjmhkihi7snf04otjpgnjc'
+        apiKey='egq9une3c7uvq9ydalo8wa9amqudb9v13dpr4ybsz5ncvxoi'
         onInit={(evt, editor) => editorRef.current = editor}
         value={content}
         onEditorChange={handleEditorChange}

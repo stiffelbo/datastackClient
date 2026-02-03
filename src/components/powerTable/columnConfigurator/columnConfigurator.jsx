@@ -28,10 +28,6 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
   if (!col) return null;
   const headerNameInitial = col.headerName;
 
-  const handleHeaderNameChange = val => {
-    console.log(val);
-  }
-
   return (
     <Modal open={Boolean(field)} onClose={close}>
       <Box

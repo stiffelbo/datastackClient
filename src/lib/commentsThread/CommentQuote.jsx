@@ -34,7 +34,7 @@ export default function CommentQuote({ replyTo }) {
             left: 0,
             right: 0,
             bottom: 0,
-            height: 24,
+            height: 48,
             // wersja zgodna z theme (bez rgba na sztywno):
             background: (theme) =>
               `linear-gradient(to bottom, transparent, ${theme.palette.grey[200]})`,

@@ -827,8 +827,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
                 const v = rest[k];
                 if (v != null) fd.append(k, String(v));
             });
-
-            console.log('uploadImg to', url, 'meta', meta, fd, file);
+            
             // Nie ustawiaj ręcznie Content-Type – axios sam doda boundary
             const res = await http.upload(url, fd);
 

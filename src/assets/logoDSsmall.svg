@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 87 33" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="Artboard1" transform="matrix(0.998553,0,0,0.846278,0,0)">
+        <rect x="0" y="0" width="86.489" height="38.269" style="fill:none;"/>
+        <clipPath id="_clip1">
+            <rect x="0" y="0" width="86.489" height="38.269"/>
+        </clipPath>
+        <g clip-path="url(#_clip1)">
+            <g transform="matrix(1.001449,0,0,1.181644,-0.125346,0.138559)">
+                <path d="M32,3L32,5C32,6.656 30.656,8 29,8L3,8C1.344,8 0,6.656 0,5L0,3C0,1.344 1.344,0 3,0L29,0C30.656,0 32,1.344 32,3Z" style="fill:rgb(37,99,235);"/>
+                <path d="M32,15L32,17C32,18.656 30.656,20 29,20L7,20C5.344,20 4,18.656 4,17L4,15C4,13.344 5.344,12 7,12L29,12C30.656,12 32,13.344 32,15Z" style="fill:rgb(29,78,216);"/>
+                <path d="M32,27L32,29C32,30.656 30.656,32 29,32L11,32C9.344,32 8,30.656 8,29L8,27C8,25.344 9.344,24 11,24L29,24C30.656,24 32,25.344 32,27Z" style="fill:rgb(15,118,110);"/>
+            </g>
+            <g transform="matrix(1.001449,0,0,1.181644,43.938422,16.68158)">
+                <text x="0px" y="0px" style="font-family:'Arial-BoldMT', 'Arial', sans-serif;font-weight:700;font-size:16px;fill:rgb(15,118,110);">Data</text>
+            </g>
+            <g transform="matrix(1.001449,0,0,1.181644,43.938422,35.58789)">
+                <text x="0px" y="0px" style="font-family:'Arial-BoldMT', 'Arial', sans-serif;font-weight:700;font-size:16px;fill:rgb(37,99,235);">Stack</text>
+            </g>
+        </g>
+    </g>
+</svg>

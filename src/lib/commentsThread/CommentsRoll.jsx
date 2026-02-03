@@ -20,6 +20,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 
 import { useComments } from './useComments';
 import { useCommentsController } from './useCommentsController';
+import { useCommentsLayout } from './useCommentsLayout';
 import CommentRow from './CommentRow';
 import TinyEditor from './TinyEditor';
 
@@ -54,6 +55,7 @@ export default function CommentsRoll({
   height = 900,
 }) {
   const { flatList, threads } = useComments(data);
+  const layout = useCommentsLayout({ flatList, threads, currentUser });
 
   const [search, setSearch] = useState('');
   const [pinnedOnly, setPinnedOnly] = useState(false);

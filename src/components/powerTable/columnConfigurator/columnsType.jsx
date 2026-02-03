@@ -24,7 +24,7 @@ const ColumnType = ({ field, column, columnsSchema, onClose }) => {
     onClose?.();
   };
 
-  const disabled = current === 'fk';
+  //const disabled = current === 'fk';
   return (
     <Box sx={{ width: '100%', p: 1 }}>
 
@@ -33,7 +33,7 @@ const ColumnType = ({ field, column, columnsSchema, onClose }) => {
           key={item.key}
           selected={current === item.key}
           onClick={() => handleSelect(item.key)}
-          disabled={disabled}
+          disabled={false}
         >
           <ListItemText primary={item.label} />
         </MenuItem>

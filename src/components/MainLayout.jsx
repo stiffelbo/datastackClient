@@ -11,7 +11,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 //comp
 import MainNav from './MainNav';
 // logo do paska
-import Logo from '../assets/logoDS.svg';
+import Logo from '../assets/logoDSsmall.svg';
 
 // src/components/UserAvatarIcon.jsx
 const UserAvatarIcon = ({ size = 30, ...props }) => (
@@ -97,6 +97,7 @@ const MainLayout = () => {
               component="img"
               src={Logo}
               alt="DataStack logo"
+              sx={{ height: 36 }}
             />
             <MainNav pages={pages}/>
           </Box>
