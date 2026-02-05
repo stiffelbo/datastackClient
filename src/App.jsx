@@ -25,6 +25,7 @@ import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
 import CostItemDict from './pages/costItemDict/CostItemDict';
 import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
+import UserDashboard from './components/user/UserDashboard';
 import NotFound from './pages/NotFound';
 
 //DevOnly
@@ -105,6 +106,7 @@ const App = () => (
         <Route path="materials/:id" element={<Materials />} />
         <Route path="materials" element={<Materials />} />
 
+        <Route path="userdashboard" element={<UserDashboard />} />
         <Route path="_dev" element={<Comments />} />
         <Route path="*" element={<NotFound />} />
       </Route>

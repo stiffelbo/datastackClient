@@ -86,7 +86,11 @@ const MainNav = ({ pages }) => {
     let activePageLabel = '';
     if (!page) {
       activePageLabel = 'Strona domowa';
-    } else {
+    }
+    else if (page === 'userdashboard') {
+      activePageLabel = 'Panel użytkownika';
+    }
+    else {
       const activePage = pages.find((p) => p.name === page);
       if (!activePage) return null;
       activePageLabel = activePage.label;
