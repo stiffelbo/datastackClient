@@ -70,7 +70,7 @@ const UserAvatarIcon = ({ size = 30, ...props }) => (
 );
 
 const MainLayout = () => {
-  
+
   const { user, logout, refreshUser } = useAuth();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -85,30 +85,42 @@ const MainLayout = () => {
 
   const pages = user?.pages;
   const userData = user?.userData || {};
-  
+
   return (
     <>
-      <AppBar position="static" color="dark" sx={{margin: 0}}>
+      <AppBar position="static" color="dark" sx={{ margin: 0 }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Logo i nawigacja */}
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
-              component="img"
-              src={Logo}
-              alt="DataStack logo"
-              sx={{ height: 36 }}
-            />
-            <MainNav pages={pages}/>
+              component={RouterLink}
+              to="//"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+              }}
+              title='Strona domowa'
+            >
+              <Box
+                component="img"
+                src={Logo}
+                alt="DataStack logo"
+                sx={{ height: 36 }}
+                
+              />
+            </Box>
+            <MainNav pages={pages} />
           </Box>
 
           {/* Użytkownik */}
           <Box>
             <IconButton size="large" color="inherit" onClick={handleMenuOpen}>
-              <UserAvatarIcon size={36}/>
+              <UserAvatarIcon size={36} />
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-              
+
               <MenuItem disabled title="tu kiedyś link do strony użytkownika">{userData.name} {userData.last_name}</MenuItem>
               <MenuItem disabled title="email">{userData.email}</MenuItem>
               <MenuItem disabled title="rola">{userData.role}</MenuItem>

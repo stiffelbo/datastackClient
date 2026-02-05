@@ -25,6 +25,7 @@ import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
 import CostItemDict from './pages/costItemDict/CostItemDict';
 import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
+import NotFound from './pages/NotFound';
 
 //DevOnly
 import Comments from './pages/_dev/Comments';
@@ -105,7 +106,7 @@ const App = () => (
         <Route path="materials" element={<Materials />} />
 
         <Route path="_dev" element={<Comments />} />
-        <Route path="*" element={<Home />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
 );

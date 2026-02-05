@@ -7,13 +7,16 @@ import {
   Box,
   Typography,
   IconButton,
+  Chip
 } from '@mui/material';
+
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 import { useNav } from '../context/NavContext';
 
 const MainNav = ({ pages }) => {
-    if (!pages) return;
+  if (!pages) return;
   const { page } = useNav();
   const [anchorEls, setAnchorEls] = useState({});
 
@@ -79,11 +82,65 @@ const MainNav = ({ pages }) => {
     );
   };
 
+  const renderActivePage = () => {
+    let activePageLabel = '';
+    if (!page) {
+      activePageLabel = 'Strona domowa';
+    } else {
+      const activePage = pages.find((p) => p.name === page);
+      if (!activePage) return null;
+      activePageLabel = activePage.label;
+    }
+
+    return (
+      <Chip
+        key={activePageLabel} // ⬅️ WAŻNE: reset animacji przy zmianie
+        label={activePageLabel}
+        size="medium"
+        variant="outlined"
+        color='primary'
+        title={`Aktualnie na stronie: ${activePageLabel}`}
+        sx={{
+          height: 32,
+          borderRadius: 999,
+          fontWeight: 600,
+
+          // start animacji
+          animation: 'dsChipIn 220ms ease-out, dsChipPulse 900ms ease-out',
+
+          '@keyframes dsChipIn': {
+            from: {
+              opacity: 0,
+              transform: 'translateY(2px)',
+            },
+            to: {
+              opacity: 1,
+              transform: 'translateY(0)',
+            },
+          },
+
+          '@keyframes dsChipPulse': {
+            '0%': {
+              boxShadow: '0 0 0 0 rgba(37,99,235,0.35)',
+            },
+            '70%': {
+              boxShadow: '0 0 0 6px rgba(37,99,235,0)',
+            },
+            '100%': {
+              boxShadow: '0 0 0 0 rgba(37,99,235,0)',
+            },
+          },
+        }}
+      />
+    );
+  };
+
   return (
-    <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
       {Object.entries(groupedPages).map(([group, groupPages]) =>
         renderGroup(group, groupPages)
       )}
+      {renderActivePage()}
     </Box>
   );
 };
