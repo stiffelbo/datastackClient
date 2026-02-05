@@ -5,6 +5,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../context/AuthContext';
 import { useRwd } from '../../context/RwdContext';
 
+import { getPageHeader } from './getPageHeader';
+
 const DEFAULT_TABS = [
   {
     key: 'details',
@@ -27,6 +29,7 @@ const DEFAULT_TABS = [
  * - tabs: [{ key, label, pageKey?, component, getProps? }]
  * - tab: string (aktualny klucz taba)
  * - setTab: (key) => void
+ * - headerFields: array of strings (pola do użycia w nagłówku)
  */
 const BaseEntityPage = ({
   entityName,
@@ -37,7 +40,8 @@ const BaseEntityPage = ({
   tabs = [],
   tab,
   setTab,
-  heightSpan
+  heightSpan,
+  headerFields = []
 }) => {
   const rwd = useRwd();
   
@@ -69,6 +73,8 @@ const BaseEntityPage = ({
 
   const height = rwd.height - heightSpan;
 
+  const pageHeader = getPageHeader(row, headerFields);
+
   return (
     <Box sx={{ height, display: 'flex', flexDirection: 'column'}}>
       {/* HEADER */}
@@ -83,7 +89,7 @@ const BaseEntityPage = ({
         }}
       >
         <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
-          {entityName} #{id}
+          {entityName} #{id} - <Typography variant="caption">{pageHeader}</Typography>
         </Typography>
 
         {onChangeId && (

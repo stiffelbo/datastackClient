@@ -61,6 +61,7 @@ const JiraIssuePage = ({
       setTab={setTab}
       rwd={rwd}
       heightSpan={entity.heightSpan}
+      headerFields={['jira_key', 'name']}
     />
   );
 };

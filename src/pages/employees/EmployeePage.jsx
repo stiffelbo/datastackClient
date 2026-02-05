@@ -39,6 +39,7 @@ const EmployeePage = ({
       tab={tab}
       setTab={setTab}
       rwd={rwd}
+      headerFields={['first_name', 'last_name']}
     />
   );
 };

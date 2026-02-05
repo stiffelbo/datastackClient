@@ -40,15 +40,9 @@ const ApiLoader = ({
     try {
       // --- TRYB SINGLE: url jako string ---
       if (!isMulti) {
-        console.debug('[ApiLoader][REQ_SINGLE]', { entityName, url, params });
-
         const res = await http.get(url, { params });
-
         if (!isMountedRef.current) return;
-
         setData(res.data);
-        console.debug('[ApiLoader][RES_SINGLE]', { entityName, data: res.data });
-
         return res.data;
       }
 
@@ -59,8 +53,6 @@ const ApiLoader = ({
         console.warn(`[ApiLoader][${entityName}] Pusta mapa url`);
         return;
       }
-
-      console.debug('[ApiLoader][REQ_MULTI]', { entityName, urls: url, params });
 
       // równoległe requesty
       const responses = await Promise.all(
@@ -77,13 +69,10 @@ const ApiLoader = ({
       });
 
       setData(nextData);
-      console.debug('[ApiLoader][RES_MULTI]', { entityName, data: nextData });
 
       return nextData;
     } catch (err) {
       if (!isMountedRef.current) return;
-
-      console.error('[ApiLoader][ERR]', entityName, err);
       setError(err);
       throw err;
     } finally {

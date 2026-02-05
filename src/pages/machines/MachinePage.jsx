@@ -44,6 +44,7 @@ const MachinePage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
+      headerFields={['name', 'brand', 'model']}
     />
   );
 };

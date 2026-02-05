@@ -45,6 +45,7 @@ const MaterialPage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
+      headerFields={['name', 'category']}
     />
   );
 };

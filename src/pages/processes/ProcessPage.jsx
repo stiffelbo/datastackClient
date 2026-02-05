@@ -59,6 +59,7 @@ const ProcessPage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
+      headerFields={['name', 'category']}
     />
   );
 };
