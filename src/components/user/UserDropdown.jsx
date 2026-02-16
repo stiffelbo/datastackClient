@@ -10,6 +10,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import UserAvatarIcon from './UserAvatarIcon.jsx';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import AppVersion from './AppVersion';
 
 
 const UserDropdown = () => {
@@ -36,6 +37,7 @@ const UserDropdown = () => {
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
 
                 <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <AppVersion />
                     <Typography variant="subtitle1">
                         {userData.name} {userData.last_name} 
                         <Chip label={userData.role} size="small" variant="outlined" color="default" sx={{ ml: 1 }} />

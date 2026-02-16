@@ -1,6 +1,7 @@
 import React from "react";
 
 import LSUsage from "./LSUsage"
+import AppVersion from "./AppVersion";
 
 import { Box } from "@mui/material";
 

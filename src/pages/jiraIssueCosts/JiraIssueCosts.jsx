@@ -32,14 +32,14 @@ const JiraIssueCosts = () => {
             data={entity.rows}
             columnSchema={entity.schema.columns}
 
-            addFormSchema={entity.schema.addForm}
+            addFormSchema={null}
             bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={entity.schema.importSchema}
+            importSchema={null}
 
             onRefresh={entity.refresh}
-            onPost={entity.create}
+            onPost={null}
             onEdit={entity.updateField}
-            onUpload={entity.upload}
+            onUpload={null}
             onBulkEdit={entity.updateMany}
             onDelete={entity.remove}
             onBulkDelete={entity.removeMany}
