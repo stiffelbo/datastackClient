@@ -46,7 +46,7 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
         // plan vs wykonanie – na start ustawiamy plan
         qty_plan: 0,
         price_net_plan: mappedItemData.defaultRate ?? 0,
-
+        margin: mappedItemData.margin ?? '1',
         qty: 0,
         price_net: mappedItemData.defaultRate ?? 0,
 
