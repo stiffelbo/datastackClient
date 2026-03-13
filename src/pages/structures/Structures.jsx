@@ -11,7 +11,7 @@ const basePath = "/structures";
 const endpoint = "/structures/";
 
 const Structures = () => {
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
 
     return (
         <BaseEntityDashboard

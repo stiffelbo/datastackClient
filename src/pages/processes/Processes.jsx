@@ -13,7 +13,7 @@ const endpoint = "/processes/";
 
 const Dashboard = () => {
     
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
     
     return (
         <BaseEntityDashboard

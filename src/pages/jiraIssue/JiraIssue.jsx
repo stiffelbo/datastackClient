@@ -10,7 +10,7 @@ const basePath = "/jiraissue";
 const endpoint = "/jira_issue/";
 
 const JiraIssue = () => {
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
     return (
         <BaseEntityDashboard
             renderPage={(props) => <JiraIssuePage entity={entity} entityName={entityName} {...props} />}

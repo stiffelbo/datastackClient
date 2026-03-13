@@ -9,7 +9,7 @@ const basePath = "/salaries";
 const endpoint = "/salaries/";
 
 const Salaries = () => {
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
         
     return (
         <BaseEntityDashboard

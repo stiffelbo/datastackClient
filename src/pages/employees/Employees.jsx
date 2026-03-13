@@ -8,7 +8,7 @@ import EmployeePage from './EmployeePage';
 const Employees = () => {
 
   const entityName = "Employees"
-  const entity = useEntity({ endpoint: '/employees/' });
+  const entity = useEntity({ entityName, endpoint: '/employees/' });
   const basePath = "/employees";
 
   return (

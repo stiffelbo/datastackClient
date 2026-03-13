@@ -10,7 +10,7 @@ const basePath = "/periods";
 const endpoint = "/periods/";
 
 const Periods = () => {
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
     
     return (
         <BaseEntityDashboard

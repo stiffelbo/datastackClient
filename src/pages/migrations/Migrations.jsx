@@ -12,7 +12,7 @@ const endpoint = "/migrations/";
 
 const Dashboard = () => {
     
-    const entity = useEntity({ endpoint });
+    const entity = useEntity({ entityName, endpoint });
     
     return (
         <BaseEntityDashboard

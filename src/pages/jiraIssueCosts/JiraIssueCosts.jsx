@@ -7,6 +7,7 @@ import useEntity from '../../hooks/useEntity';
 import PowerTable from '../../components/powerTable/powerTable';
 
 const enityName = 'JiraIssueCosts';
+const endpoint = '/jira_issue_costs/';
 
 const selected = null;
 const onSelected = (val) => {
@@ -19,7 +20,7 @@ const onSelectItems = (val) => {
 }
 
 const JiraIssueCosts = () => {
-    const entity = useEntity({ endpoint: '/jira_issue_costs/' });
+    const entity = useEntity({ entityName, endpoint });
     useEffect(() => {
         entity.refresh();
     }, []);

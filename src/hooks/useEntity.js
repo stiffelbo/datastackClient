@@ -1,5 +1,8 @@
+//TODO: entity runtime store z delta synchronization.
+
+
 // hooks/useEntity.js
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import http from '../http';
 
@@ -14,6 +17,7 @@ import http from '../http';
 /* --- domyślne nazwy endpointów (tylko getEntitySchema domyślnie dostępny) --- */
 const defaultEndpoints = {
     getEntitySchema: 'getEntitySchema.php',
+    get: 'get.php',
 };
 
 /* --- UI schema domyślny --- */
@@ -276,7 +280,7 @@ function organizeSchema(input = defaultSchema) {
     return schema;
 }
 
-export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null }) {
+export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null }) {
     // UI / network state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -288,8 +292,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
     // rows (single source of truth; optional frontend processing applied on fetch)
     const [rows, setRows] = useState([]);
-
-    const fetchedRef = useRef(false);
 
     // Resolve endpoint: returns a full URL/string or null if disabled / not present.
     // NOTE: we do NOT fallback to `${endpoint}/${name}` — endpoint must be provided by backend or defaults.
@@ -330,7 +332,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
                 throw new Error('Endpoint getEntitySchema is not available for this entity.');
             }
 
-            // Budujemy obiekt parametrów GET
             const params = {
                 readOnly,
             };
@@ -341,11 +342,13 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
             const res = await http.get(url, { params });
             const payload = res.data ?? defaultSchema;
-            const procesedSchema = organizeSchema(payload);
-            setSchema(procesedSchema);
+            const processedSchema = organizeSchema(payload);
+
+            setSchema(processedSchema);
             setSchemaVersion(v => v + 1);
             setError(null);
-            return payload;
+
+            return processedSchema;
         } catch (err) {
             console.error('fetchSchema error', err);
             toast.error('Błąd pobierania schematu encji');
@@ -358,56 +361,53 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
 
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
-    const fetchRows = useCallback(async () => {
-        if (!schemaOnly) {
-            setLoading(true);
-            try {
-                const url = resolveEndpoint('get');
-                if (!url) {
-                    setRows([]);
-                    return [];
-                }
+    const fetchRows = useCallback(async (schemaOverride = null) => {
+        
+        if (schemaOnly) return [];
 
-                // 🔹 budujemy query params:
-                let params = {};
-
-                // 1) query przekazane z zewnątrz
-                if (query && typeof query === 'object') {
-                    params = { ...params, ...query };
-                }
-
-                // 2) itemId (na przyszłość, gdy dodasz mapper.itemField)
-                if (schema?.mapper?.itemField && itemId != null) {
-                    params[schema.mapper.itemField] = itemId;
-                }
-
-                // 🔹 wykonujemy GET z params
-                const res = await http.get(url, { params });
-
-                const data = res.data ?? [];
-                let final = Array.isArray(data) ? processResolvedFields(schema, data) : [];
-
-                if (typeof processRows === 'function') {
-                    try {
-                        final = processRows(final) ?? final;
-                    } catch (procErr) {
-                        console.warn('processRows error', procErr);
-                    }
-                }
-
-                setRows(final);
-                setError(null);
-                return final;
-
-            } catch (err) {
-                console.error('fetchRows error', err);
-                toast.error('Błąd pobierania danych encji');
-                setError(err);
+        setLoading(true);
+        try {
+            const url = resolveEndpoint('get');
+            if (!url) {
                 setRows([]);
-                return [];
-            } finally {
-                setLoading(false);
+                return ['no url'];
             }
+            const activeSchema = schemaOverride || schema;
+
+            let params = {};
+
+            if (query && typeof query === 'object') {
+                params = { ...params, ...query };
+            }
+
+            if (activeSchema?.mapper?.itemField && itemId != null) {
+                params[activeSchema.mapper.itemField] = itemId;
+            }
+            
+            const res = await http.get(url, { params });
+
+            const data = res.data ?? [];
+            let final = Array.isArray(data) ? processResolvedFields(activeSchema, data) : [];
+
+            if (typeof processRows === 'function') {
+                try {
+                    final = processRows(final) ?? final;
+                } catch (procErr) {
+                    console.warn('processRows error', procErr);
+                }
+            }
+
+            setRows(final);
+            setError(null);
+            return final;
+        } catch (err) {
+            console.error('fetchRows error', err);
+            toast.error('Błąd pobierania danych encji');
+            setError(err);
+            setRows([]);
+            return [];
+        } finally {
+            setLoading(false);
         }
     }, [resolveEndpoint, processRows, query, schema, schemaOnly]);
 
@@ -416,8 +416,12 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
     const refresh = useCallback(async () => {
         try {
             setLoading(true);
-            await fetchSchema();
-            await fetchRows();
+
+            const freshSchema = await fetchSchema();
+            if (!schemaOnly) {
+                const resultRows = await fetchRows(freshSchema);
+            }
+
             setError(null);
         } catch (err) {
             console.error('refresh error', err);
@@ -425,39 +429,16 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         } finally {
             setLoading(false);
         }
-    }, [fetchSchema, fetchRows]);
+    }, [fetchSchema, fetchRows, schemaOnly]);
 
     const queryKey = JSON.stringify(query || {});
     const schemaQueryKey = JSON.stringify(schemaQuery || {});
 
     useEffect(() => {
-        // initial load when endpoint (entity folder) changes
-        if (queryKey) {
-            setRows([]);
-        }
-
+        setRows([]);
         refresh().catch(e => console.error(e));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [endpoint, queryKey, schemaQueryKey]);
-
-    useEffect(() => {
-        const ep = resolveEndpoint('get');
-        if (!ep) {
-            // endpoint jawnie wyłączony (null) lub nie ma fallbacku -> nie fetchujemy
-            return;
-        }
-
-        // jeśli już mamy załadowane wiersze i nie chcemy ponownie pobierać -> skip
-        if (fetchedRef.current || (rows && rows.length > 0)) return;
-
-        fetchedRef.current = true;
-
-        fetchRows()
-            .catch(err => {
-                console.error('fetchRows error', err);
-                fetchedRef.current = false; // pozwól na retry jeśli chcesz
-            });
-    }, [resolveEndpoint, schema, fetchRows, rows]);
+    }, [entityName, endpoint, queryKey, schemaQueryKey]);
 
     // ---------------- CRUD guards & implementations ----------------
     // Each operation checks resolveEndpoint(name) — if null -> disabled.
@@ -827,7 +808,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
                 const v = rest[k];
                 if (v != null) fd.append(k, String(v));
             });
-            
+
             // Nie ustawiaj ręcznie Content-Type – axios sam doda boundary
             const res = await http.upload(url, fd);
 
