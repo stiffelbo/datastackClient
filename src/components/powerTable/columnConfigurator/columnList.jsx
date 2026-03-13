@@ -72,7 +72,7 @@ const ColumnList = ({ columnsSchema, onClose }) => {
                   color="text.secondary"
                   sx={{ fontStyle: "italic" }}
                 >
-                  {c.fieldGroup}
+                  {c.fieldGroup} - {c.type}
                 </Typography>
               )
             }

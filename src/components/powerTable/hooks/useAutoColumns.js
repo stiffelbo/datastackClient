@@ -63,6 +63,7 @@ const inferinput = (type) => {
     case 'number':
       return 'number';
     case 'bool':
+    case 'boolean':
       return 'bool';
     case 'date':
       return 'date';
@@ -77,6 +78,7 @@ const inferinput = (type) => {
 const inferDisplayType = (type) => {
   switch (type) {
     case 'bool':
+    case 'boolean':
       return 'bool';
     case 'number':
       return 'numeric';
