@@ -57,6 +57,7 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
 
         cost_date: today,
         is_planned: 1,
+        is_billable: mappedItemData.is_billable
         // seq: tutaj kiedyś możesz dorzucić sekwencję na podstawie prevElementData
       };
 

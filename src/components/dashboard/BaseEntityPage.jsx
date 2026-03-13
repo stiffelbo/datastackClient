@@ -17,6 +17,8 @@ const DEFAULT_TABS = [
   },
 ];
 
+const basePageHeightSpan = 80; // wysokość zajmowana przez header i tabsy
+
 /**
  * BaseEntityPage
  *
@@ -40,7 +42,7 @@ const BaseEntityPage = ({
   tabs = [],
   tab,
   setTab,
-  heightSpan,
+  heightSpan = basePageHeightSpan,
   headerFields = []
 }) => {
   const rwd = useRwd();

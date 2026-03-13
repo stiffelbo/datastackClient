@@ -2,6 +2,12 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
+//Pages
+import StructureDetails from './StructureDetails';
+import StructureEmployees from './StructureEmployees';
+import StructureProcesses from './StructureProcesses';
+import StructureMachines from './StructureMachines';
+
 const StructurePage = ({
   entityName,
   entity,
@@ -16,9 +22,31 @@ const StructurePage = ({
   const { tab, setTab } = dashboard;
 
   // tu definicje tabsów i propsy dla subkomponentów
-  const tabs = [
-  
-    // itd...
+  const tabs = [  
+    {
+      key: 'details',
+      label: 'Szczegóły',
+      pageKey: 'process_details', // klucz z rejestru stron
+      component: <StructureDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'employees',
+      label: 'Pracownicy',
+      pageKey: 'structure_employees',
+      component: <StructureEmployees id={id} data={row} rwd={rwd} />,
+    },
+    {
+      key: 'processes',
+      label: 'Procesy',
+      pageKey: 'structure_processes',
+      component: <StructureProcesses id={id} data={row} rwd={rwd} />,
+    },
+    {
+      key: 'machines',
+      label: 'Maszyny',
+      pageKey: 'structure_machines',
+      component: <StructureMachines id={id} data={row} rwd={rwd} />,
+    }
   ];
 
   return (
@@ -32,7 +60,7 @@ const StructurePage = ({
       tab={tab}
       setTab={setTab}
       rwd={rwd}
-      heightSpan={190}
+      headerFields={['structure_type', 'name']}
     />
   );
 };

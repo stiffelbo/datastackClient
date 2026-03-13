@@ -27,6 +27,7 @@ export const createFilter = (field, type = 'string') => {
         op: firstOp,
         value: defaultFilterValue(firstOp, type),
     };
+
     return newFilter;
 };
 

@@ -47,7 +47,7 @@ const PowerTableHead = ({
   data = [],
   // 🔹 NOWE:
   isTree = false,
-  treeColumnWidth = 40,
+  treeColumnWidth = 55,
 }) => {
   const ref = useRef(null);
 

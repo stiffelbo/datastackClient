@@ -860,7 +860,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
     }, [resolveEndpoint, http, toast]);
 
 
-
     // final return — expose handlers as function or null (so UI can easily check)
     return {
         // state
