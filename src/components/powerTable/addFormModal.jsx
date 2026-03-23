@@ -78,7 +78,7 @@ const AddFormModal = ({ open, onClose, addFormSchema, initialValues = {}, onPost
           loading={combinedLoading}
           onCancel={onClose}
           submitButtonText="Zapisz"
-          sendFormData={false}
+          sendFormData={addFormSchema?.formData ?? false}
           mode="add"
         />
         {renderResponse()}

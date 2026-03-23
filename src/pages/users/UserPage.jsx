@@ -3,6 +3,8 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 import PageUser from './PageUser';
+import UsersProcess from './UsersProcess';
+import BrigadeMapper from './BrigadeMapper';
 
 const UsersPage = ({
   entityName,
@@ -24,6 +26,18 @@ const UsersPage = ({
       label: 'Strony',
       pageKey: 'user.pages', // klucz z rejestru stron
       component: <PageUser id={id} row={row} rwd={rwd}/>,
+    },
+    {
+      key: 'procesy',
+      label: 'Procesy',
+      pageKey: 'user.proceses', // klucz z rejestru stron
+      component: <UsersProcess id={id} row={row} rwd={rwd}/>,
+    },
+    {
+      key: 'brygady',
+      label: 'Brygady',
+      pageKey: 'user.brigades', // klucz z rejestru stron
+      component: <BrigadeMapper id={id} row={row} rwd={rwd}/>,
     },
     // itd...
   ];

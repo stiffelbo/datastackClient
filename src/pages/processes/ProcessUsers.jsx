@@ -10,20 +10,20 @@ const defaultRwd = {
   height: window.innerHeight,
 };
 
-const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
+const ProcessUsers = ({ id = null, data = {}, rwd = defaultRwd }) => {
   // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
   const optionsEntity = useEntity({
-    endpoint: '/processes/',
-    entityName: 'Processes',
+    endpoint: '/user/',
+    entityName: 'Users',
     readOnly: true,
   });
   const options = optionsEntity.rows;
 
   // lewa strona – pozycje przypisane
   const assignedEntity = useEntity({
-    endpoint: '/employees_processes/',
-    entityName: 'EmployeeProcess',
-    query: { employee_id: id },
+    endpoint: '/users_processes/',
+    entityName: 'ProcessesUsers',
+    query: { process_id: id },
   });
   const assigned = assignedEntity.rows;
 
@@ -40,8 +40,8 @@ const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
 
       // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
-        employee_id: id,
-        process_id: mappedItemData.id,
+        process_id: id,
+        user_id: mappedItemData.id,
         importance_score: 5,
         is_complementary: false,
         notes: '',
@@ -51,7 +51,7 @@ const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
         await assignedEntity.create(payload);
         // create w useEntity i tak robi getOne(id) → odświeży cache wierszy
       } catch (e) {
-        console.error('Error creating jira_issue_cost row', e);
+        console.error('Error creating user_process row', e);
       }
     },
     [id, assignedEntity.create]
@@ -90,8 +90,8 @@ const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
       }}
     >
       <Mapper
-        entityName='EmployeeProcessesMapper'
-        ownerLabel="Procesy Pracownika"
+        entityName='ProcessesUsersMapper'
+        ownerLabel="Procesy Użytkowników"
         owner={{ id }}
 
         leftData={assigned}
@@ -104,9 +104,9 @@ const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
         rightSearchFields={['userName', 'userLastName']}
 
         idField="id"
-        orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
+        orderField={null} // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
         distinct={true}
-        distinctField='process_id'
+        distinctField='user_id'
 
         onAdd={handleAdd}
         onEditLeft={handleEditLeft}
@@ -120,4 +120,4 @@ const EmployeeProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
   );
 };
 
-export default EmployeeProcess;
+export default ProcessUsers;

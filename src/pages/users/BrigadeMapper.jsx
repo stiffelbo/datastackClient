@@ -32,7 +32,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
         query: { brigade_id: id },
     });
     const assigned = assignedEntity.rows;
-    const assignedIds = assigned.map((item) => item.employee_id);
+    const assignedIds = assigned.map((item) => item.user_id);
 
     const handleAdd = useCallback(
         async ({ mappedItemData, prevElementData }) => {
@@ -43,7 +43,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
 
             const today = new Date().toISOString().slice(0, 10);
 
-            // 🔑 payload zgodny ze schematem jira_issue_costs
+            // 🔑 payload zgodny ze schematem brigade_employee
             const payload = {
                 brigade_id: id,
                 employee_id: mappedItemData.id,
@@ -53,7 +53,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
                 await assignedEntity.create(payload);
                 // create w useEntity i tak robi getOne(id) → odświeży cache wierszy
             } catch (e) {
-                console.error('Error creating jira_issue_cost row', e);
+                console.error('Error creating brigade_employee row', e);
             }
         },
         [id, assignedEntity.create]
@@ -100,7 +100,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
         >
             <Mapper
                 entityName='EmployeesBrigadesMapper'
-                ownerLabel={"Skład Brygady: " + data.first_name}
+                ownerLabel={"Skład Brygady: " + data.name}
                 owner={{ id }}
 
                 leftData={assigned}

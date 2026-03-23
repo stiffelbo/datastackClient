@@ -1,4 +1,4 @@
-// pages/Employees/PageUser.jsx
+// pages/Userss/PageUser.jsx
 import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 
@@ -10,20 +10,20 @@ const defaultRwd = {
   height: window.innerHeight,
 };
 
-const ProcessEmployees = ({ id = null, data = {}, rwd = defaultRwd }) => {
+const UsersProcess = ({ id = null, data = {}, rwd = defaultRwd }) => {
   // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
   const optionsEntity = useEntity({
-    endpoint: '/employees/',
-    entityName: 'Employees',
+    endpoint: '/processes/',
+    entityName: 'Processes',
     readOnly: true,
   });
   const options = optionsEntity.rows;
 
   // lewa strona – pozycje przypisane
   const assignedEntity = useEntity({
-    endpoint: '/employees_processes/',
-    entityName: 'EmployeeProcess',
-    query: { process_id: id },
+    endpoint: '/users_processes/',
+    entityName: 'UsersProcess',
+    query: { user_id: id },
   });
   const assigned = assignedEntity.rows;
 
@@ -40,8 +40,8 @@ const ProcessEmployees = ({ id = null, data = {}, rwd = defaultRwd }) => {
 
       // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
-        process_id: id,
-        employee_id: mappedItemData.id,
+        user_id: id,
+        process_id: mappedItemData.id,
         importance_score: 5,
         is_complementary: false,
         notes: '',
@@ -90,8 +90,8 @@ const ProcessEmployees = ({ id = null, data = {}, rwd = defaultRwd }) => {
       }}
     >
       <Mapper
-        entityName='EmployeeProcessesMapper'
-        ownerLabel="Procesy Pracownika"
+        entityName='UserProcessesMapper'
+        ownerLabel="Procesy Użytkownika"
         owner={{ id }}
 
         leftData={assigned}
@@ -104,9 +104,9 @@ const ProcessEmployees = ({ id = null, data = {}, rwd = defaultRwd }) => {
         rightSearchFields={['userName', 'userLastName']}
 
         idField="id"
-        orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
+        orderField={null} // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
         distinct={true}
-        distinctField='employee_id'
+        distinctField='process_id'
 
         onAdd={handleAdd}
         onEditLeft={handleEditLeft}
@@ -120,4 +120,4 @@ const ProcessEmployees = ({ id = null, data = {}, rwd = defaultRwd }) => {
   );
 };
 
-export default ProcessEmployees;
+export default UsersProcess;

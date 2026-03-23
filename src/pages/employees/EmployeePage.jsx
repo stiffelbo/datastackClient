@@ -4,7 +4,6 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
 import EmployeeDetails from './EmployeeDetails';
-import EmployeeProcess from './EmployeeProcess';
 
 const EmployeePage = ({
   entityName,
@@ -26,12 +25,6 @@ const EmployeePage = ({
       label: 'Szczegóły',
       pageKey: 'employee_details', // klucz z rejestru stron
       component: <EmployeeDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard}/>,
-    },
-    {
-      key: 'employee_process',
-      label: 'Procesy',
-      pageKey: 'employee_process', // klucz z rejestru stron
-      component: <EmployeeProcess id={id} data={row} rwd={rwd}/>,
     },
   ];
 

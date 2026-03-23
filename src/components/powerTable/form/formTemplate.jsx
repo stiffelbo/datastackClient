@@ -126,15 +126,48 @@ const FormTemplate = ({
 
   const prepareFormData = (state) => {
     const formData = new FormData();
+
     Object.keys(state).forEach((k) => {
       const v = state[k];
-      if (v instanceof File || v instanceof Blob) formData.append(k, v);
-      else if (Array.isArray(v)) v.forEach((it, i) => formData.append(`${k}[${i}]`, it));
-      else if (v instanceof Date) formData.append(k, v.toISOString());
-      else if (typeof v === 'boolean') formData.append(k, v ? '1' : '0');
-      else if (typeof v === 'object' && v !== null) formData.append(k, JSON.stringify(v));
-      else formData.append(k, v != null ? v : '');
+
+      if (v instanceof File || v instanceof Blob) {
+        formData.append(k, v);
+        return;
+      }
+
+      if (Array.isArray(v)) {
+        v.forEach((it) => {
+          if (it instanceof File || it instanceof Blob) {
+            formData.append(`${k}[]`, it);
+          } else if (it instanceof Date) {
+            formData.append(`${k}[]`, it.toISOString());
+          } else if (typeof it === 'object' && it !== null) {
+            formData.append(`${k}[]`, JSON.stringify(it));
+          } else {
+            formData.append(`${k}[]`, it != null ? String(it) : '');
+          }
+        });
+        return;
+      }
+
+      if (v instanceof Date) {
+        formData.append(k, v.toISOString());
+        return;
+      }
+
+      if (typeof v === 'boolean') {
+        formData.append(k, v ? '1' : '0');
+        return;
+      }
+
+      if (typeof v === 'object' && v !== null) {
+        formData.append(k, JSON.stringify(v));
+        return;
+      }
+
+      formData.append(k, v != null ? String(v) : '');
     });
+
     return formData;
   };
 
@@ -143,30 +176,37 @@ const FormTemplate = ({
       console.warn('Brak funkcji submit');
       return;
     }
+
     const finalData = mode === 'bulk' ? bulkFormState(formState, schema) : formState;
-    // bulk -> prosty confirm
+    const validationErrors = runValidation(finalData);
+
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
+
     if (mode === 'bulk') {
       const keys = Object.keys(finalData || {});
       if (keys.length === 0) {
-        // nic do wysłania
         window.alert('Brak zmian do wysłania.');
         return;
       }
 
-      // zbuduj krótki podgląd jako tekst (max długość dla czytelności)
       const previewLines = keys.map(k => {
-        // znajdź etykietę pola z schematu jeśli jest
         const f = (Array.isArray(schema) ? schema.find(s => s.name === k) : null) || { label: k };
         let v = finalData[k];
-        if (v === null) v = '[WYCZYŚĆ]';
-        else if (v === '') v = '[WYCZYŚĆ]';
-        else if (Array.isArray(v)) v = v.join(', ');
+
+        if (v === null || v === '') v = '[WYCZYŚĆ]';
+        else if (Array.isArray(v)) {
+          v = v.map(item => item?.name || String(item)).join(', ');
+        }
+        else if (v instanceof File) {
+          v = v.name;
+        }
         else v = String(v);
-        // ogranicz długość wartości
+
         if (v.length > 80) v = v.slice(0, 77) + '...';
         return `• ${f.label || k}: ${v}`;
       });
-
 
       const count = addons?.selectedIds ? addons.selectedIds : 0;
       const msg = `Na pewno chcesz wprowadzić zmiany do ${count} rekordów?\n\nPola do zmiany:\n${previewLines.join('\n')}\n\nKontynuować?`;
@@ -175,21 +215,17 @@ const FormTemplate = ({
         return;
       }
 
-      // potwierdzono → wyślij
-      if (sendFormData) {
-        onSubmit(prepareFormData(finalData));
-      } else {
-        onSubmit(finalData);
-      }
+      if (sendFormData) onSubmit(prepareFormData(finalData));
+      else onSubmit(finalData);
       return;
     }
+    console.log('sendFormData', sendFormData);
+    console.log('FORM STATE', formState);
+    console.log('PROFILE VALUE', formState.profile_url);
+    console.log('IS FILE', formState.profile_url instanceof File);
 
-    // single / normal mode — od razu wysyłamy
-    if (sendFormData) {
-      onSubmit(prepareFormData(finalData));
-    } else {
-      onSubmit(finalData);
-    }
+    if (sendFormData) onSubmit(prepareFormData(finalData));
+    else onSubmit(finalData);
   };
 
 
@@ -254,8 +290,7 @@ const FormTemplate = ({
                 onChange={(e) => {
                   const raw = e.target.value;
                   const normalized = typeof raw === 'string' ? raw.replace(',', '.') : raw;
-                  console.log(normalized);
-                  setField(field.name, normalized);
+                  setField(field.name, normalized === '' ? '' : Number(normalized), { runValidate: true, raw: true });
                 }}
                 error={!!errorsText}
                 helperText={errorsText || field.helperText}
@@ -442,35 +477,73 @@ const FormTemplate = ({
           );
         }
 
-        case 'file':
+        case 'file': {
+          const isMultiple = !!field.multiple || !!field.inputProps?.multiple;
+          const files = Array.isArray(value) ? value : value ? [value] : [];
+
           return (
             <Col key={field.name} {...colProps}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
                   id={`file-${field.name}`}
                   type="file"
                   style={{ display: 'none' }}
                   onChange={(e) => {
-                    const f = e.target.files?.[0] ?? null;
-                    setField(field.name, f);
+                    const selectedFiles = Array.from(e.target.files || []);
+
+                    if (isMultiple) {
+                      setField(field.name, selectedFiles);
+                    } else {
+                      setField(field.name, selectedFiles[0] ?? null);
+                    }
                   }}
+                  multiple={isMultiple}
                   {...(field.inputProps || {})}
                 />
+
                 <label htmlFor={`file-${field.name}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
-                  <Button variant="outlined" component="span" startIcon={<UploadFileIcon />} size={field.size === 'small' ? 'small' : 'medium'}>
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<UploadFileIcon />}
+                    size={field.size === 'small' ? 'small' : 'medium'}
+                  >
                     {field.label || 'Wybierz plik'}
                   </Button>
                 </label>
-                {value ? <span style={{ fontSize: 13 }}>{value.name ?? String(value)}</span> : <span style={{ color: '#666', fontSize: 13 }}>{field.placeholder || ''}</span>}
-                {(value) && (
-                  <IconButton size="small" onClick={() => setField(field.name, null)} aria-label="clear file">
+
+                {files.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {files.map((file, idx) => (
+                      <span key={`${field.name}-${idx}`} style={{ fontSize: 13 }}>
+                        {file?.name ?? String(file)}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ color: '#666', fontSize: 13 }}>
+                    {field.placeholder || ''}
+                  </span>
+                )}
+
+                {files.length > 0 && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setField(field.name, isMultiple ? [] : null)}
+                    aria-label="clear file"
+                  >
                     <ClearIcon fontSize="small" />
                   </IconButton>
                 )}
               </div>
+
               {errorsText && <div style={{ color: '#c00', marginTop: 6 }}>{errorsText}</div>}
+              {!errorsText && field.helperText && (
+                <div style={{ color: '#666', marginTop: 6, fontSize: 12 }}>{field.helperText}</div>
+              )}
             </Col>
           );
+        }
 
         case 'bool':
         case 'boolean': {

@@ -3,7 +3,7 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
-import ProcessEmployees from './ProcessEmployees';
+import ProcessUsers from './ProcessUsers';
 import ProcessMachines from './ProcessMachines';
 import ProcessMaterials from './ProcessMaterials';
 import ProcessDetails from './ProcessDetails';
@@ -30,13 +30,13 @@ const ProcessPage = ({
       component: <ProcessDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
      {
-      key: 'process_employee',
-      label: 'Pracownicy',
-      pageKey: 'process_employee', // klucz z rejestru stron
-      component: <ProcessEmployees id={id} data={row} rwd={rwd}/>,
+      key: 'process_users',
+      label: 'Użytkownicy',
+      pageKey: 'process_users', // klucz z rejestru stron
+      component: <ProcessUsers id={id} data={row} rwd={rwd}/>,
     },
     {
-      key: 'process_machine',
+      key: 'process_machines',
       label: 'Maszyny',
       pageKey: 'process_machines', // klucz z rejestru stron
       component: <ProcessMachines id={id} data={row} rwd={rwd}/>,
