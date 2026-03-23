@@ -8,5 +8,5 @@ export default defineConfig({
     open: true,        // (opcjonalnie) otwórz automatycznie
     strictPort: true,  // (opcjonalnie) jak zajęty to nie przełącza
   },
-  base: '/datastack/', // jeśli hostujesz w podkatalogu
+  base: '/datastack', // jeśli hostujesz w podkatalogu
 });

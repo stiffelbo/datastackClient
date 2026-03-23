@@ -20,6 +20,7 @@ import {
   FormControlLabel,
   FormHelperText,
   Switch,
+  ListSubheader
 } from '@mui/material';
 
 // MUI imports needed for buildForm
@@ -371,15 +372,28 @@ const FormTemplate = ({
         case 'select-multiple': {
           const isMultiple = field.type === 'select-multiple' || !!field.multiple;
           const opts = normalizeOptions(field.selectOptions || []);
+
+          const groupedOptions = opts.reduce((acc, opt) => {
+            const groupName = opt.group || '';
+            if (!acc[groupName]) acc[groupName] = [];
+            acc[groupName].push(opt);
+            return acc;
+          }, {});
+
           return (
             <Col key={field.name} {...colProps}>
               <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
                 <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
+
                 <Select
                   labelId={`${field.name}-label`}
                   name={field.name}
                   label={field.label}
-                  value={typeof value === 'undefined' || value === null ? (isMultiple ? [] : '') : value}
+                  value={
+                    typeof value === 'undefined' || value === null
+                      ? (isMultiple ? [] : '')
+                      : value
+                  }
                   onChange={(e) => {
                     const val = e.target.value;
                     setField(field.name, val);
@@ -388,13 +402,40 @@ const FormTemplate = ({
                   size={field.size || 'small'}
                   {...(field.selectProps || {})}
                 >
-                  {!isMultiple && <MenuItem value="">{`-- ${field.label || 'Wybierz'} --`}</MenuItem>}
-                  {opts.map((opt) => (
-                    <MenuItem key={String(opt.value)} value={opt.value} disabled={opt.disabled} title={opt.title || ''}>
-                      {opt.label}
+                  {!isMultiple && (
+                    <MenuItem value="">
+                      {`-- ${field.label || 'Wybierz'} --`}
                     </MenuItem>
-                  ))}
+                  )}
+
+                  {Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
+                    const items = [];
+
+                    if (groupName) {
+                      items.push(
+                        <ListSubheader key={`group-${groupName}`} disableSticky>
+                          {groupName}
+                        </ListSubheader>
+                      );
+                    }
+
+                    groupItems.forEach((opt) => {
+                      items.push(
+                        <MenuItem
+                          key={`opt-${opt.value}`}
+                          value={opt.value}
+                          disabled={opt.disabled}
+                          title={opt.title || ''}
+                        >
+                          {opt.label}
+                        </MenuItem>
+                      );
+                    });
+
+                    return items;
+                  })}
                 </Select>
+
                 {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : null}
               </FormControl>
             </Col>

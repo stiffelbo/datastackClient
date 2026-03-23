@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 import useAutoColumns from './hooks/useAutoColumns';
-import { useSelection } from './hooks/useSelection';
+import { useRowAction } from './hooks/useRowAction';
 import usePresets from './hooks/usePresets';
 import useColumns from './hooks/useColumns';
 import useTableSettings from './hooks/useTableSettings';
@@ -45,6 +45,7 @@ const PowerTable = ({
   treeConfig = null,
   //Form Schemas
   addFormSchema = { label: '', schema: [] },
+  addFormInitialValues = {},
   bulkEditFormSchema = { label: '', schema: [] },
   importSchema = null,
   //Crud Callbacks
@@ -76,7 +77,7 @@ const PowerTable = ({
   }
 
   const presets = usePresets({ entityName, enablePresets });
-  const actionsApi = useSelection({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
+  const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit});
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
@@ -115,6 +116,7 @@ const PowerTable = ({
             open={modalState.open}
             onClose={closeModal}
             addFormSchema={addFormSchema}
+            initialValues={addFormInitialValues}
             onPost={onPost}
             error={error}
             clearError={clearError}

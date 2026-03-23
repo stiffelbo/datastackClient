@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { createSelectionColumns } from "./useAutoColumns";
+import { createActionColumns } from "./useAutoColumns";
 
 /* -------------------------------------------------------------------------- */
-/* 🔹 useSelection – notify parent on single/multi select changes             */
+/* 🔹 useRowAction – notify parent on single/multi select changes             */
 /* -------------------------------------------------------------------------- */
-export const useSelection = ({
+export const useRowAction = ({
   onDelete,
   onBulkDelete,
   onBulkEdit,
@@ -108,7 +108,7 @@ export const useSelection = ({
     typeof onBulkDelete === 'function' ||
     typeof onBulkEdit === 'function'
 
-  const columnActions = createSelectionColumns({ isDeleteCol, isSelectCol, isSelectedItemsCol });
+  const columnActions = createActionColumns({ isDeleteCol, isSelectCol, isSelectedItemsCol });
 
   return {
     columnActions,

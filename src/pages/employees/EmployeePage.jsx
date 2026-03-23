@@ -3,6 +3,7 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
+import EmployeeDetails from './EmployeeDetails';
 import EmployeeProcess from './EmployeeProcess';
 
 const EmployeePage = ({
@@ -20,6 +21,12 @@ const EmployeePage = ({
 
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
+    {
+      key: 'employee_details',
+      label: 'Szczegóły',
+      pageKey: 'employee_details', // klucz z rejestru stron
+      component: <EmployeeDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard}/>,
+    },
     {
       key: 'employee_process',
       label: 'Procesy',

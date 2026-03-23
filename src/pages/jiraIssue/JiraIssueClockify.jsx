@@ -6,7 +6,7 @@ import { Alert } from "@mui/material";
 
 const entityName = "JiraIssueClockify_Page";
 
-const JiraIssueClockify = ({ sygn = '' }) => {
+const JiraIssueClockify = ({ sygn = '', rwd }) => {
   if (!sygn) {
     return (
       <Alert severity="warning">
@@ -27,7 +27,7 @@ const JiraIssueClockify = ({ sygn = '' }) => {
       <PowerTable
         entityName={entityName}
         data={[]}            // zostanie nadpisane przez ApiLoader -> props.data
-        height={600}
+        height={rwd.height - 196}
         rowHeight={60}
       />
     </ApiLoader>

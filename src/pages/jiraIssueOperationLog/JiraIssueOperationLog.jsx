@@ -6,8 +6,8 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const entityName = 'JiraIssueCosts';
-const endpoint = '/jira_issue_costs/';
+const entityName = 'JiraIssueOperationLog';
+const endpoint = '/jira_issue_operation_log/';
 
 const selected = null;
 const onSelected = (val) => {
@@ -19,7 +19,7 @@ const onSelectItems = (val) => {
     console.log(val);
 }
 
-const JiraIssueCosts = () => {
+const JiraIssueOperationLog = () => {
     const entity = useEntity({ entityName, endpoint });
     useEffect(() => {
         entity.refresh();
@@ -56,4 +56,4 @@ const JiraIssueCosts = () => {
     );
 };
 
-export default JiraIssueCosts;
+export default JiraIssueOperationLog;

@@ -24,7 +24,13 @@ import Machines from './pages/machines/Machines';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
 import CostItemDict from './pages/costItemDict/CostItemDict';
+import JiraIssueGroups from './pages/jiraIssueGroups/JiraIssueGroups';
 import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
+import JiraIssueMachineUsageLog from './pages/jiraIssueMachineUsageLog/JiraIssueMachineUsageLog';
+import JiraIssueMaterialUsageLog from './pages/jiraIssueMaterialUsageLog/JiraIssueMaterialUsageLog';
+import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperationLog';
+import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
+import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
 import UserDashboard from './components/user/UserDashboard';
 import NotFound from './pages/NotFound';
 
@@ -48,7 +54,14 @@ const App = () => (
                 
         <Route path="clockify" element={<Clockify />} />
         <Route path="salaries" element={<Salaries />} />
+        
+        <Route path="jiraissuegroups" element={<JiraIssueGroups />} />
         <Route path="jiraissuecosts" element={<JiraIssueCosts />} />
+        <Route path="jiraissuemachineusagelog" element={<JiraIssueMachineUsageLog />} />
+        <Route path="jiraissuematerialusagelog" element={<JiraIssueMaterialUsageLog />} />
+        <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
+        <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
+        <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
         
         <Route path="deptcosts" element={<Costs />} />
 

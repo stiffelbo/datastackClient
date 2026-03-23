@@ -165,7 +165,7 @@ export default useAutoColumns;
 /* 🔹 FABRYKA KOLUMN AKCJI                                                   */
 /* -------------------------------------------------------------------------- */
 
-export const createSelectionColumns = ({isDeleteCol, isSelectCol, isSelectedItemsCol}) => {
+export const createActionColumns = ({isDeleteCol, isSelectCol, isSelectedItemsCol}) => {
   
   const columns = [];
   const makeColumn = (name, width = 45) => {

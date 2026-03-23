@@ -111,9 +111,10 @@ export const normalizeOptions = (opts = []) => {
         label: o.label ?? o.val ?? String(o.value ?? o.id ?? ''),
         title: o.title ?? null,
         disabled: !!o.disabled,
+        group : o.group ?? ''
       };
     }
-    return { value: o, label: String(o), title: null, disabled: false };
+    return { value: o, label: String(o), title: null, disabled: false, group: '' };
   });
 };
 

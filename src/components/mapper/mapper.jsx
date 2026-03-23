@@ -335,8 +335,8 @@ const Mapper = ({
                             onEdit={handleEditLeft}
                             onDelete={handleDeleteLeft}
                             // 🔑 lokalna selekcja
-                            selected={leftSelected}
-                            onSelect={setLeftSelected}
+                            selected={orderField ? leftSelected : null}
+                            onSelect={orderField ? setLeftSelected : null}
                             // mapper to lekki widget
                             enablePresets={true}
                             enableUpload={false}

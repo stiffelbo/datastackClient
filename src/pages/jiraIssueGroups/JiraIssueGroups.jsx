@@ -6,8 +6,8 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../../components/powerTable/powerTable';
 
-const entityName = 'JiraIssueCosts';
-const endpoint = '/jira_issue_costs/';
+const entityName = 'JiraIssueGroups';
+const endpoint = '/jira_issue_groups/';
 
 const selected = null;
 const onSelected = (val) => {
@@ -19,7 +19,7 @@ const onSelectItems = (val) => {
     console.log(val);
 }
 
-const JiraIssueCosts = () => {
+const JiraIssueGroups = () => {
     const entity = useEntity({ entityName, endpoint });
     useEffect(() => {
         entity.refresh();
@@ -33,12 +33,12 @@ const JiraIssueCosts = () => {
             data={entity.rows}
             columnSchema={entity.schema.columns}
 
-            addFormSchema={null}
+            addFormSchema={entity.schema.addForm}
             bulkEditFormSchema={entity.schema.bulkEditForm}
             importSchema={null}
 
             onRefresh={entity.refresh}
-            onPost={null}
+            onPost={entity.create}
             onEdit={entity.updateField}
             onUpload={null}
             onBulkEdit={entity.updateMany}
@@ -56,4 +56,4 @@ const JiraIssueCosts = () => {
     );
 };
 
-export default JiraIssueCosts;
+export default JiraIssueGroups;

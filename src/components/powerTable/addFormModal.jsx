@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import FormTemplate from './form/formTemplate';
 import ErrorAlerts from './errorAlerts';
 
-const AddFormModal = ({ open, onClose, addFormSchema, onPost, loading, entityName, error, clearError }) => {
+const AddFormModal = ({ open, onClose, addFormSchema, initialValues = {}, onPost, loading, entityName, error, clearError }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const handleClose = () => {
@@ -72,7 +72,7 @@ const AddFormModal = ({ open, onClose, addFormSchema, onPost, loading, entityNam
       >
         <FormTemplate
           formLabel={addFormSchema?.label ?? 'Dodaj'}
-          data={{}}
+          data={initialValues}
           schema={addFormSchema?.schema ?? []}
           onSubmit={handleSubmit}
           loading={combinedLoading}
