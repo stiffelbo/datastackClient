@@ -51,35 +51,59 @@ export const bulkFormState = (formState = {}, schema = []) => {
 // --- helpers ---
 export const createInitialStateFromSchema = (data = {}, schema = []) => {
   const initial = {};
+
   schema.forEach((f) => {
     if (!f || !f.name) return;
-    if (data && Object.prototype.hasOwnProperty.call(data, f.name)) {
-      initial[f.name] = data[f.name];
+
+    const hasOwn = Object.prototype.hasOwnProperty.call(data, f.name);
+    const incoming = hasOwn ? data[f.name] : undefined;
+
+    if (incoming !== undefined) {
+      initial[f.name] = incoming;
       return;
     }
+
     if (f.defaultValue !== undefined) {
       initial[f.name] = f.defaultValue;
       return;
     }
+
     switch (f.type) {
       case 'select-multiple':
         initial[f.name] = [];
         break;
+
       case 'switch':
+      case 'bool':
       case 'boolean':
-        initial[f.name] = !!f.defaultValue;
+        initial[f.name] = false;
         break;
+
       case 'number':
-        initial[f.name] = f.defaultValue ?? undefined;
+        initial[f.name] = '';
         break;
+
       case 'date':
-        initial[f.name] = f.defaultValue ?? undefined;
+      case 'datetime':
+        initial[f.name] = '';
         break;
+
       case 'object':
+        initial[f.name] = null;
+        break;
+
+      case 'select':
+      case 'select-object':
+      case 'text':
+      case 'email':
+      case 'textarea':
+      case 'password':
       default:
-        initial[f.name] = f.defaultValue ?? undefined;
+        initial[f.name] = '';
+        break;
     }
   });
+
   return initial;
 };
 

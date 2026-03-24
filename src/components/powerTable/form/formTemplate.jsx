@@ -248,7 +248,10 @@ const FormTemplate = ({
       const md = field.md || 6;
       const xl = field.xl ?? (field.md ? field.md : 4);
       const stateValue = formState[field.name];
-      const value = typeof stateValue !== 'undefined' ? stateValue : (field.type === 'select-multiple' ? [] : '');
+      const value =
+        stateValue === undefined || stateValue === null
+          ? (field.type === 'select-multiple' ? [] : '')
+          : stateValue;
       const errorsText = errors?.[field.name] && errors[field.name].length ? (Array.isArray(errors[field.name]) ? errors[field.name].join(' ') : errors[field.name]) : null;
 
       // wrapper Col (twój grid)
