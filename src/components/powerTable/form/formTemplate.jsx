@@ -63,6 +63,7 @@ const FormTemplate = ({
   const validateFn = validator || validatorDefault;
 
   const [formState, setFormState] = useState(() => createInitialStateFromSchema(data, schema));
+  const [fileInputKeys, setFileInputKeys] = useState({});
   const [errors, setErrors] = useState({});
   const [isChanged, setIsChanged] = useState(false);
   const [isValid, setIsValid] = useState(true);
@@ -82,6 +83,13 @@ const FormTemplate = ({
   useEffect(() => {
     setIsValid(Object.keys(errors || {}).length === 0);
   }, [errors]);
+
+  const bumpFileInputKey = (fieldName) => {
+    setFileInputKeys((prev) => ({
+      ...prev,
+      [fieldName]: (prev[fieldName] || 0) + 1,
+    }));
+  };
 
   const runValidation = (state) => {
     try {
@@ -219,10 +227,7 @@ const FormTemplate = ({
       else onSubmit(finalData);
       return;
     }
-    console.log('sendFormData', sendFormData);
-    console.log('FORM STATE', formState);
-    console.log('PROFILE VALUE', formState.profile_url);
-    console.log('IS FILE', formState.profile_url instanceof File);
+
 
     if (sendFormData) onSubmit(prepareFormData(finalData));
     else onSubmit(finalData);
@@ -479,29 +484,41 @@ const FormTemplate = ({
 
         case 'file': {
           const isMultiple = !!field.multiple || !!field.inputProps?.multiple;
-          const files = Array.isArray(value) ? value : value ? [value] : [];
+          const currentValue = formState[field.name];
+
+          const files = Array.isArray(currentValue)
+            ? currentValue
+            : currentValue instanceof File
+              ? [currentValue]
+              : [];
+
+          const inputId = `file-${field.name}`;
+          const inputKey = `${field.name}-${fileInputKeys[field.name] || 0}`;
 
           return (
             <Col key={field.name} {...colProps}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
-                  id={`file-${field.name}`}
+                  key={inputKey}
+                  id={inputId}
+                  name={field.name}
                   type="file"
                   style={{ display: 'none' }}
+                  multiple={isMultiple}
+                  accept={field.inputProps?.accept}
                   onChange={(e) => {
                     const selectedFiles = Array.from(e.target.files || []);
 
-                    if (isMultiple) {
-                      setField(field.name, selectedFiles);
-                    } else {
-                      setField(field.name, selectedFiles[0] ?? null);
-                    }
+                    const nextValue = isMultiple
+                      ? selectedFiles
+                      : (selectedFiles[0] ?? null);
+
+                    setField(field.name, nextValue);
                   }}
-                  multiple={isMultiple}
                   {...(field.inputProps || {})}
                 />
 
-                <label htmlFor={`file-${field.name}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <label htmlFor={inputId} style={{ display: 'inline-flex', alignItems: 'center' }}>
                   <Button
                     variant="outlined"
                     component="span"
@@ -516,20 +533,23 @@ const FormTemplate = ({
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {files.map((file, idx) => (
                       <span key={`${field.name}-${idx}`} style={{ fontSize: 13 }}>
-                        {file?.name ?? String(file)}
+                        {file?.name || String(file)}
                       </span>
                     ))}
                   </div>
                 ) : (
                   <span style={{ color: '#666', fontSize: 13 }}>
-                    {field.placeholder || ''}
+                    {field.placeholder || 'Nie wybrano pliku'}
                   </span>
                 )}
 
                 {files.length > 0 && (
                   <IconButton
                     size="small"
-                    onClick={() => setField(field.name, isMultiple ? [] : null)}
+                    onClick={() => {
+                      setField(field.name, isMultiple ? [] : null);
+                      bumpFileInputKey(field.name); // reset native input
+                    }}
                     aria-label="clear file"
                   >
                     <ClearIcon fontSize="small" />
@@ -537,9 +557,16 @@ const FormTemplate = ({
                 )}
               </div>
 
-              {errorsText && <div style={{ color: '#c00', marginTop: 6 }}>{errorsText}</div>}
+              {errorsText && (
+                <div style={{ color: '#c00', marginTop: 6 }}>
+                  {errorsText}
+                </div>
+              )}
+
               {!errorsText && field.helperText && (
-                <div style={{ color: '#666', marginTop: 6, fontSize: 12 }}>{field.helperText}</div>
+                <div style={{ color: '#666', marginTop: 6, fontSize: 12 }}>
+                  {field.helperText}
+                </div>
               )}
             </Col>
           );

@@ -13,14 +13,15 @@ const defaultRwd = {
 const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
 
     if (data.is_brigade == 0) {
-        return <pre>{JSON.stringify(data)}</pre>;
+        //mui alert "to nie jest brygada"
+        return <Box sx={{ p: 2 }}>To nie jest brygada</Box>;
     }
 
     // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
     const optionsEntity = useEntity({
         endpoint: '/employees/',
         entityName: 'BrygadaPracownicy',
-        query: { rowsForBrigades: 'true' },
+        query: { is_active: 'true' },
         readOnly: true,
     });
     const options = optionsEntity.rows;
@@ -82,13 +83,6 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
         .filter(Boolean)
         .map((col) => ({ ...col, editable: false }));
 
-    const combedOptions = options.map((option) => ({
-        id: option.id,
-        structure_id: option.structure_id,
-        first_name: option.first_name,
-        last_name: option.last_name,
-    }));
-
     return (
         <Box
             sx={{
@@ -100,7 +94,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
         >
             <Mapper
                 entityName='EmployeesBrigadesMapper'
-                ownerLabel={"Skład Brygady: " + data.name}
+                ownerLabel={"Skład Brygady: " + data.first_name}
                 owner={{ id }}
 
                 leftData={assigned}
@@ -108,7 +102,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
                 leftSearchFields={['first_name', 'last_name']} // albo ['note'] w zależności od joinedFields
                 leftProps={{ showSidebar: false, enablePresets: false, }}
 
-                rightData={combedOptions}
+                rightData={options}
                 rightColumnsBase={optionsColumns}
                 rightSearchFields={['first_name', 'last_name']} // albo ['note'] w zależności od joinedFields
 
@@ -120,7 +114,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
                 onEditLeft={null}
                 onDeleteLeft={handleDeleteLeft}
 
-                height={rwd.height - 300}
+                height={rwd.height - 196}
                 leftRowHeight={40}
                 rightRowHeight={40}
             />

@@ -280,6 +280,53 @@ function organizeSchema(input = defaultSchema) {
     return schema;
 }
 
+
+function toFormData(payload) {
+    const formData = new FormData();
+
+    Object.entries(payload || {}).forEach(([key, value]) => {
+        if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value);
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            value.forEach((item) => {
+                if (item instanceof File || item instanceof Blob) {
+                    formData.append(`${key}[]`, item);
+                } else if (item instanceof Date) {
+                    formData.append(`${key}[]`, item.toISOString());
+                } else if (typeof item === 'object' && item !== null) {
+                    formData.append(`${key}[]`, JSON.stringify(item));
+                } else {
+                    formData.append(`${key}[]`, item != null ? String(item) : '');
+                }
+            });
+            return;
+        }
+
+        if (value instanceof Date) {
+            formData.append(key, value.toISOString());
+            return;
+        }
+
+        if (typeof value === 'boolean') {
+            formData.append(key, value ? '1' : '0');
+            return;
+        }
+
+        if (typeof value === 'object' && value !== null) {
+            formData.append(key, JSON.stringify(value));
+            return;
+        }
+
+        formData.append(key, value != null ? String(value) : '');
+    });
+
+    return formData;
+};
+
+
 export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null }) {
     // UI / network state
     const [loading, setLoading] = useState(false);
@@ -362,7 +409,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async (schemaOverride = null) => {
-        
+
         if (schemaOnly) return [];
 
         setLoading(true);
@@ -383,7 +430,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             if (activeSchema?.mapper?.itemField && itemId != null) {
                 params[activeSchema.mapper.itemField] = itemId;
             }
-            
+
             const res = await http.get(url, { params });
 
             const data = res.data ?? [];
@@ -591,6 +638,42 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
         }
     }, [resolveEndpoint, setRows, setLoading, setError]);
+
+    const updateFD = useCallback(async (id, changes) => {
+        const url = resolveEndpoint('update');
+        if (!url) {
+            toast.warning('Aktualizacja wyłączona dla tej encji.');
+            return false;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const payload = toFormData({ id, ...changes });
+
+            console.log('updateFD payload', payload);
+            const res = await http.post(url, payload);
+            const ok = !!res.updated;
+
+            if (ok) {
+                await getOne(res.id);
+                toast.success('Zapisano');
+                return true;
+            }
+
+            const serverMsg = res?.error ?? res?.message ?? 'Aktualizacja nie powiodła się';
+            setError(serverMsg);
+            return false;
+
+        } catch (err) {
+            console.error('updateFD error', err);
+            setError(err?.response?.data?.error || err?.message || 'Błąd aktualizacji');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    }, [resolveEndpoint, getOne, setLoading, setError]);
 
     const updateMany = useCallback(async (ids = [], changes = {}) => {
         const url = resolveEndpoint('updateMany');
@@ -855,6 +938,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         create: resolveEndpoint('create') ? create : null,
         updateField: resolveEndpoint('updateField') ? updateField : null,
         update: resolveEndpoint('update') ? update : null,
+        updateFD: resolveEndpoint('update') ? updateFD : null,
         updateMany: resolveEndpoint('updateMany') ? updateMany : null,
         remove: resolveEndpoint('delete') ? remove : null,
         removeMany: resolveEndpoint('deleteMany') ? removeMany : null,

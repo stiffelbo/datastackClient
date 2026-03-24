@@ -12,14 +12,20 @@ const EmployeeDetails = ({id, row, entity, rwd, dashboard}) => {
         dashboard.setTab(null);
     }
 
-    return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
+    //we need to remove data from 'profile_url' field, because it is not used in edit form, and it causes error when we try to submit the form
+    const modifiedRow = { ...row };
+    if(row) {
+        modifiedRow.profile_url = '';
+    }   
 
+    return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
+        
         <FormTemplate 
             formLabel={"Edytuj Pracownika"}
             sendFormData={false}
-            data={row}
+            data={modifiedRow}
             schema={entity.schema.editForm.schema}    
-            onSubmit={(data) => entity.update(id, data)}    
+            onSubmit={(data) => entity.updateFD(id, data)}    
             onCancel={onCancel}
         />  
     </Box>

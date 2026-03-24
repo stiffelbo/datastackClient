@@ -5,28 +5,23 @@ import { Box } from '@mui/material';
 
 import FormTemplate from '../../components/powerTable/form/formTemplate';
 
-const StructureDetails = ({id, row, entity, rwd, dashboard}) => {
+const UserDetails = ({id, row, entity, rwd, dashboard}) => {
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
     }
-
-     //we need to remove data from 'profile_url' field, because it is not used in edit form, and it causes error when we try to submit the form
-    const modifiedRow = { ...row };
-    if(row) {
-        modifiedRow.profile_url = '';
-    }   
-
+    
     return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
+
         <FormTemplate 
-            formLabel={"Edytuj Strukturę"}
+            formLabel={"Edytuj Użytkownika"}
+            data={row}
             sendFormData={false}
-            data={modifiedRow}
             schema={entity.schema.editForm.schema}    
-            onSubmit={(data) => entity.updateFD(id, data)}    
+            onSubmit={(data) => entity.update(id, data)}    
             onCancel={onCancel}
         />  
     </Box>
 }
 
-export default StructureDetails;
+export default UserDetails;

@@ -5,6 +5,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 import PageUser from './PageUser';
 import UsersProcess from './UsersProcess';
 import BrigadeMapper from './BrigadeMapper';
+import UserDetails from './UserDetails';
 
 const UsersPage = ({
   entityName,
@@ -22,6 +23,12 @@ const UsersPage = ({
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
+      key: 'details',
+      label: 'Szczegóły',
+      pageKey: 'user.details', // klucz z rejestru stron
+      component: <UserDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
       key: 'pages',
       label: 'Strony',
       pageKey: 'user.pages', // klucz z rejestru stron
@@ -37,13 +44,14 @@ const UsersPage = ({
       key: 'brygady',
       label: 'Brygady',
       pageKey: 'user.brigades', // klucz z rejestru stron
-      component: <BrigadeMapper id={id} row={row} rwd={rwd}/>,
+      component: <BrigadeMapper id={id} data={row} rwd={rwd}/>,
     },
     // itd...
   ];
 
   return (
     <BaseEntityPage
+      headerFields={['first_name', 'last_name', 'role']}
       entityName={entityName}
       id={id}
       rows={rows}
