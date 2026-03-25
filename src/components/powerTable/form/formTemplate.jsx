@@ -36,7 +36,7 @@ import { Row, Col } from '../grid/flexGrid'; // Twój flex grid
 import BulkPreview from './bulkPreview';
 
 //Utils
-import { bulkFormState, createInitialStateFromSchema, applyCompute, normalizeOptions } from './utils';
+import { bulkFormState, createInitialStateFromSchema, createInitialBulkStateFromSchema, applyCompute, normalizeOptions } from './utils';
 const emptyColor = "#f6f6f6ff";
 
 // --- component ---
@@ -62,19 +62,26 @@ const FormTemplate = ({
 
   const validateFn = validator || validatorDefault;
 
-  const [formState, setFormState] = useState(() => createInitialStateFromSchema(data, schema));
+  const [formState, setFormState] = useState(() =>
+    mode === 'bulk'
+      ? createInitialBulkStateFromSchema(schema)
+      : createInitialStateFromSchema(data, schema)
+  );
   const [fileInputKeys, setFileInputKeys] = useState({});
   const [errors, setErrors] = useState({});
   const [isChanged, setIsChanged] = useState(false);
   const [isValid, setIsValid] = useState(true);
 
   useEffect(() => {
-    const init = createInitialStateFromSchema(data, schema);
+    const init = mode === 'bulk'
+      ? createInitialBulkStateFromSchema(schema)
+      : createInitialStateFromSchema(data, schema);
+
     const computed = applyCompute(init, schema);
     setFormState(computed);
     setErrors({});
     setIsChanged(false);
-  }, [JSON.stringify(data), JSON.stringify(schema)]);
+  }, [mode, JSON.stringify(data), JSON.stringify(schema)]);
 
   useEffect(() => {
     setIsChanged(false);

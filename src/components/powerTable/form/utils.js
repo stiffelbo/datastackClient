@@ -8,7 +8,6 @@
  * @returns {Object} out - obiekt z polami do wysłania
  */
 export const bulkFormState = (formState = {}, schema = []) => {
-  // stworzymy mapę schema by szybciej patrzeć typy po nazwie
   const schemaMap = {};
   (Array.isArray(schema) ? schema : []).forEach(f => {
     if (f && f.name) schemaMap[f.name] = f;
@@ -18,29 +17,23 @@ export const bulkFormState = (formState = {}, schema = []) => {
     if (!field) return false;
     const t = (field.type || '').toString().toLowerCase();
     if (t === 'number') return true;
-    // obsłuż różne warianty typów z backendu/schematu
     return /int|decimal|float|numeric|double/.test(t);
   };
 
   const out = {};
-  Object.keys(formState || {}).forEach(key => {
+
+  Object.keys(formState || {}).forEach((key) => {
     const val = formState[key];
-
-    // 1) undefined => pomijamy (użytkownik nie zmienił)
-    if (typeof val === 'undefined') return;
-
     const field = schemaMap[key];
 
-    // 2) jeśli pole jest liczbowe i wartość to pusty string / tylko spacje => pomijamy
-    if (isNumericField(field)) {
-      if (typeof val === 'string' && val.trim() === '') {
-        return; // pomiń — nie wysyłamy pustego stringa dla numerów
-      }
-      // jeśli chcesz dodatkowo znormalizować '12,34' -> 12.34 to zrób to tutaj przed przypisaniem
-      // np. out[key] = toNum(val);
+    // brak zmiany
+    if (typeof val === 'undefined') return;
+
+    // number: pusty string traktujemy jako brak zmiany
+    if (isNumericField(field) && typeof val === 'string' && val.trim() === '') {
+      return;
     }
 
-    // 3) dla pozostałych przypadków: do out trafia wszystko poza undefined
     out[key] = val;
   });
 
@@ -102,6 +95,17 @@ export const createInitialStateFromSchema = (data = {}, schema = []) => {
         initial[f.name] = '';
         break;
     }
+  });
+
+  return initial;
+};
+
+export const createInitialBulkStateFromSchema = (schema = []) => {
+  const initial = {};
+
+  schema.forEach((f) => {
+    if (!f || !f.name) return;
+    initial[f.name] = undefined;
   });
 
   return initial;
