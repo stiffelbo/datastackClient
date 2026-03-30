@@ -643,6 +643,22 @@ const FormTemplate = ({
             </Col>
           );
         }
+        case 'custom':
+          return (
+            <Col key={field.name} {...colProps}>
+              {typeof field.render === 'function'
+                ? field.render({
+                    value,
+                    field,
+                    formState,
+                    setField,
+                    errors,
+                    row: data,
+                    mode,
+                  })
+                : null}
+            </Col>
+          );
 
         default:
           // fallback: generic text input

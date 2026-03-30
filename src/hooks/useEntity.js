@@ -651,8 +651,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
         try {
             const payload = toFormData({ id, ...changes });
-
-            console.log('updateFD payload', payload);
             const res = await http.post(url, payload);
             const ok = !!res.updated;
 
