@@ -31,6 +31,7 @@ import JiraIssueMaterialUsageLog from './pages/jiraIssueMaterialUsageLog/JiraIss
 import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperationLog';
 import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
+import JiraIssueRawLogs from './pages/jiraIssueRawLogs/JiraIssueRawLogs';
 import UserDashboard from './components/user/UserDashboard';
 import NotFound from './pages/NotFound';
 
@@ -62,7 +63,7 @@ const App = () => (
         <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
         <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
-        
+        <Route path="jiraissuerawlogs" element={<JiraIssueRawLogs />} />
         <Route path="deptcosts" element={<Costs />} />
 
         <Route path="migrations" element={<Migrations />} />
