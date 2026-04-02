@@ -116,9 +116,9 @@ export function downloadTemplate(importSchema = [], filename = null) {
 //HELPERS
 // --- prosta normalizacja dat ---
 const EXCEL_EPOCH = 25569;      // Excel -> Unix epoch offset (dni)
-const MS_PER_DAY  = 86400000;
+const MS_PER_DAY = 86400000;
 const pad2 = (n) => String(n).padStart(2, '0');
-const ymdUTC = (d) => `${d.getUTCFullYear()}-${pad2(d.getUTCMonth()+1)}-${pad2(d.getUTCDate())}`;
+const ymdUTC = (d) => `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
 
 const isExcelSerial = (n) => typeof n === 'number' && isFinite(n) && n > 20000 && n < 90000;
 const excelToDate = (n) => {
@@ -188,11 +188,10 @@ export function normalizeToIsoDate(val) {
       const mm = Number(mdy[1]);
       const dd = Number(mdy[2]);
       const yyyy = Number(mdy[3]);
-      // parsuj jako MDY tylko jeśli jednoznaczne (np. 13/02/2025)
-      if ((mm > 12 && dd <= 31) || (dd > 12 && mm <= 12)) {
-        const y = yyyy, m = mm, d = dd;
-        const dt = new Date(Date.UTC(y, m - 1, d));
-        if (!isNaN(dt)) return toIsoYmd(y, m, d);
+
+      // tylko jednoznaczny MDY: np. 02/13/2025
+      if (mm >= 1 && mm <= 12 && dd > 12 && dd <= 31) {
+        return toIsoYmd(yyyy, mm, dd);
       }
     }
   }
