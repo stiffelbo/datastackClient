@@ -10,6 +10,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import UserAvatarIcon from './UserAvatarIcon.jsx';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import AppVersion from './AppVersion';
 
 
@@ -27,8 +28,10 @@ const UserDropdown = () => {
     const handleMenuClose = () => setAnchorEl(null);
 
     const pages = user?.pages;
+    const processes = user?.processes;
     const userData = user?.userData || {};
 
+    console.log(user);
     return (
         <Box>
             <IconButton size="large" color="inherit" onClick={handleMenuOpen}>
@@ -42,6 +45,22 @@ const UserDropdown = () => {
                         {userData.name} {userData.last_name} 
                         <Chip label={userData.role} size="small" variant="outlined" color="default" sx={{ ml: 1 }} />
                     </Typography>        
+                    
+                    {processes && processes.length > 0 && (
+                        <Button
+                            component={RouterLink}
+                            to="/userlogform"
+                            startIcon={<AccessAlarmIcon />}
+                            variant="text"
+                            color='default'
+                            size="small"
+                            sx={{ mt: 1 }}
+                            onClick={handleMenuClose}
+                        >
+                            Logi użytkownika
+                        </Button>
+                    )}
+
                     <Button
                         component={RouterLink}
                         to="/userdashboard"

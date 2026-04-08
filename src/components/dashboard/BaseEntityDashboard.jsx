@@ -11,13 +11,16 @@ import { useDashboard } from '../../context/DashboardContext';
 import PowerTable from '../../components/powerTable/powerTable';
 import DashboardLayout from './DashboardLayout';
 
+//modes: dashboard (lista + strona), list-only (tylko lista, bez synchronizacji z URL i bez zaznaczania wierszy), single-page (tylko strona, bez listy, synchronizacja tabów)
+
 const BaseEntityDashboard = ({
   entityName,
   entity,
   renderPage,   // <EmployeePage entity={entity} />
   basePath,// np. "/employees"
   listProps = {},
-  refreshId = false
+  refreshId = false,
+  mode = 'dashboard' // albo 'list-only'
 }) => {
   const { width, height } = useRwd();
   const dashboard = useDashboard(entityName);
@@ -147,6 +150,7 @@ const BaseEntityDashboard = ({
       onResizeEnd={(ratio) => {
         console.log(`[Dashboard][${entityName}] leftRatio:`, ratio);
       }}
+      mode={mode}
     />
   );
 };

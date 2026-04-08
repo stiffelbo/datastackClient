@@ -414,19 +414,21 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
         setLoading(true);
         try {
-            const url = resolveEndpoint('get');
-            if (!url) {
-                setRows([]);
-                return ['no url'];
-            }
-            const activeSchema = schemaOverride || schema;
-
             let params = {};
 
             if (query && typeof query === 'object') {
                 params = { ...params, ...query };
             }
 
+            const url = resolveEndpoint('get');
+
+            if (!url) {
+                setRows([]);
+                return ['no url'];
+            }
+            const activeSchema = schemaOverride || schema;
+
+         
             if (activeSchema?.mapper?.itemField && itemId != null) {
                 params[activeSchema.mapper.itemField] = itemId;
             }

@@ -90,6 +90,9 @@ const MainNav = ({ pages }) => {
     else if (page === 'userdashboard') {
       activePageLabel = 'Panel użytkownika';
     }
+    else if (page === 'userlogform') {
+      activePageLabel = 'Logi użytkownika';
+    }
     else {
       const activePage = pages.find((p) => p.name === page);
       if (!activePage) return null;

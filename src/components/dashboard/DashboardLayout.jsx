@@ -1,4 +1,3 @@
-// dashboard/DashboardLayout.jsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 
@@ -6,13 +5,14 @@ import { Box } from '@mui/material';
  * DashboardLayout
  *
  * Props:
- * - left: ReactNode – widok listy (PowerTable / cokolwiek)
- * - right: ReactNode – strona rekordu
- * - showRight: bool – czy pokazać panel po prawej
- * - initialLeftRatio: number (0–1) – startowa szerokość lewej kolumny przy showRight=true (domyślnie 0.4)
- * - minLeftRatio: number (0–1) – minimalna szerokość lewej (domyślnie 0.2)
- * - maxLeftRatio: number (0–1) – maksymalna szerokość lewej (domyślnie 0.8)
- * - onResizeEnd?: (leftRatio: number) => void – wywołane po zakończeniu przeciągania
+ * - left: ReactNode – widok listy
+ * - right: ReactNode – widok szczegółów
+ * - showRight: bool – czy w trybie "dashboard" pokazać prawy panel
+ * - initialLeftRatio: number (0–1)
+ * - minLeftRatio: number (0–1)
+ * - maxLeftRatio: number (0–1)
+ * - onResizeEnd?: (leftRatio: number) => void
+ * - mode: 'dashboard' | 'listonly' | 'singlepage'
  */
 const DashboardLayout = ({
   left,
@@ -22,15 +22,23 @@ const DashboardLayout = ({
   minLeftRatio = 0.2,
   maxLeftRatio = 0.8,
   onResizeEnd,
+  mode = 'dashboard',
 }) => {
   const containerRef = useRef(null);
   const [leftRatio, setLeftRatio] = useState(initialLeftRatio);
   const [isDragging, setIsDragging] = useState(false);
 
-  // helper do clamp
   const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
 
+  const isDashboard = mode === 'dashboard';
+  const isListOnly = mode === 'listonly';
+  const isSinglePage = mode === 'singlepage';
+
+  const showLeftPanel = isDashboard || isListOnly;
+  const showRightPanel = isDashboard ? !!showRight : isSinglePage;
+
   const handleMouseDown = (e) => {
+    if (!isDashboard || !showRightPanel) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
@@ -38,29 +46,29 @@ const DashboardLayout = ({
 
   const handleMouseMove = useCallback(
     (e) => {
-      if (!isDragging || !containerRef.current || !showRight) return;
+      if (!isDragging || !containerRef.current || !isDashboard || !showRightPanel) {
+        return;
+      }
 
       const rect = containerRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const ratio = x / rect.width;
 
-      setLeftRatio((prev) => {
-        const next = clamp(ratio, minLeftRatio, maxLeftRatio);
-        return next;
-      });
+      setLeftRatio(clamp(ratio, minLeftRatio, maxLeftRatio));
     },
-    [isDragging, showRight, minLeftRatio, maxLeftRatio]
+    [isDragging, isDashboard, showRightPanel, minLeftRatio, maxLeftRatio]
   );
 
   const handleMouseUp = useCallback(() => {
     if (!isDragging) return;
+
     setIsDragging(false);
-    if (onResizeEnd && showRight) {
+
+    if (onResizeEnd && isDashboard && showRightPanel) {
       onResizeEnd(leftRatio);
     }
-  }, [isDragging, onResizeEnd, leftRatio, showRight]);
+  }, [isDragging, onResizeEnd, leftRatio, isDashboard, showRightPanel]);
 
-  // globalne nasłuchiwanie myszki przy drag
   useEffect(() => {
     if (!isDragging) return;
 
@@ -73,8 +81,12 @@ const DashboardLayout = ({
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // przy braku prawego panelu lewy ma zawsze 100%
-  const effectiveLeftRatio = showRight ? leftRatio : 1;
+  const effectiveLeftRatio =
+    isDashboard
+      ? (showRightPanel ? leftRatio : 1)
+      : isListOnly
+        ? 1
+        : 0;
 
   return (
     <Box
@@ -89,22 +101,25 @@ const DashboardLayout = ({
         cursor: isDragging ? 'col-resize' : 'default',
       }}
     >
-      {/* LEFT PANEL */}
-      <Box
-        sx={{
-          flex: '0 0 auto',
-          width: `${effectiveLeftRatio * 100}%`,
-          maxWidth: `${effectiveLeftRatio * 100}%`,
-          minWidth: 0,
-          overflow: 'hidden',
-          transition: isDragging ? 'none' : 'max-width 0.2s ease-in-out, width 0.2s ease-in-out',
-        }}
-      >
-        {left}
-      </Box>
+      {showLeftPanel && (
+        <Box
+          sx={{
+            flex: '0 0 auto',
+            width: `${effectiveLeftRatio * 100}%`,
+            maxWidth: `${effectiveLeftRatio * 100}%`,
+            minWidth: 0,
+            height: '100%',
+            overflow: 'hidden',
+            transition: isDragging
+              ? 'none'
+              : 'max-width 0.2s ease-in-out, width 0.2s ease-in-out',
+          }}
+        >
+          {left}
+        </Box>
+      )}
 
-      {/* RESIZER */}
-      {showRight && (
+      {isDashboard && showRightPanel && (
         <Box
           onMouseDown={handleMouseDown}
           sx={{
@@ -113,23 +128,22 @@ const DashboardLayout = ({
             cursor: 'col-resize',
             position: 'relative',
             zIndex: 10,
+            backgroundColor: isDragging ? 'rgba(0,0,0,0.12)' : 'transparent',
             '&:hover': {
               backgroundColor: 'rgba(0,0,0,0.08)',
             },
-            backgroundColor: isDragging ? 'rgba(0,0,0,0.12)' : 'transparent',
           }}
         />
       )}
 
-      {/* RIGHT PANEL */}
-      {showRight && (
+      {showRightPanel && (
         <Box
           sx={{
             flex: '1 1 auto',
             minWidth: 0,
-            borderLeft: '1px solid #ddd',
             height: '100%',
             overflow: 'hidden',
+            borderLeft: isDashboard ? '1px solid #ddd' : 'none',
           }}
         >
           {right}

@@ -33,10 +33,12 @@ import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/J
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
 import JiraIssueRawLogs from './pages/jiraIssueRawLogs/JiraIssueRawLogs';
 import UserDashboard from './components/user/UserDashboard';
+import UserLogForm from './pages/users/UserLogForm';
 import NotFound from './pages/NotFound';
 
 //DevOnly
 import Comments from './pages/_dev/Comments';
+import JiraIssueSingle from './pages/jiraIssue/JiraIssueSingle';
 
 const App = () => (
     <Routes>
@@ -98,8 +100,11 @@ const App = () => (
 
         <Route path="jiraissue/:id/:tab" element={<JiraIssue />} />
         <Route path="jiraissue/:id" element={<JiraIssue />} />
-        <Route path="jiraissue" element={<JiraIssue />} />        
+        <Route path="jiraissue" element={<JiraIssue />} />    
 
+        <Route path="jiraissuesingle/:id/:tab" element={<JiraIssueSingle />} />
+        <Route path="jiraissuesingle/:id" element={<JiraIssueSingle />} />
+  
         <Route path="contractor/:id/:tab" element={<Contractor />} />
         <Route path="contractor/:id" element={<Contractor />} />
         <Route path="contractor" element={<Contractor />} />
@@ -121,6 +126,7 @@ const App = () => (
         <Route path="materials" element={<Materials />} />
 
         <Route path="userdashboard" element={<UserDashboard />} />
+        <Route path="userlogform" element={<UserLogForm />} />
         <Route path="_dev" element={<Comments />} />
         <Route path="*" element={<NotFound />} />
       </Route>
