@@ -524,7 +524,7 @@ export default function UsersTechStack() {
                         <TableRow>
                             <TableCell colSpan={7}>
                                 <Typography variant="body2" color="text.secondary">
-                                    {emptyMessage}
+                                    Brak przypisanych procesów.
                                 </Typography>
                             </TableCell>
                         </TableRow>
