@@ -24,7 +24,7 @@ function getTaskKey(task) {
     );
 }
 
-export default function useLogForm({ onSubmit, initialValues = {} }) {
+export default function useTasks({ onSubmit, initialValues = {} }) {
     const [tasks, setTasks] = useState(
         Array.isArray(initialValues.tasks) ? initialValues.tasks : []
     );
@@ -52,7 +52,7 @@ export default function useLogForm({ onSubmit, initialValues = {} }) {
     }
 
     function addTask(task) {
-        if (!task || typeof task !== 'object') return;
+        if (!task || typeof task !== "object") return;
 
         const identity = getTaskIdentity(task);
         if (!identity) return;
@@ -64,7 +64,15 @@ export default function useLogForm({ onSubmit, initialValues = {} }) {
 
             if (exists) return prev;
 
-            return [...prev, task];
+            return [
+                ...prev,
+                {
+                    ...task,
+                    report: {
+                        quantity: task?.report?.quantity ?? null,
+                    },
+                },
+            ];
         });
     }
 
@@ -81,12 +89,47 @@ export default function useLogForm({ onSubmit, initialValues = {} }) {
         );
     }
 
+    function setTaskQuantity(taskOrId, quantity) {
+        const identity =
+            typeof taskOrId === "object"
+                ? getTaskIdentity(taskOrId)
+                : taskOrId;
+
+        if (!identity) return;
+
+        setTasks((prev) =>
+            prev.map((task) =>
+                getTaskIdentity(task) === identity
+                    ? {
+                        ...task,
+                        report: {
+                            ...task.report,
+                            quantity,
+                        },
+                    }
+                    : task
+            )
+        );
+    }
+
     function clearTasks() {
         setTasks([]);
     }
 
     function replaceTasks(nextTasks) {
-        setTasks(Array.isArray(nextTasks) ? nextTasks : []);
+        if (!Array.isArray(nextTasks)) {
+            setTasks([]);
+            return;
+        }
+
+        setTasks(
+            nextTasks.map((task) => ({
+                ...task,
+                report: {
+                    quantity: task?.report?.quantity ?? null,
+                },
+            }))
+        );
     }
 
     function submit() {
@@ -115,6 +158,7 @@ export default function useLogForm({ onSubmit, initialValues = {} }) {
             removeTask,
             clearTasks,
             replaceTasks,
+            setTaskQuantity,
             submit,
         },
 

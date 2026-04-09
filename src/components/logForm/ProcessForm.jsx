@@ -1,73 +1,41 @@
-import React, { useMemo, useState, useEffect } from "react";
-import {
-    Box,
-    Stack,
-    Typography,
-} from "@mui/material";
+import React from "react";
+import { Box, Stack } from "@mui/material";
 
-import InputSelectObject from "./InputSelectObject";
-import InputNumber from "./InputNumber";
+import ProcessSelector from "./ProcessSelector";
+import MachineUsageForm from "./MachineUsageForm";
+import MaterialsUsageTable from "./MaterialsUsageTable";
 
-import { processesDto } from "./dto/processesDto";
+const ProcessForm = ({
+    processForm,
+    disabled = false,
+}) => {
+    function renderMachineSection() {
+        if (!processForm?.computed?.hasMachines) return null;
 
-const ProcessForm = ({ user, onChange }) => {
-    const processes = useMemo(
-        () => processesDto(user?.processes),
-        [user?.processes]
-    );
+        return (
+            <MachineUsageForm
+                machineId={processForm.state.machineId}
+                machineOptions={processForm.options.machineOptions}
+                machineTime={processForm.state.machineTime}
+                onMachineChange={processForm.actions.handleMachineChange}
+                onMachineTimeChange={processForm.actions.handleMachineTimeChange}
+                disabled={disabled}
+            />
+        );
+    }
 
-    const [processId, setProcessId] = useState("");
-    const [machineId, setMachineId] = useState("");
-    const [materials, setMaterials] = useState({});
+    function renderMaterialsSection() {
+        if (!processForm?.computed?.hasMaterials) return null;
 
-    const selectedProcess = useMemo(
-        () => processes.find((p) => String(p.id) === String(processId)) ?? null,
-        [processes, processId]
-    );
-
-    // 🔴 reset zależnych danych przy zmianie procesu
-    useEffect(() => {
-        setMachineId("");
-        setMaterials({});
-    }, [processId]);
-
-    // 🔴 emit do parenta
-    useEffect(() => {
-        if (typeof onChange !== "function") return;
-
-        onChange({
-            processId,
-            process: selectedProcess,
-            machineId,
-            materials,
-        });
-    }, [processId, machineId, materials, selectedProcess, onChange]);
-
-    const handleProcessChange = (val) => {
-        setProcessId(val);
-    };
-
-    const handleMachineChange = (val) => {
-        setMachineId(val);
-    };
-
-    const handleMaterialChange = (materialId, value) => {
-        setMaterials((prev) => ({
-            ...prev,
-            [materialId]: value,
-        }));
-    };
-
-    const processOptions = processes.map((p) => ({
-        id: p.id,
-        val: p.name,
-        title: p.description,
-    }));
-
-    const machineOptions = selectedProcess?.machines?.map((m) => ({
-        id: m.id,
-        val: m.name,
-    })) ?? [];
+        return (
+            <MaterialsUsageTable
+                materials={processForm.data.materials}
+                value={processForm.state.materialsReport}
+                onFieldChange={processForm.actions.handleMaterialFieldChange}
+                disabled={disabled}
+            />
+        );
+    }
 
     return (
         <Box
@@ -79,50 +47,15 @@ const ProcessForm = ({ user, onChange }) => {
             }}
         >
             <Stack spacing={2}>
-                <Typography variant="subtitle2" fontWeight={600}>
-                    Proces
-                </Typography>
-
-                {/* SELECT PROCESU */}
-                <InputSelectObject
-                    selectOptions={processOptions}
-                    value={processId}
-                    label="Wybierz czynność"
-                    onChange={handleProcessChange}
+                <ProcessSelector
+                    value={processForm.state.processId}
+                    options={processForm.options.processOptions}
+                    onChange={processForm.actions.handleProcessChange}
+                    disabled={disabled}
                 />
 
-                {/* MASZYNY */}
-                {selectedProcess?.machines?.length > 0 && (
-                    <InputSelectObject
-                        selectOptions={machineOptions}
-                        value={machineId}
-                        label="Maszyna"
-                        onChange={handleMachineChange}
-                    />
-                )}
-
-                {/* MATERIAŁY */}
-                {selectedProcess?.materials?.length > 0 && (
-                    <Stack spacing={2}>
-                        <Typography variant="body2" fontWeight={500}>
-                            Materiały
-                        </Typography>
-
-                        {selectedProcess.materials.map((material) => (
-                            <InputNumber
-                                key={material.id}
-                                label={`${material.name}${material.unit ? ` (${material.unit})` : ""}`}
-                                value={materials[material.id] ?? ""}
-                                required={material.required}
-                                step={material.step}
-                                min={0}
-                                onChange={(val) =>
-                                    handleMaterialChange(material.id, val)
-                                }
-                            />
-                        ))}
-                    </Stack>
-                )}
+                {renderMachineSection()}
+                {renderMaterialsSection()}
             </Stack>
         </Box>
     );

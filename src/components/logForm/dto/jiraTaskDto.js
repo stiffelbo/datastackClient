@@ -18,7 +18,7 @@
 export function mapJiraTaskResponseToDto(response) {
     if (!response || typeof response !== 'object') return null;
 
-    const raw = {...response.data, ...response.existing};
+    const raw = { ...response.existing, ...response.data };
     
     if (!raw) return null;
 
@@ -32,6 +32,10 @@ export function mapJiraTaskResponseToDto(response) {
         name: raw.name ?? null,
         status: raw.status ?? null,
         productGroup: raw.product_group ?? null,
+        //placeholder for reports
+        report : {
+            quantity: null, //tutaj można dodać ilosc nominalną lub pozostałą do produkcji, w zależności od potrzeb
+        },
     };
 }
 

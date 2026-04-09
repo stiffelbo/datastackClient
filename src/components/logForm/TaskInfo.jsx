@@ -9,7 +9,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
-export default function TaskInfo({ data, onAdd = null, onRemove = null, sx = {} }) {
+export default function TaskInfo({
+    data,
+    onAdd = null,
+    onRemove = null,
+    sx = {},
+    children = null,
+}) {
     if (!data) return null;
 
     if (!data.id) {
@@ -32,7 +38,7 @@ export default function TaskInfo({ data, onAdd = null, onRemove = null, sx = {} 
         }
     };
 
-    const renderAction = () => {
+    function renderAction() {
         if (typeof onAdd === 'function') {
             return (
                 <Button
@@ -60,7 +66,17 @@ export default function TaskInfo({ data, onAdd = null, onRemove = null, sx = {} 
         }
 
         return null;
-    };
+    }
+
+    function renderChildren() {
+        if (!children) return null;
+
+        return (
+            <Stack sx={{ pt: 0.5 }}>
+                {children}
+            </Stack>
+        );
+    }
 
     return (
         <Alert
@@ -119,6 +135,8 @@ export default function TaskInfo({ data, onAdd = null, onRemove = null, sx = {} 
                         Parent: {data.jiraParentKey}
                     </Typography>
                 ) : null}
+
+                {renderChildren()}
             </Stack>
         </Alert>
     );
