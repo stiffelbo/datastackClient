@@ -56,6 +56,26 @@ const TimeForm = ({
 
     const lastValueRef = useRef(null);
 
+    //Props Value effect
+    useEffect(() => {
+        const nextDate = value?.date ?? todayISO();
+        const nextStart = value?.start ?? "";
+        const nextEnd = value?.end ?? "";
+        const nextDuration = value?.duration ?? "";
+
+        setDate((prev) => (prev === nextDate ? prev : nextDate));
+        setStart((prev) => (prev === nextStart ? prev : nextStart));
+        setEnd((prev) => (prev === nextEnd ? prev : nextEnd));
+        setDuration((prev) => {
+            const prevNormalized = prev === null || prev === undefined ? "" : String(prev);
+            const nextNormalized =
+                nextDuration === null || nextDuration === undefined ? "" : String(nextDuration);
+
+            return prevNormalized === nextNormalized ? prev : nextDuration;
+        });
+    }, [value?.date, value?.start, value?.end, value?.duration]);
+
+    //Converter
     useEffect(() => {
         if (typeof onChange !== "function") return;
 

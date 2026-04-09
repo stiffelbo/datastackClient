@@ -31,7 +31,6 @@ const UserDropdown = () => {
     const processes = user?.processes;
     const userData = user?.userData || {};
 
-    console.log(user);
     return (
         <Box>
             <IconButton size="large" color="inherit" onClick={handleMenuOpen}>

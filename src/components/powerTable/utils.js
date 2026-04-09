@@ -427,9 +427,12 @@ export const buildTreeByParent = (
     const node = map[id];
     if (!node) return;
 
+    const isSelfParent = parentId === id;
+
     const isRoot =
       parentId === rootValue ||
       parentId == null ||
+      isSelfParent ||
       !map[parentId]; // brak rodzica w danych → też root
 
     if (isRoot) {
@@ -448,7 +451,7 @@ export const buildTreeByParent = (
         count += countDescendants(child); // jego potomkowie
       });
     }
-    node.__totalDescendants = count; // zapisujemy meta na node'cie
+    node.__totalDescendants = count;
     return count;
   };
 
@@ -458,7 +461,6 @@ export const buildTreeByParent = (
 
   return [roots, map];
 };
-
 
 /**
  * Spłaszcza drzewo do listy, z poziomem i path.

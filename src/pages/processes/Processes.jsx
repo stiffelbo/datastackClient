@@ -14,7 +14,13 @@ const endpoint = "/processes/";
 const Dashboard = () => {
     
     const entity = useEntity({ entityName, endpoint });
-    
+    const listProps =     {
+                    treeConfig: {
+                        parentField: 'master_process_id',
+                        idField: 'id',
+                        rootValue: null
+                    }
+                };
     return (
         <BaseEntityDashboard
             renderPage={(props) => <ProcessPage entity={entity} entityName={entityName} {...props} />}
@@ -22,13 +28,7 @@ const Dashboard = () => {
             entityName={entityName}
             basePath={basePath}
             listProps={
-                {
-                    treeConfig: {
-                        parentField: 'master_process_id',
-                        idField: 'id',
-                        rootValue: null
-                    }
-                }
+                listProps
             }
         />
     );

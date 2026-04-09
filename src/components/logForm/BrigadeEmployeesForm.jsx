@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import {
     Box,
     Checkbox,
@@ -6,10 +6,8 @@ import {
     Stack,
     Typography,
     Chip,
-    Divider,
 } from "@mui/material";
 
-import { brigadeEmployeesDto } from "./dto/brigadesDto";
 import TimeForm from "./TimeForm";
 
 function normalizeTimeValue(value = null) {
@@ -21,93 +19,146 @@ function normalizeTimeValue(value = null) {
     };
 }
 
-function isSameTime(a = {}, b = {}) {
-    return (
-        (a?.date ?? "") === (b?.date ?? "") &&
-        (a?.start ?? "") === (b?.start ?? "") &&
-        (a?.end ?? "") === (b?.end ?? "") &&
-        String(a?.duration ?? "") === String(b?.duration ?? "")
-    );
+function getEmployeeTime(employee, employeeTimes, initialTime) {
+    const fromMap = employeeTimes?.[employee.id];
+    if (fromMap) return normalizeTimeValue(fromMap);
+
+    if (employee?.time) return normalizeTimeValue(employee.time);
+
+    return normalizeTimeValue(initialTime);
 }
 
 const BrigadeEmployeesForm = ({
-    user,
-    onChange,
-    title = "Pracownicy",
-    selectAllByDefault = true,
+    employees = [],
+    selectedIds = [],
+    employeeTimes = {},
     initialTime = null,
+    title = "Pracownicy",
+    emptyMessage = "Brak pracowników w brygadzie.",
+    showToolbar = true,
+    disabled = false,
+    onToggle,
+    onSelectAll,
+    onClear,
+    onEmployeeTimeChange,
 }) => {
+    function renderToolbar() {
+        if (!showToolbar) return null;
 
-    console.log("BrigadeEmployeesForm render", { initialTime });
-
-    const employees = useMemo(
-        () => brigadeEmployeesDto(user?.brigades),
-        [user?.brigades]
-    );
-
-    const normalizedInitialTime = useMemo(
-        () => normalizeTimeValue(initialTime),
-        [initialTime]
-    );
-
-    const [selectedIds, setSelectedIds] = useState([]);
-    const [employeeTimes, setEmployeeTimes] = useState({});
-
-    function buildWorklogMap(ids, times, employeesList) {
-        const selectedEmployees = employeesList.filter((item) =>
-            ids.includes(item.id)
+        return (
+            <Stack direction="row" spacing={0.75}>
+                <Chip
+                    label={`Wybrano: ${selectedIds.length}`}
+                    size="small"
+                    variant="outlined"
+                />
+                <Chip
+                    label="Wszyscy"
+                    size="small"
+                    onClick={disabled ? undefined : onSelectAll}
+                    clickable={!disabled}
+                    variant="outlined"
+                />
+                <Chip
+                    label="Wyczyść"
+                    size="small"
+                    onClick={disabled ? undefined : onClear}
+                    clickable={!disabled}
+                    variant="outlined"
+                />
+            </Stack>
         );
-
-        const worklogMap = {};
-        selectedEmployees.forEach((employee) => {
-            worklogMap[employee.id] = normalizeTimeValue(times[employee.id]);
-        });
-
-        return {
-            employeeIds: ids,
-            employees: selectedEmployees,
-            employeeTimes: worklogMap,
-        };
     }
 
-    function emitChange(nextIds, nextTimes, employeesList = employees) {
-        if (typeof onChange !== "function") return;
-        onChange(buildWorklogMap(nextIds, nextTimes, employeesList));
+    function renderEmpty() {
+        return (
+            <Typography variant="body2" color="text.secondary">
+                {emptyMessage}
+            </Typography>
+        );
     }
 
-    const handleToggle = (employeeId) => {
-        setSelectedIds((prev) => {
-            const nextIds = prev.includes(employeeId)
-                ? prev.filter((id) => id !== employeeId)
-                : [...prev, employeeId];
+    function renderEmployee(employee) {
+        const checked = selectedIds.includes(employee.id);
+        const employeeTime = getEmployeeTime(employee, employeeTimes, initialTime);
 
-            emitChange(nextIds, employeeTimes);
-            return nextIds;
-        });
-    };
+        return (
+            <Box
+                key={employee.id}
+                sx={{
+                    border: "1px solid",
+                    borderColor: checked ? "primary.main" : "divider",
+                    borderRadius: 1.5,
+                    px: 1.25,
+                    py: 1,
+                    bgcolor: checked ? "transparent" : "action.selected",
+                }}
+            >
+                <Stack spacing={1}>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        flexWrap="wrap"
+                        gap={1}
+                    >
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    size="small"
+                                    checked={checked}
+                                    disabled={disabled}
+                                    onChange={() => onToggle?.(employee.id)}
+                                />
+                            }
+                            label={
+                                <Stack spacing={0}>
+                                    <Typography variant="body2" fontWeight={600}>
+                                        {employee.fullName || "—"}
+                                    </Typography>
 
-    const handleSelectAll = () => {
-        const nextIds = employees.map((item) => item.id);
-        setSelectedIds(nextIds);
-        emitChange(nextIds, employeeTimes);
-    };
+                                    {employee.occupationName ? (
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            {employee.occupationName}
+                                        </Typography>
+                                    ) : null}
+                                </Stack>
+                            }
+                            sx={{ alignItems: "center", m: 0 }}
+                        />
 
-    const handleClear = () => {
-        setSelectedIds([]);
-        emitChange([], employeeTimes);
-    };
+                        {employee.optimaGid ? (
+                            <Typography variant="caption" color="text.secondary">
+                                {employee.optimaGid}
+                            </Typography>
+                        ) : null}
+                    </Stack>
 
-    const handleEmployeeTimeChange = (employeeId, nextTime) => {
-        setEmployeeTimes((prev) => {
-            const nextTimes = {
-                ...prev,
-                [employeeId]: normalizeTimeValue(nextTime),
-            };
+                    <TimeForm
+                        value={employeeTime}
+                        onChange={(nextValue) =>
+                            onEmployeeTimeChange?.(employee.id, nextValue)
+                        }
+                        label="Czas"
+                        dense
+                        disabled={disabled || !checked}
+                    />
+                </Stack>
+            </Box>
+        );
+    }
 
-            emitChange(selectedIds, nextTimes);
-            return nextTimes;
-        });
-    };
+    function renderList() {
+        return <Stack spacing={1}>{employees.map(renderEmployee)}</Stack>;
+    }
+
+    function renderContent() {
+        if (!employees.length) return renderEmpty();
+        return renderList();
+    }
 
     return (
         <Box
@@ -130,112 +181,10 @@ const BrigadeEmployeesForm = ({
                         {title}
                     </Typography>
 
-                    <Stack direction="row" spacing={0.75}>
-                        <Chip
-                            label={`Wybrano: ${selectedIds.length}`}
-                            size="small"
-                            variant="outlined"
-                        />
-                        {employees.length > 0 && (
-                            <>
-                                <Chip
-                                    label="Wszyscy"
-                                    size="small"
-                                    onClick={handleSelectAll}
-                                    clickable
-                                    variant="outlined"
-                                />
-                                <Chip
-                                    label="Wyczyść"
-                                    size="small"
-                                    onClick={handleClear}
-                                    clickable
-                                    variant="outlined"
-                                />
-                            </>
-                        )}
-                    </Stack>
+                    {renderToolbar()}
                 </Stack>
 
-                {!employees.length ? (
-                    <Typography variant="body2" color="text.secondary">
-                        Brak pracowników w brygadzie.
-                    </Typography>
-                ) : (
-                    <Stack spacing={1}>
-                        {employees.map((employee) => {
-                            const checked = selectedIds.includes(employee.id);
-                            const employeeTime =
-                                employeeTimes[employee.id] ?? normalizedInitialTime;
-
-                            return (
-                                <Box
-                                    key={employee.id}
-                                    sx={{
-                                        border: "1px solid",
-                                        borderColor: checked ? "primary.main" : "divider",
-                                        borderRadius: 1.5,
-                                        px: 1.25,
-                                        py: 1,
-                                        bgcolor: checked ? "transparent" : "action.selected",
-                                    }}
-                                >
-                                    <Stack spacing={1}>
-                                        <Stack
-                                            direction="row"
-                                            alignItems="center"
-                                            justifyContent="space-between"
-                                            flexWrap="wrap"
-                                            gap={1}
-                                        >
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        size="small"
-                                                        checked={checked}
-                                                        onChange={() => handleToggle(employee.id)}
-                                                    />
-                                                }
-                                                label={
-                                                    <Stack spacing={0}>
-                                                        <Typography variant="body2" fontWeight={600}>
-                                                            {employee.fullName || "—"}
-                                                        </Typography>
-
-                                                        {employee.occupationName ? (
-                                                            <Typography
-                                                                variant="caption"
-                                                                color="text.secondary"
-                                                            >
-                                                                {employee.occupationName}
-                                                            </Typography>
-                                                        ) : null}
-                                                    </Stack>
-                                                }
-                                                sx={{ alignItems: "center", m: 0 }}
-                                            />
-
-                                            {employee.optimaGid ? (
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {employee.optimaGid}
-                                                </Typography>
-                                            ) : null}
-                                        </Stack>
-
-                                        <TimeForm
-                                            value={employeeTime}
-                                            onChange={(nextValue) =>
-                                                handleEmployeeTimeChange(employee.id, nextValue)
-                                            }
-                                            label="Czas"
-                                            dense
-                                        />
-                                    </Stack>
-                                </Box>
-                            );
-                        })}
-                    </Stack>
-                )}
+                {renderContent()}
             </Stack>
         </Box>
     );
