@@ -1,5 +1,9 @@
+import { defaultTime } from "../utils";
+
 export function brigadeEmployeesDto(data) {
     if (!Array.isArray(data)) return [];
+
+    const defaultTimeValue = defaultTime();
 
     return data.map((item) => {
         const details = item?.details ?? {};
@@ -14,8 +18,8 @@ export function brigadeEmployeesDto(data) {
             email: details?.email ?? "",
             active: details?.is_active === 1 || details?.is_active === "1" || details?.is_active === true,
             //placeholders for reporting
-            time: null,
-            isSelected: false,
+            time: defaultTimeValue,
+            isSelected: data.length === 1,
         };
     }).filter((item) => item.id);
 }

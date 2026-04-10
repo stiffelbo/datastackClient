@@ -10,14 +10,7 @@ import {
 
 import TimeForm from "./TimeForm";
 
-function normalizeTimeValue(value = null) {
-    return {
-        date: value?.date ?? "",
-        start: value?.start ?? "",
-        end: value?.end ?? "",
-        duration: value?.duration ?? "",
-    };
-}
+import { normalizeTimeValue } from "./utils";
 
 function getEmployeeTime(employee, employeeTimes, initialTime) {
     const fromMap = employeeTimes?.[employee.id];
@@ -80,7 +73,7 @@ const BrigadeEmployeesForm = ({
 
     function renderEmployee(employee) {
         const checked = selectedIds.includes(employee.id);
-        const employeeTime = getEmployeeTime(employee, employeeTimes, initialTime);
+        const employeeTime = employee.time;
 
         return (
             <Box
@@ -129,12 +122,6 @@ const BrigadeEmployeesForm = ({
                             }
                             sx={{ alignItems: "center", m: 0 }}
                         />
-
-                        {employee.optimaGid ? (
-                            <Typography variant="caption" color="text.secondary">
-                                {employee.optimaGid}
-                            </Typography>
-                        ) : null}
                     </Stack>
 
                     <TimeForm

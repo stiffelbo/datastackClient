@@ -53,7 +53,6 @@ const TimeForm = ({
     const [end, setEnd] = useState(value.end ?? "");
     const [duration, setDuration] = useState(value.duration ?? "");
 
-
     const lastValueRef = useRef(null);
 
     //Props Value effect
@@ -132,11 +131,13 @@ const TimeForm = ({
 
     const size = dense ? "small" : "medium";
 
+    const borderColor = duration ? "divider" : "error.main";
+
     return (
         <Box
             sx={{
                 border: "1px solid",
-                borderColor: "divider",
+                borderColor: borderColor,
                 borderRadius: 2,
                 p: 2,
             }}

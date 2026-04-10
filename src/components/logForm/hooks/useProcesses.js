@@ -1,22 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-function normalizeTimeValue(value = null) {
-    return {
-        date: value?.date ?? "",
-        start: value?.start ?? "",
-        end: value?.end ?? "",
-        duration: value?.duration ?? "",
-    };
-}
-
-function isSameTime(a = {}, b = {}) {
-    return (
-        (a?.date ?? "") === (b?.date ?? "") &&
-        (a?.start ?? "") === (b?.start ?? "") &&
-        (a?.end ?? "") === (b?.end ?? "") &&
-        String(a?.duration ?? "") === String(b?.duration ?? "")
-    );
-}
+import { normalizeTimeValue, isSameTime } from '../utils';
 
 function createMaterialReportRow(material) {
     return {

@@ -35,6 +35,9 @@ export function mapJiraTaskResponseToDto(response) {
         //placeholder for reports
         report : {
             quantity: null, //tutaj można dodać ilosc nominalną lub pozostałą do produkcji, w zależności od potrzeb
+            remarks: '',
+            requiresQuantity: true,
+            requiresRemarks: false,
         },
     };
 }

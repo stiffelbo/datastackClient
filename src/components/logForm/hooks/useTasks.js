@@ -24,7 +24,7 @@ function getTaskKey(task) {
     );
 }
 
-export default function useTasks({ onSubmit, initialValues = {} }) {
+export default function useTasks({ onSubmit, initialValues = {}, requiresQuantity = true, requiresRemarks = false }) {
     const [tasks, setTasks] = useState(
         Array.isArray(initialValues.tasks) ? initialValues.tasks : []
     );
@@ -70,6 +70,9 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
                     ...task,
                     report: {
                         quantity: task?.report?.quantity ?? null,
+                        remarks: task?.report?.remarks ?? "",
+                        requiresQuantity: requiresQuantity, 
+                        requiresRemarks: requiresRemarks
                     },
                 },
             ];
@@ -112,6 +115,30 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
         );
     }
 
+    function setTaskRemarks(taskOrId, remarks) {
+
+        const identity =
+            typeof taskOrId === "object"
+                ? getTaskIdentity(taskOrId)
+                : taskOrId;
+
+        if (!identity) return;
+
+        setTasks((prev) =>
+            prev.map((task) =>
+                getTaskIdentity(task) === identity
+                    ? {
+                        ...task,
+                        report: {
+                            ...task.report,
+                            remarks,
+                        },
+                    }
+                    : task
+            )
+        );
+    }
+
     function clearTasks() {
         setTasks([]);
     }
@@ -140,6 +167,8 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
         });
     }
 
+    //Computed
+
     const taskKeys = tasks
         .map((task) => getTaskKey(task))
         .filter(Boolean);
@@ -147,6 +176,11 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
     const taskIds = tasks
         .map((task) => task.jira_id ?? task.id ?? null)
         .filter(Boolean);
+
+    const totalQuantity = tasks.reduce(
+        (sum, task) => sum + Number(task?.report?.quantity || 0),
+        0
+    );
 
     return {
         state: {
@@ -159,6 +193,7 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
             clearTasks,
             replaceTasks,
             setTaskQuantity,
+            setTaskRemarks,
             submit,
         },
 
@@ -172,6 +207,9 @@ export default function useTasks({ onSubmit, initialValues = {} }) {
             tasksCount: tasks.length,
             taskKeys,
             taskIds,
+            totalQuantity,
+            requiresQuantity,
+            requiresRemarks,
         },
     };
 }

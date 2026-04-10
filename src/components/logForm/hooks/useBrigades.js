@@ -1,22 +1,5 @@
-import { useEffect, useState } from 'react';
-
-function normalizeTimeValue(value = null) {
-    return {
-        date: value?.date ?? '',
-        start: value?.start ?? '',
-        end: value?.end ?? '',
-        duration: value?.duration ?? '',
-    };
-}
-
-function isSameTime(a = {}, b = {}) {
-    return (
-        (a?.date ?? '') === (b?.date ?? '') &&
-        (a?.start ?? '') === (b?.start ?? '') &&
-        (a?.end ?? '') === (b?.end ?? '') &&
-        String(a?.duration ?? '') === String(b?.duration ?? '')
-    );
-}
+import { useEffect, useRef, useState } from 'react';
+import { normalizeTimeValue, isSameTime } from '../utils';
 
 function mapEmployeesWithState(employees = [], initialTime = {}) {
     const normalizedInitialTime = normalizeTimeValue(initialTime);
@@ -24,7 +7,9 @@ function mapEmployeesWithState(employees = [], initialTime = {}) {
     return employees.map((employee) => ({
         ...employee,
         isSelected: employee?.isSelected ?? false,
-        time: employee?.time ? normalizeTimeValue(employee.time) : normalizedInitialTime,
+        time: employee?.time
+            ? normalizeTimeValue(employee.time)
+            : normalizedInitialTime,
     }));
 }
 
@@ -32,24 +17,31 @@ function getEmployeesSignature(employees = []) {
     if (!Array.isArray(employees)) return '';
 
     return employees
-        .map((employee) => [
-            employee?.id ?? '',
-            employee?.brigadeId ?? '',
-            employee?.active ?? '',
-            employee?.fullName ?? '',
-        ].join(':'))
+        .map((employee) =>
+            [
+                employee?.id ?? '',
+                employee?.brigadeId ?? '',
+                employee?.active ?? '',
+                employee?.fullName ?? '',
+            ].join(':')
+        )
         .join('|');
 }
 
-export default function useBrigades({ initialTime = {}, employees = [], onChange }) {
+export default function useBrigades({
+    initialTime = {},
+    employees = [],
+    onChange,
+}) {
     const [brigades, setBrigades] = useState(() =>
         mapEmployeesWithState(employees, initialTime)
     );
 
     const employeesSignature = getEmployeesSignature(employees);
+    const previousInitialTimeRef = useRef(normalizeTimeValue(initialTime));
+    const isFirstInitialTimeEffectRef = useRef(true);
 
     useEffect(() => {
-        //we need to effect only if empoyees as props changed only. still new object with same date may appera that will trigger effect
         setBrigades((prev) => {
             const prevMap = new Map(prev.map((item) => [item.id, item]));
             const normalizedInitialTime = normalizeTimeValue(initialTime);
@@ -72,7 +64,9 @@ export default function useBrigades({ initialTime = {}, employees = [], onChange
                     isSelected: existing.isSelected ?? false,
                     time: existing.time
                         ? normalizeTimeValue(existing.time)
-                        : normalizedInitialTime,
+                        : employee?.time
+                            ? normalizeTimeValue(employee.time)
+                            : normalizedInitialTime,
                 };
             });
         });
@@ -80,14 +74,36 @@ export default function useBrigades({ initialTime = {}, employees = [], onChange
 
     useEffect(() => {
         const normalizedInitialTime = normalizeTimeValue(initialTime);
+        const previousInitialTime = previousInitialTimeRef.current;
 
+        // przy pierwszym renderze nic nie nadpisujemy,
+        // bo chcemy zachować time z DTO
+        if (isFirstInitialTimeEffectRef.current) {
+            isFirstInitialTimeEffectRef.current = false;
+            previousInitialTimeRef.current = normalizedInitialTime;
+            return;
+        }
+
+        // jeśli initialTime logicznie się nie zmienił, nic nie rób
+        if (isSameTime(previousInitialTime, normalizedInitialTime)) {
+            return;
+        }
+
+        previousInitialTimeRef.current = normalizedInitialTime;
+
+        // realna zmiana master time -> nadpisujemy wszystkim
         setBrigades((prev) =>
             prev.map((employee) => ({
                 ...employee,
                 time: normalizedInitialTime,
             }))
         );
-    }, [initialTime]);
+    }, [
+        initialTime?.date,
+        initialTime?.start,
+        initialTime?.end,
+        initialTime?.duration,
+    ]);
 
     useEffect(() => {
         if (typeof onChange === 'function') {
@@ -108,7 +124,9 @@ export default function useBrigades({ initialTime = {}, employees = [], onChange
                     ...employee,
                     isSelected: nextSelected,
                     time: nextSelected
-                        ? (employee.time ? normalizeTimeValue(employee.time) : normalizedInitialTime)
+                        ? (employee.time
+                            ? normalizeTimeValue(employee.time)
+                            : normalizedInitialTime)
                         : employee.time,
                 };
             })

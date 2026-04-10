@@ -7,6 +7,7 @@ import {
 
 import TaskInfo from "./TaskInfo";
 import InputNumber from "./InputNumber";
+import InputText from "./InputText";
 
 function getTaskKey(task) {
     return (
@@ -28,7 +29,7 @@ function renderEmpty(emptyMessage) {
     );
 }
 
-function renderTaskItem(task, onRemove, onQuantityChange) {
+function renderTaskItem(task, onRemove, onQuantityChange, onRemarksChange) {
     const quantity = task?.report?.quantity ?? "";
 
     return (
@@ -43,29 +44,38 @@ function renderTaskItem(task, onRemove, onQuantityChange) {
                 <TaskInfo
                     data={task}
                     onRemove={onRemove}
-                    sx={{
-                        bgcolor: "success.lighter",
-                        borderColor: "success.light",
-                    }}
                 >
-                    <InputNumber
-                        label="Ilość do raportu"
-                        value={quantity}
-                        min={0}
-                        step={1}
-                        onChange={(value) => onQuantityChange?.(task, value)}
-                    />                    
+                    <Stack spacing={1}>
+                        <InputNumber
+                            label="Ilość do raportu"
+                            value={quantity}
+                            required={task?.report?.requiresQuantity}
+                            min={0}
+                            step={1}
+                            onChange={(value) => onQuantityChange?.(task, value)}
+                        />    
+                        <InputText
+                            label="Komentarz"
+                            value={task?.report?.remarks ?? ""}
+                            onChange={(value) => onRemarksChange?.(task, value)}
+                            required={task?.report?.requiresRemarks}
+                            multiline={true}
+                            rows={4}
+                            fullWidth
+                        />
+                    </Stack>
+                                   
                 </TaskInfo>                    
             </Stack>
         </Box>
     );
 }
 
-function renderList(tasks, onRemove, onQuantityChange) {
+function renderList(tasks, onRemove, onQuantityChange, onRemarksChange) {
     return (
         <Stack spacing={1}>
             {tasks.map((task) =>
-                renderTaskItem(task, onRemove, onQuantityChange)
+                renderTaskItem(task, onRemove, onQuantityChange, onRemarksChange)
             )}
         </Stack>
     );
@@ -75,6 +85,7 @@ export default function SelectedTasksList({
     tasks = [],
     onRemove,
     onQuantityChange,
+    onRemarksChange,
     emptyMessage = "Brak dodanych tasków.",
 }) {
     const isEmpty = !Array.isArray(tasks) || tasks.length === 0;
@@ -98,7 +109,7 @@ export default function SelectedTasksList({
 
             {isEmpty
                 ? renderEmpty(emptyMessage)
-                : renderList(tasks, onRemove, onQuantityChange)}
+                : renderList(tasks, onRemove, onQuantityChange, onRemarksChange)}
         </Box>
     );
 }

@@ -4,6 +4,7 @@ import {
     Button,
     Link,
     Stack,
+    Box,
     Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -39,26 +40,30 @@ export default function TaskInfo({
     };
 
     function renderAction() {
-        if (typeof onAdd === 'function') {
+        if (typeof onAdd === "function") {
             return (
                 <Button
                     size="small"
-                    color="inherit"
+                    variant="outlined"
+                    color="success"
                     startIcon={<AddIcon />}
                     onClick={handleAdd}
+                    sx={{ flexShrink: 0 }}
                 >
                     Dodaj
                 </Button>
             );
         }
 
-        if (typeof onRemove === 'function') {
+        if (typeof onRemove === "function") {
             return (
                 <Button
                     size="small"
-                    color="inherit"
+                    variant="outlined"
+                    color="error"
                     startIcon={<DeleteOutlineIcon />}
                     onClick={handleRemove}
+                    sx={{ flexShrink: 0 }}
                 >
                     Usuń
                 </Button>
@@ -70,50 +75,56 @@ export default function TaskInfo({
 
     function renderChildren() {
         if (!children) return null;
-
-        return (
-            <Stack sx={{ pt: 0.5 }}>
-                {children}
-            </Stack>
-        );
+        return children;
     }
 
     return (
-        <Alert
-            severity="info"
-            variant="outlined"
-            action={renderAction()}
-            sx={sx}
+        <Box
+            sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 2,
+                p: 1.5,
+                bgcolor: "background.paper",
+                ...sx,
+            }}
         >
             <Stack spacing={1}>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <Typography variant="body2" fontWeight={700}>
-                        {data.jiraKey || '—'}
-                    </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="body2" fontWeight={700}>
+                            {data.jiraKey || '—'}
+                        </Typography>
 
-                    {data.jiraUrl ? (
-                        <Link
-                            href={data.jiraUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            underline="hover"
-                            variant="caption"
-                        >
-                            Link do Jiry
-                        </Link>
-                    ) : null}
+                        {data.jiraUrl ? (
+                            <Link
+                                href={data.jiraUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                underline="hover"
+                                variant="caption"
+                            >
+                                Link do Jiry
+                            </Link>
+                        ) : null}
+
+                        {data.name ? (
+                            <Typography variant="body2">
+                                {data.name}
+                            </Typography>
+                        ) : null}
+                    </Stack>
+
+
+                    {renderAction()}
                 </Stack>
 
-                {data.name ? (
-                    <Typography variant="body2">
-                        {data.name}
-                    </Typography>
-                ) : null}
 
-                <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
-                    {data.jiraProjectLabel ? (
+
+                <Stack direction="row" spacing={2} sx={{ marginTop: 1 , marginBottom: 1}}>
+                    {data.jiraParentKey ? (
                         <Typography variant="caption" color="text.secondary">
-                            Projekt: {data.jiraProjectLabel}
+                            Parent: {data.jiraParentKey}
                         </Typography>
                     ) : null}
 
@@ -130,14 +141,11 @@ export default function TaskInfo({
                     ) : null}
                 </Stack>
 
-                {data.jiraParentKey ? (
-                    <Typography variant="caption" color="text.secondary">
-                        Parent: {data.jiraParentKey}
-                    </Typography>
-                ) : null}
 
-                {renderChildren()}
+                <Box fullWidth>
+                    {renderChildren()}
+                </Box>
             </Stack>
-        </Alert>
+        </Box>
     );
 }
