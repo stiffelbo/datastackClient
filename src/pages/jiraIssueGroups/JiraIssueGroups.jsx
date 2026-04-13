@@ -35,12 +35,12 @@ const JiraIssueGroups = () => {
 
             addFormSchema={entity.schema.addForm}
             bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={null}
+            importSchema={entity.schema.importSchema}
 
             onRefresh={entity.refresh}
             onPost={entity.create}
             onEdit={entity.updateField}
-            onUpload={null}
+            onUpload={entity.upload}
             onBulkEdit={entity.updateMany}
             onDelete={entity.remove}
             onBulkDelete={entity.removeMany}
