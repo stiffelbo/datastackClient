@@ -727,56 +727,35 @@ const FormTemplate = ({
 };
 
 FormTemplate.propTypes = {
-  // dane wejściowe (edytowany/ładowany obiekt)
   data: PropTypes.object,
-
-  // schema: tablica definicji pól formularza.
-  // Każdy element opisuje pojedyncze pole i może zawierać tylko poniższe właściwości.
   schema: PropTypes.arrayOf(
     PropTypes.shape({
-      // identyfikator pola (wymagany)
       name: PropTypes.string.isRequired,
-
-      // etykieta / tekst pomocniczy / placeholder
       label: PropTypes.string,
       helperText: PropTypes.string,
       placeholder: PropTypes.string,
-
-      // typ pola (steruje wyborem kontrolki w FormTemplate)
       type: PropTypes.oneOf([
         'hidden', 'text', 'email', 'number', 'date', 'textarea',
         'password', 'switch', 'boolean', 'select',
         'select-object', 'select-multiple', 'file'
       ]),
-
-      // drobne wskazówki dotyczące wejścia (np. 'datetime', 'email') - passthrough
       input: PropTypes.string,
-
-      // layout / rozmiary siatki
       md: PropTypes.number,
       xl: PropTypes.number,
       xs: PropTypes.number,
-
-      // wygląd / rozmiar kontrolki
       size: PropTypes.oneOf(['small', 'medium']),
       variant: PropTypes.string,
-
-      // zachowanie kontrolki
       disabled: PropTypes.bool,
       validation: PropTypes.array,
-      multiple: PropTypes.bool, // dla select
-      rows: PropTypes.number,   // dla textarea
-      step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]), // dla number
+      multiple: PropTypes.bool,
+      rows: PropTypes.number,
+      step: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       min: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
       max: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      labelPlacement: PropTypes.oneOf(['end', 'start']), // dla switch
-
-      // passthrough props dla komponetów MUI
+      labelPlacement: PropTypes.oneOf(['end', 'start']),
       textFieldProps: PropTypes.object,
       inputProps: PropTypes.object,
       selectProps: PropTypes.object,
-
-      // selectOptions: tablica opcji dla Select
       selectOptions: PropTypes.arrayOf(
         PropTypes.shape({
           value: PropTypes.any.isRequired,
@@ -785,14 +764,10 @@ FormTemplate.propTypes = {
           disabled: PropTypes.bool,
         })
       ),
-
-      // opcjonalne: pole pomocnicze do obliczeń/wyliczania wartości w createInitialState/applyCompute
-      // (FormTemplate używa applyCompute przed renderem — pozostaw jako opcjonalność)
       computed: PropTypes.oneOfType([PropTypes.object, PropTypes.func, PropTypes.string]),
     })
   ).isRequired,
 
-  // handlers + UI state
   onSubmit: PropTypes.func,
   onChange: PropTypes.func,
   onCancel: PropTypes.func,
@@ -802,7 +777,9 @@ FormTemplate.propTypes = {
   submitButtonText: PropTypes.string,
   cancelButtonText: PropTypes.string,
   cardSX: PropTypes.object,
-  formLabel: PropTypes.string,
+
+  formLabel: PropTypes.node,
+
   action: PropTypes.func,
   sendFormData: PropTypes.bool,
   validator: PropTypes.func,

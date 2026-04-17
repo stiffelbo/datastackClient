@@ -19,6 +19,8 @@ const UserDropdown = () => {
 
     const [anchorEl, setAnchorEl] = useState(null);
 
+    const navigate = useNavigate();
+
     const handleLogout = async () => {
         await logout();
         navigate('/login');

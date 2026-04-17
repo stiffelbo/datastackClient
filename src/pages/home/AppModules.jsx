@@ -1,24 +1,19 @@
-
 import * as React from "react";
 import {
-    Box,
-    Container,
-    Typography,
-    Stack,
-    Grid,
-    Card,
-    CardContent,
-    Chip,
-    Divider,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Paper,
+  Box,
+  Typography,
+  Stack,
+  Grid,
+  Card,
+  CardContent,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Avatar,
 } from "@mui/material";
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import HubIcon from "@mui/icons-material/Hub";
-import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -26,23 +21,6 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import BuildCircleIcon from "@mui/icons-material/BuildCircle";
-
-
-function groupPages(pages) {
-  const map = new Map();
-  pages.forEach((p) => {
-    const key = p.group_label || "Inne";
-    if (!map.has(key)) map.set(key, []);
-    map.get(key).push(p);
-  });
-  // stable sort: group name, then page name
-  return Array.from(map.entries())
-    .sort((a, b) => a[0].localeCompare(b[0], "pl"))
-    .map(([group, items]) => ({
-      group,
-      items: items.slice().sort((x, y) => (x.name || "").localeCompare(y.name || "", "pl")),
-    }));
-}
 
 const GROUP_ICON = {
   System: <SettingsIcon fontSize="small" />,
@@ -53,41 +31,83 @@ const GROUP_ICON = {
   Tech: <BuildCircleIcon fontSize="small" />,
 };
 
+const ROLE_CHIP_COLOR = {
+  admin: "error",
+  editor: "primary",
+  operator: "success",
+  viewer: "default",
+};
 
-const AppModules = ({pages}) => {
+const getPersonName = (person) => {
+  if (!person) {
+    return "Nieprzypisany użytkownik";
+  }
 
-    const grouped = groupPages(pages);
+  const fullName = [person.first_name, person.last_name].filter(Boolean).join(" ").trim();
 
-    return (<Stack spacing={3}>
-        {/* Pages/modules from Excel */}
-        <Box sx={{ pb: 4 }}>
-          <Stack spacing={1.5} sx={{ mb: 1.25 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <AccountTreeIcon fontSize="small" />
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                Moduły / strony aplikacji
-              </Typography>
-            </Stack>
+  return fullName || "Nieznana osoba";
+};
+
+const getInitials = (person) => {
+  if (!person) {
+    return "?";
+  }
+
+  const first = person.first_name?.[0] ?? "";
+  const last = person.last_name?.[0] ?? "";
+
+  return `${first}${last}`.toUpperCase() || "?";
+};
+
+const AppModules = ({ pages = [] }) => {
+  console.log(pages);
+  return (
+    <Stack spacing={3}>
+      <Box sx={{ pb: 4 }}>
+        <Stack spacing={1.5} sx={{ mb: 1.25 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <AccountTreeIcon fontSize="small" />
+            <Typography variant="h5" sx={{ fontWeight: 800 }}>
+              Moduły / strony aplikacji
+            </Typography>
           </Stack>
+        </Stack>
 
-          <Stack spacing={1.25}>
-            {grouped.map(({ group, items }) => (
-              <Accordion key={group} defaultExpanded={group === "Projekty"} disableGutters>
+        <Stack spacing={1.25}>
+          {pages.map((domain) => {
+            const groupKey = domain.group_key;
+            const groupLabel = domain.group_label || domain.group_key || "Bez grupy";
+            const domainPages = domain.pages || [];
+
+            return (
+              <Accordion
+                key={groupKey}
+                defaultExpanded={groupLabel === "Projekty"}
+                disableGutters
+              >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Stack direction="row" spacing={1.25} alignItems="center">
-                    {GROUP_ICON[group] ?? <AccountTreeIcon fontSize="small" />}
-                    <Typography sx={{ fontWeight: 800 }}>{group}</Typography>
-                    <Chip size="small" label={`${items.length}`} variant="outlined" />
+                    {GROUP_ICON[groupLabel] ?? <AccountTreeIcon fontSize="small" />}
+                    <Typography sx={{ fontWeight: 800 }}>{groupLabel}</Typography>
+                    <Chip size="small" label={`${domainPages.length}`} variant="outlined" />
                   </Stack>
                 </AccordionSummary>
 
                 <AccordionDetails>
                   <Grid container spacing={1.75}>
-                    {items.map((p) => (
-                      <Grid item key={p.name} sx={{ width: "32%" }}>
-                        <Card variant="outlined" sx={{ borderRadius: 2, height: "100%", minWidth: "100%", width: "100%" }}>
+                    {domainPages.map((page) => (
+                      <Grid key={page.id || page.name} size={{ xs: 12, md: 6, lg: 4 }}>
+                        <Card
+                          variant="outlined"
+                          sx={{
+                            borderRadius: 2,
+                            height: "100%",
+                            minWidth: "100%",
+                            width: "100%",
+                          }}
+                        >
                           <CardContent>
-                            <Stack spacing={1}>
+                            <Stack spacing={1.5}>
                               <Stack
                                 direction="row"
                                 spacing={1}
@@ -96,14 +116,100 @@ const AppModules = ({pages}) => {
                                 flexWrap="wrap"
                               >
                                 <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                                  {p.label}
+                                  {page.label}
                                 </Typography>
-                                <Chip size="small" label={p.name} variant="filled" />
+
+                                <Chip
+                                  size="small"
+                                  label={page.name}
+                                  variant="filled"
+                                />
                               </Stack>
 
                               <Typography variant="body2" color="text.secondary">
-                                {p.description?.trim?.() ? p.description : "Opis w przygotowaniu."}
+                                {page.description?.trim?.()
+                                  ? page.description
+                                  : "Opis w przygotowaniu."}
                               </Typography>
+
+                              {!!page.users?.length && (
+                                <Stack spacing={1}>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ fontWeight: 700, textTransform: "uppercase" }}
+                                  >
+                                    Osoby przypisane
+                                  </Typography>
+
+                                  <Stack spacing={1}>
+                                    {page.users.map((entry, index) => {
+                                      const person = entry.person || entry.employee || null;
+                                      const personName = getPersonName(person);
+
+                                      return (
+                                        <Box
+                                          key={`${page.id}-${entry.user_id}-${index}`}
+                                          sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            borderRadius: 2,
+                                            p: 1.25,
+                                          }}
+                                        >
+                                          <Stack direction="row" spacing={1.25} alignItems="flex-start">
+                                            <Avatar
+                                              src={person?.profile_url || undefined}
+                                              alt={personName}
+                                              sx={{ width: 36, height: 36 }}
+                                            >
+                                              {getInitials(person)}
+                                            </Avatar>
+
+                                            <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+                                              <Stack
+                                                direction="row"
+                                                spacing={1}
+                                                alignItems="center"
+                                                flexWrap="wrap"
+                                              >
+                                                <Typography
+                                                  variant="body2"
+                                                  sx={{ fontWeight: 700 }}
+                                                >
+                                                  {personName}
+                                                </Typography>
+
+                                                <Chip
+                                                  size="small"
+                                                  label={entry.role_label}
+                                                  color={ROLE_CHIP_COLOR[entry.role_key] || "default"}
+                                                  variant="outlined"
+                                                />
+                                              </Stack>
+
+                                              {!!person?.occupation_name && (
+                                                <Typography
+                                                  variant="caption"
+                                                  color="text.secondary"
+                                                >
+                                                  {person.occupation_name}
+                                                </Typography>
+                                              )}
+
+                                              {!!entry.description && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                  {entry.description}
+                                                </Typography>
+                                              )}
+                                            </Stack>
+                                          </Stack>
+                                        </Box>
+                                      );
+                                    })}
+                                  </Stack>
+                                </Stack>
+                              )}
                             </Stack>
                           </CardContent>
                         </Card>
@@ -112,13 +218,12 @@ const AppModules = ({pages}) => {
                   </Grid>
                 </AccordionDetails>
               </Accordion>
-            ))}
-          </Stack>
-        </Box>
-      </Stack>);
-
-}
+            );
+          })}
+        </Stack>
+      </Box>
+    </Stack>
+  );
+};
 
 export default AppModules;
-
-    

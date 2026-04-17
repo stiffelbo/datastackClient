@@ -34,7 +34,10 @@ export function mapJiraTaskResponseToDto(response) {
         productGroup: raw.product_group ?? null,
         //placeholder for reports
         report : {
-            quantity: null, //tutaj można dodać ilosc nominalną lub pozostałą do produkcji, w zależności od potrzeb
+            quantity: null, //ilosc procesów wykonanych
+            quantityGood: null, //ilosc wyrobów dobrych
+            quantityScrap: null, //ilosc odpadów wyprodukowanych
+            is_rework: false,
             remarks: '',
             requiresQuantity: true,
             requiresRemarks: false,

@@ -17,14 +17,16 @@ const Home = () => {
   const contentHeight = height - 100;
 
   useEffect(() => {
-    http.get('/pages/get.php')
+    http.get('/pages/getDomains.php')
       .then(response => {
-        setPagesData(response.data.filter(page => String(page.is_active) === '1'));
+        setPagesData(response.data);
       })
       .catch(error => {
         console.error('Error fetching pages data:', error);
       });
   }, []);
+
+  console.log(pagesData);
 
   return (
     <Box sx={{mt: 1, height: contentHeight, maxHeight: contentHeight, overflowY: 'hidden'}}>

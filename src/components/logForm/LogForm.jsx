@@ -23,6 +23,7 @@ import useProcesses from "./hooks/useProcesses";
 
 import PowerTable from "../powerTable/powerTable";
 import { useRwd } from "../../context/RwdContext";
+import RenderLogErrors from "./RenderLogErrors";
 
 const LogForm = ({ user }) => {
     if (!user) return <Alert severity="error">Brak danych użytkownika. Zaloguj się ponownie.</Alert>;
@@ -40,15 +41,17 @@ const LogForm = ({ user }) => {
         onChange: null
     });
 
+    let requiresTasks = true;
     let requiresQuantity = true;
     let requiresRemarks = false;
 
-    if(processes.data.selectedProcess){
+    if (processes.data.selectedProcess) {
+        requiresTasks = !Boolean(processes.data.selectedProcess.is_general);
         requiresQuantity = processes.data.selectedProcess.requires_quantity;
         requiresRemarks = processes.data.selectedProcess.requires_remarks;
     }
 
-    const tasks = useTasks({requiresQuantity, requiresRemarks});
+    const tasks = useTasks({ requiresQuantity, requiresRemarks, requiresTasks });
 
     const draft = logDraftVo({
         tasksState: tasks.state.tasks,
@@ -59,29 +62,28 @@ const LogForm = ({ user }) => {
             machineTime: processes.state.machineTime,
             materialsReport: processes.state.materialsReport,
             materials: processes.data.materials,
+            isRework: processes.state.isRework,
         },
-        structureId : null,
-        periodId : null,
+        structureId: null,
+        periodId: null,
     });
 
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
-        <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-            <Grid item size={6}>
-                <JiraTaskLookup onAdd={tasks.actions.addTask} sx={{ mb: 2 }} />
+        <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
+            <Grid item size={6} spacing={1}>
+                <JiraTaskLookup onAdd={tasks.actions.addTask} sx={{ my: 2 }} />
                 <SelectedTasksList
-                    tasks={tasks.state.tasks}
-                    onRemove={tasks.actions.removeTask}
-                    onQuantityChange={(task, value) =>
-                        tasks.actions.setTaskQuantity(task, value)
-                    }
-                    onRemarksChange={(task, value) =>
-                        tasks.actions.setTaskRemarks(task, value)
-                    }
+                    tasks={tasks}
+                    requiresTasks={requiresTasks}
                 />
+                {brigade.state.brigades.length !== 1 ? <TimeForm onChange={setTime} value={time} /> : null}
+                <ProcessForm processes={processes} />
+                <Box sx={{ my: 2, width: '100%', maxWidth: '100%' }}>
+                    <RenderLogErrors errors={draft.meta.errors} />
+                </Box>
             </Grid>
             <Grid item size={6}>
-                {brigade.state.brigades.length !== 1 ? <TimeForm onChange={setTime} value={time} /> : null}
-                <ProcessForm processForm={processes} />
+
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
                     selectedIds={brigade.computed.selectedIds}
@@ -94,46 +96,60 @@ const LogForm = ({ user }) => {
                 />
             </Grid>
         </Grid>
-        <Box mt={2} sx={{height: '400px', overflowY: 'auto'}}>
-            <Typography variant="h6" gutterBottom>
-                Czasy Pracownika
-            </Typography>
-            <PowerTable 
-                entityName="LogPreview_Operation"
-                data={draft.logs.operationLogs}
-                height={350}
-            />          
-        </Box>
-        <Box mt={2} sx={{height: '400px', overflowY: 'auto'}}>
-            <Typography variant="h6" gutterBottom>
-                Czasy Maszyn
-            </Typography>
-            <PowerTable 
-                entityName="LogPreview_MachineLogs"
-                data={draft.logs.machineLogs}
-                height={350}
-            />          
-        </Box>
-        <Box mt={2} sx={{height: '400px', overflowY: 'auto'}}>
-            <Typography variant="h6" gutterBottom>
-                Materiały
-            </Typography>
-            <PowerTable 
-                entityName="LogPreview_MaterialsLogs"
-                data={draft.logs.materialLogs}
-                height={350}
-            />          
-        </Box>
-        <Box mt={2} sx={{height: '400px', overflowY: 'auto'}}>
-            <Typography variant="h6" gutterBottom>
-                Ilosci Produkcyjne
-            </Typography>
-            <PowerTable 
-                entityName="LogPreview_OutputsLogs"
-                data={draft.logs.outputLogs}
-                height={350}
-            />          
-        </Box>
+
+        <Grid container>
+            <Grid item size={6}>
+                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Czasy Pracownika
+                    </Typography>
+                    <PowerTable
+                        entityName="LogPreview_Operation"
+                        data={draft.logs.operationLogs}
+                        height={350}
+                    />
+                </Box>
+            </Grid>
+            <Grid item size={6}>
+                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Ilosci Produkcyjne
+                    </Typography>
+                    <PowerTable
+                        entityName="LogPreview_OutputsLogs"
+                        data={draft.logs.outputLogs}
+                        height={350}
+                    />
+                </Box>
+            </Grid>            
+        </Grid>
+        <Grid container>
+            <Grid item size={6}>
+                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Czasy Maszyn
+                    </Typography>
+                    <PowerTable
+                        entityName="LogPreview_MachineLogs"
+                        data={draft.logs.machineLogs}
+                        height={350}
+                    />
+                </Box>
+            </Grid>
+            <Grid item size={6}>
+                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                    <Typography variant="h6" gutterBottom>
+                        Materiały
+                    </Typography>
+                    <PowerTable
+                        entityName="LogPreview_MaterialsLogs"
+                        data={draft.logs.materialLogs}
+                        height={350}
+                    />
+                </Box>
+            </Grid>
+            
+        </Grid>
     </Box>;
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { normalizeTimeValue, isSameTime } from '../utils';
+import { normalizeTimeValue, isSameTime } from "../utils";
 
 function createMaterialReportRow(material) {
     return {
@@ -12,7 +12,6 @@ function createMaterialReportRow(material) {
 
         qty: "",
         wasteQty: "",
-        goodQty: "",
     };
 }
 
@@ -44,8 +43,7 @@ function areMaterialReportsEqual(a = {}, b = {}) {
             left.step === right.step &&
             left.required === right.required &&
             String(left.qty ?? "") === String(right.qty ?? "") &&
-            String(left.wasteQty ?? "") === String(right.wasteQty ?? "") &&
-            String(left.goodQty ?? "") === String(right.goodQty ?? "")
+            String(left.wasteQty ?? "") === String(right.wasteQty ?? "")
         );
     });
 }
@@ -54,10 +52,12 @@ export default function useProcessForm({
     processes = [],
     initialProcessId = "",
     initialMachineTime = null,
+    initialIsRework = false,
     onChange,
 }) {
     const [processId, setProcessId] = useState(initialProcessId);
     const [machineId, setMachineId] = useState("");
+    const [isRework, setIsRework] = useState(Boolean(initialIsRework));
     const [machineTime, setMachineTime] = useState(
         normalizeTimeValue(initialMachineTime)
     );
@@ -85,16 +85,13 @@ export default function useProcessForm({
         }));
     }, [machines]);
 
-    // reset zależnych danych po zmianie procesu
     useEffect(() => {
         setMachineId("");
+        setIsRework(Boolean(initialIsRework));
         setMachineTime(normalizeTimeValue(initialMachineTime));
-
-        const nextMaterialsReport = createMaterialsReport(materials);
-        setMaterialsReport(nextMaterialsReport);
+        setMaterialsReport(createMaterialsReport(materials));
     }, [processId]);
 
-    // synchronizacja czasu maszyny z głównym time form
     useEffect(() => {
         const nextTime = normalizeTimeValue(initialMachineTime);
 
@@ -109,7 +106,6 @@ export default function useProcessForm({
         initialMachineTime?.duration,
     ]);
 
-    // emit do parenta
     useEffect(() => {
         if (typeof onChange !== "function") return;
 
@@ -117,10 +113,19 @@ export default function useProcessForm({
             processId,
             process: selectedProcess,
             machineId,
+            isRework,
             machineTime,
             materialsReport,
         });
-    }, [processId, selectedProcess, machineId, machineTime, materialsReport, onChange]);
+    }, [
+        processId,
+        selectedProcess,
+        machineId,
+        isRework,
+        machineTime,
+        materialsReport,
+        onChange,
+    ]);
 
     function handleProcessChange(nextProcessId) {
         setProcessId(nextProcessId);
@@ -128,6 +133,10 @@ export default function useProcessForm({
 
     function handleMachineChange(nextMachineId) {
         setMachineId(nextMachineId);
+    }
+
+    function handleReworkChange(nextValue) {
+        setIsRework(Boolean(nextValue));
     }
 
     function handleMachineTimeChange(nextTime) {
@@ -152,14 +161,6 @@ export default function useProcessForm({
                 },
             };
 
-            const qty = Number(next[materialId].qty || 0);
-            const wasteQty = Number(next[materialId].wasteQty || 0);
-
-            next[materialId].goodQty =
-                next[materialId].qty === "" && next[materialId].wasteQty === ""
-                    ? ""
-                    : String(Math.max(qty - wasteQty, 0));
-
             if (areMaterialReportsEqual(prev, next)) return prev;
             return next;
         });
@@ -168,6 +169,7 @@ export default function useProcessForm({
     function resetProcesses() {
         setProcessId("");
         setMachineId("");
+        setIsRework(Boolean(initialIsRework));
         setMachineTime(normalizeTimeValue(initialMachineTime));
         setMaterialsReport({});
     }
@@ -187,6 +189,7 @@ export default function useProcessForm({
         state: {
             processId,
             machineId,
+            isRework,
             machineTime,
             materialsReport,
         },
@@ -207,9 +210,10 @@ export default function useProcessForm({
         actions: {
             handleProcessChange,
             handleMachineChange,
+            handleReworkChange,
             handleMachineTimeChange,
             handleMaterialFieldChange,
-            //resetProcessForm,
+            resetProcesses,
         },
 
         computed: {

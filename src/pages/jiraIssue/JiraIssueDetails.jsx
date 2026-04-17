@@ -1,26 +1,44 @@
 import React from 'react';
 
 //Mui
-import { Box } from '@mui/material';
+import { Box, Typography, Chip } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import FormTemplate from '../../components/powerTable/form/formTemplate';
+import RenderLink from './RenderLink';
 
-const JiraIssueDetails = ({id, row, entity, rwd, dashboard}) => {
+const renderLabel = (id) => {
+    if (!id) return "Edytuj Jira Issue";
+
+    return (
+        <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+            <Typography variant="h6">
+                Edytuj Jira Issue
+            </Typography>
+
+            <RenderLink id={id} />
+        </Box>
+    );
+};
+
+
+
+const JiraIssueDetails = ({ id, row, entity, rwd, dashboard }) => {
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
     }
-    
-    return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
 
-        <FormTemplate 
-            formLabel={"Edytuj Jira Issue"}
+    return <Box sx={{ width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%' }}>
+
+        <FormTemplate
+            formLabel={renderLabel(id)}
             sendFormData={false}
             data={row}
-            schema={entity.schema.editForm.schema}    
-            onSubmit={(data) => entity.update(id, data)}    
+            schema={entity.schema.editForm.schema}
+            onSubmit={(data) => entity.update(id, data)}
             onCancel={onCancel}
-        />  
+        />
     </Box>
 }
 

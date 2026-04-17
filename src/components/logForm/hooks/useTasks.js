@@ -24,7 +24,45 @@ function getTaskKey(task) {
     );
 }
 
-export default function useTasks({ onSubmit, initialValues = {}, requiresQuantity = true, requiresRemarks = false }) {
+function normalizeTask(task) {
+    return {
+        ...task,
+        report: {
+            quantity: task?.report?.quantity ?? null,
+            quantityGood: task?.report?.quantityGood ?? null,
+            quantityScrap: task?.report?.quantityScrap ?? null,
+            is_rework: task?.report?.is_rework ?? false,
+            remarks: task?.report?.remarks ?? "",
+            requiresQuantity: task?.report?.requiresQuantity ?? true,
+            requiresRemarks: task?.report?.requiresRemarks ?? false,
+        },
+    };
+}
+
+function updateTaskReport(taskOrId, patch) {
+    const identity =
+        typeof taskOrId === "object"
+            ? getTaskIdentity(taskOrId)
+            : taskOrId;
+
+    if (!identity) return;
+
+    setTasks((prev) =>
+        prev.map((task) =>
+            getTaskIdentity(task) === identity
+                ? {
+                    ...task,
+                    report: {
+                        ...task.report,
+                        ...patch,
+                    },
+                }
+                : task
+        )
+    );
+}
+
+export default function useTasks({ onSubmit, initialValues = {}, requiresQuantity = true, requiresRemarks = false, requiresTasks = false }) {
     const [tasks, setTasks] = useState(
         Array.isArray(initialValues.tasks) ? initialValues.tasks : []
     );
@@ -64,18 +102,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
 
             if (exists) return prev;
 
-            return [
-                ...prev,
-                {
-                    ...task,
-                    report: {
-                        quantity: task?.report?.quantity ?? null,
-                        remarks: task?.report?.remarks ?? "",
-                        requiresQuantity: requiresQuantity, 
-                        requiresRemarks: requiresRemarks
-                    },
-                },
-            ];
+            return [...prev, normalizeTask(task)];
         });
     }
 
@@ -92,7 +119,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         );
     }
 
-    function setTaskQuantity(taskOrId, quantity) {
+    function updateTaskReport(taskOrId, patch) {
         const identity =
             typeof taskOrId === "object"
                 ? getTaskIdentity(taskOrId)
@@ -107,7 +134,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
                         ...task,
                         report: {
                             ...task.report,
-                            quantity,
+                            ...patch,
                         },
                     }
                     : task
@@ -115,28 +142,32 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         );
     }
 
+    function setTaskQuantity(taskOrId, quantity) {
+        updateTaskReport(taskOrId, { quantity });
+    }
+
+    function setTaskQuantityGood(taskOrId, quantityGood) {
+        updateTaskReport(taskOrId, { quantityGood });
+    }
+
+    function setTaskQuantityScrap(taskOrId, quantityScrap) {
+        updateTaskReport(taskOrId, { quantityScrap });
+    }
+
+    function setTaskIsRework(taskOrId, is_rework) {
+        updateTaskReport(taskOrId, { is_rework });
+    }
+
     function setTaskRemarks(taskOrId, remarks) {
+        updateTaskReport(taskOrId, { remarks });
+    }
 
-        const identity =
-            typeof taskOrId === "object"
-                ? getTaskIdentity(taskOrId)
-                : taskOrId;
+    function setTaskRequiresQuantity(taskOrId, requiresQuantity) {
+        updateTaskReport(taskOrId, { requiresQuantity });
+    }
 
-        if (!identity) return;
-
-        setTasks((prev) =>
-            prev.map((task) =>
-                getTaskIdentity(task) === identity
-                    ? {
-                        ...task,
-                        report: {
-                            ...task.report,
-                            remarks,
-                        },
-                    }
-                    : task
-            )
-        );
+    function setTaskRequiresRemarks(taskOrId, requiresRemarks) {
+        updateTaskReport(taskOrId, { requiresRemarks });
     }
 
     function clearTasks() {
@@ -144,18 +175,10 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
     }
 
     function replaceTasks(nextTasks) {
-        if (!Array.isArray(nextTasks)) {
-            setTasks([]);
-            return;
-        }
-
         setTasks(
-            nextTasks.map((task) => ({
-                ...task,
-                report: {
-                    quantity: task?.report?.quantity ?? null,
-                },
-            }))
+            Array.isArray(nextTasks)
+                ? nextTasks.map(normalizeTask)
+                : []
         );
     }
 
@@ -182,6 +205,16 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         0
     );
 
+    const totalQuantityGood = tasks.reduce(
+        (sum, task) => sum + Number(task?.report?.quantityGood || 0),
+        0
+    );
+
+    const totalQuantityScrap = tasks.reduce(
+        (sum, task) => sum + Number(task?.report?.quantityScrap || 0),
+        0
+    );
+
     return {
         state: {
             tasks,
@@ -192,9 +225,15 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
             removeTask,
             clearTasks,
             replaceTasks,
-            setTaskQuantity,
-            setTaskRemarks,
             submit,
+            updateTaskReport,
+            setTaskQuantity,
+            setTaskQuantityGood,
+            setTaskQuantityScrap,
+            setTaskIsRework,
+            setTaskRemarks,
+            setTaskRequiresQuantity,
+            setTaskRequiresRemarks,
         },
 
         getters: {
@@ -208,8 +247,8 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
             taskKeys,
             taskIds,
             totalQuantity,
-            requiresQuantity,
-            requiresRemarks,
+            totalQuantityGood,
+            totalQuantityScrap,
         },
     };
 }

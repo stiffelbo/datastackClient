@@ -1,7 +1,6 @@
 import React from "react";
 import {
     Box,
-    Chip,
     Stack,
     Table,
     TableBody,
@@ -24,33 +23,27 @@ const MaterialsUsageTable = ({
         return null;
     }
 
-    function renderRequiredChip(required) {
-        if (!required) return null;
-
-        return (
-            <Chip
-                size="small"
-                label="wymagany"
-                color="warning"
-                variant="outlined"
-            />
-        );
-    }
-
     function renderRow(material) {
         const row = value?.[material.id] ?? {};
         const qty = row.qty ?? "";
         const wasteQty = row.wasteQty ?? "";
-        const goodQty = row.goodQty ?? "";
+
+        const labelTitle = material.required ? "wartość jest wymagana" : "";
 
         return (
             <TableRow key={material.id} hover>
-                <TableCell sx={{ minWidth: 220 }}>
+                <TableCell sx={{ minWidth: 160 }}>
                     <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight={600}>
+                        <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            title={labelTitle}
+                            sx={{
+                                color: material.required ? "warning.main" : "text.primary",
+                            }}
+                        >
                             {material.name}
                         </Typography>
-                        {renderRequiredChip(material.required)}
                     </Stack>
                 </TableCell>
 
@@ -80,22 +73,11 @@ const MaterialsUsageTable = ({
                         value={wasteQty}
                         min={0}
                         step={material.step}
-                        required={material.required}
+                        required={false}
                         disabled={disabled}
                         onChange={(nextValue) =>
                             onFieldChange?.(material.id, "wasteQty", nextValue)
                         }
-                    />
-                </TableCell>
-
-                <TableCell sx={{ width: 160 }}>
-                    <InputNumber
-                        label="Dobra"
-                        value={goodQty}
-                        min={0}
-                        step={material.step}
-                        disabled
-                        onChange={() => {}}
                     />
                 </TableCell>
             </TableRow>
@@ -103,6 +85,10 @@ const MaterialsUsageTable = ({
     }
 
     function renderTable() {
+        const sortedMaterials = [...materials].sort(
+            (a, b) => Number(b.required) - Number(a.required)
+        );
+
         return (
             <Box
                 sx={{
@@ -112,7 +98,13 @@ const MaterialsUsageTable = ({
                     overflow: "hidden",
                 }}
             >
-                <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+                <Box
+                    sx={{
+                        p: 2,
+                        borderBottom: "1px solid",
+                        borderColor: "divider",
+                    }}
+                >
                     <Typography variant="subtitle2" fontWeight={600}>
                         {title}
                     </Typography>
@@ -125,10 +117,9 @@ const MaterialsUsageTable = ({
                             <TableCell>Jm</TableCell>
                             <TableCell>Ilość</TableCell>
                             <TableCell>Odpad</TableCell>
-                            <TableCell>Dobra</TableCell>
                         </TableRow>
                     </TableHead>
-                    <TableBody>{materials.map(renderRow)}</TableBody>
+                    <TableBody>{sortedMaterials.map(renderRow)}</TableBody>
                 </Table>
             </Box>
         );

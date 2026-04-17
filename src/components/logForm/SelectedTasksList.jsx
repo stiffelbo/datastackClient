@@ -3,6 +3,7 @@ import {
     Box,
     Stack,
     Typography,
+    Alert,
 } from "@mui/material";
 
 import TaskInfo from "./TaskInfo";
@@ -21,7 +22,15 @@ function getTaskKey(task) {
     );
 }
 
-function renderEmpty(emptyMessage) {
+function renderEmpty(emptyMessage, requiresTasks) {
+    if (requiresTasks) {
+        return (
+            <Alert severity="warning" variant="outlined">
+                {emptyMessage}
+            </Alert>
+        );
+    }
+
     return (
         <Typography variant="body2" color="text.secondary">
             {emptyMessage}
@@ -29,9 +38,65 @@ function renderEmpty(emptyMessage) {
     );
 }
 
-function renderTaskItem(task, onRemove, onQuantityChange, onRemarksChange) {
+function renderTaskInputs(task, tasksHook) {
     const quantity = task?.report?.quantity ?? "";
+    const quantityGood = task?.report?.quantityGood ?? "";
+    const quantityScrap = task?.report?.quantityScrap ?? "";
+    const remarks = task?.report?.remarks ?? "";
 
+    return (
+        <Stack spacing={1.5}>
+            <Stack spacing={1} direction="row">
+                <InputNumber
+                    label="Ilość czynności"
+                    value={quantity}
+                    required={task?.report?.requiresQuantity}
+                    min={0}
+                    step={1}
+                    onChange={(value) =>
+                        tasksHook.actions.setTaskQuantity(task, value)
+                    }
+                />
+
+                <InputNumber
+                    label="Ilość dobrych wyrobów"
+                    value={quantityGood}
+                    required={false}
+                    min={0}
+                    step={1}
+                    onChange={(value) =>
+                        tasksHook.actions.setTaskQuantityGood(task, value)
+                    }
+                />
+
+                <InputNumber
+                    label="Ilość odpadów"
+                    value={quantityScrap}
+                    required={false}
+                    min={0}
+                    step={1}
+                    onChange={(value) =>
+                        tasksHook.actions.setTaskQuantityScrap(task, value)
+                    }
+                />
+            </Stack>
+
+            <InputText
+                label="Komentarz"
+                value={remarks}
+                onChange={(value) =>
+                    tasksHook.actions.setTaskRemarks(task, value)
+                }
+                required={task?.report?.requiresRemarks}
+                multiline={true}
+                rows={4}
+                fullWidth
+            />
+        </Stack>
+    );
+}
+
+function renderTaskItem(task, tasksHook) {
     return (
         <Box
             key={getTaskKey(task)}
@@ -40,55 +105,32 @@ function renderTaskItem(task, onRemove, onQuantityChange, onRemarksChange) {
                 overflow: "hidden",
             }}
         >
-            <Stack spacing={0.75}>
-                <TaskInfo
-                    data={task}
-                    onRemove={onRemove}
-                >
-                    <Stack spacing={1}>
-                        <InputNumber
-                            label="Ilość do raportu"
-                            value={quantity}
-                            required={task?.report?.requiresQuantity}
-                            min={0}
-                            step={1}
-                            onChange={(value) => onQuantityChange?.(task, value)}
-                        />    
-                        <InputText
-                            label="Komentarz"
-                            value={task?.report?.remarks ?? ""}
-                            onChange={(value) => onRemarksChange?.(task, value)}
-                            required={task?.report?.requiresRemarks}
-                            multiline={true}
-                            rows={4}
-                            fullWidth
-                        />
-                    </Stack>
-                                   
-                </TaskInfo>                    
-            </Stack>
+            <TaskInfo
+                data={task}
+                onRemove={tasksHook.actions.removeTask}
+            >
+                {renderTaskInputs(task, tasksHook)}
+            </TaskInfo>
         </Box>
     );
 }
 
-function renderList(tasks, onRemove, onQuantityChange, onRemarksChange) {
+function renderList(taskItems, tasksHook) {
     return (
         <Stack spacing={1}>
-            {tasks.map((task) =>
-                renderTaskItem(task, onRemove, onQuantityChange, onRemarksChange)
-            )}
+            {taskItems.map((task) => renderTaskItem(task, tasksHook))}
         </Stack>
     );
 }
 
 export default function SelectedTasksList({
-    tasks = [],
-    onRemove,
-    onQuantityChange,
-    onRemarksChange,
+    tasks,
     emptyMessage = "Brak dodanych tasków.",
 }) {
-    const isEmpty = !Array.isArray(tasks) || tasks.length === 0;
+    const taskItems = tasks?.state?.tasks ?? [];
+    const requiresTasks = tasks?.computed?.requiresTasks ?? false;
+
+    const isEmpty = !Array.isArray(taskItems) || taskItems.length === 0;
 
     return (
         <Box
@@ -108,8 +150,8 @@ export default function SelectedTasksList({
             </Typography>
 
             {isEmpty
-                ? renderEmpty(emptyMessage)
-                : renderList(tasks, onRemove, onQuantityChange, onRemarksChange)}
+                ? renderEmpty(emptyMessage, requiresTasks)
+                : renderList(taskItems, tasks)}
         </Box>
     );
 }

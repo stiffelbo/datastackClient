@@ -142,7 +142,7 @@ export default function TaskInfo({
                 </Stack>
 
 
-                <Box fullWidth>
+                <Box sx={{width: '100%'}}>
                     {renderChildren()}
                 </Box>
             </Stack>
