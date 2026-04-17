@@ -32,6 +32,10 @@ import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperat
 import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
 import JiraIssueRawLogs from './pages/jiraIssueRawLogs/JiraIssueRawLogs';
+import ItAssetsTypes from './pages/itAssetsTypes/ItAssetsTypes';
+import ItAssets from './pages/itAssets/ItAssets';
+import ItAssetsShifts from './pages/itAssetsShifts/ItAssetsShifts';
+
 import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
 import NotFound from './pages/NotFound';
@@ -124,6 +128,14 @@ const App = () => (
         <Route path="materials/:id/:tab" element={<Materials />} />
         <Route path="materials/:id" element={<Materials />} />
         <Route path="materials" element={<Materials />} />
+
+        <Route path="itassetstypes" element={<ItAssetsTypes />} />
+
+        <Route path="itassestsshifts" element={<ItAssetsShifts />} />
+
+        <Route path="itassets/:id/:tab" element={<ItAssets />} />
+        <Route path="itassets/:id/" element={<ItAssets />} />
+        <Route path="itassets" element={<ItAssets />} />
 
         <Route path="userdashboard" element={<UserDashboard />} />
         <Route path="userlogform" element={<UserLogForm />} />

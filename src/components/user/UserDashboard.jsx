@@ -55,7 +55,7 @@ const UserDashboard = () => {
             <Box
                 sx={{
                     display: "grid",
-                    gridTemplateColumns: isMobile ? "1fr" : "1fr 11fr",
+                    gridTemplateColumns: isMobile ? "1fr" : "2fr 10fr",
                     gap: 2,
                     height: "100%",
                 }}

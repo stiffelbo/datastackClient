@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Alert, Grid, Box, Typography } from "@mui/material";
+import { useRwd } from "../../context/RwdContext";
 
 //Hooks
 import useEntity from "../../hooks/useEntity";
 import useTasks from "./hooks/useTasks";
 import useBrigades from "./hooks/useBrigades";
+import useProcesses from "./hooks/useProcesses";
 
 //DTO
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
@@ -19,10 +21,8 @@ import SelectedTasksList from "./SelectedTasksList";
 import ProcessForm from "./ProcessForm";
 import TimeForm from "./TimeForm";
 import BrigadeEmployeesForm from "./BrigadeEmployeesForm";
-import useProcesses from "./hooks/useProcesses";
 
 import PowerTable from "../powerTable/powerTable";
-import { useRwd } from "../../context/RwdContext";
 import RenderLogErrors from "./RenderLogErrors";
 
 const LogForm = ({ user }) => {
@@ -32,6 +32,11 @@ const LogForm = ({ user }) => {
 
     //Hooks
     const { height } = useRwd();
+
+    const opLogEntity = useEntity({entityName: 'JiraIssueOperationLog', endpoint: '/jira_issue_operation_log/', schemaOnly: true});
+    const matLogEntity = useEntity({entityName: 'JiraIssueMaterialsUsageLog', endpoint: '/jira_issue_material_usage_log/', schemaOnly: true});
+    const machineLogEntity = useEntity({entityName: 'JiraIssueMachineUsageLog', endpoint: '/jira_issue_machine_usage_log/', schemaOnly: true});
+    const prodLogEntity = useEntity({entityName: 'JiraIssueProductionLog', endpoint: '/jira_issue_production_output_log/', schemaOnly: true});
 
     const brigade = useBrigades({ initialTime: time, employees: brigadeEmployeesDto(user.brigades) });
 
@@ -83,7 +88,6 @@ const LogForm = ({ user }) => {
                 </Box>
             </Grid>
             <Grid item size={6}>
-
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
                     selectedIds={brigade.computed.selectedIds}
@@ -98,7 +102,7 @@ const LogForm = ({ user }) => {
         </Grid>
 
         <Grid container>
-            <Grid item size={6}>
+            <Grid item size={12}>
                 <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
                     <Typography variant="h6" gutterBottom>
                         Czasy Pracownika
@@ -107,10 +111,11 @@ const LogForm = ({ user }) => {
                         entityName="LogPreview_Operation"
                         data={draft.logs.operationLogs}
                         height={350}
+                        columnSchema={opLogEntity.schema.columns}
                     />
                 </Box>
             </Grid>
-            <Grid item size={6}>
+            <Grid item size={12}>
                 <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
                     <Typography variant="h6" gutterBottom>
                         Ilosci Produkcyjne
@@ -119,12 +124,11 @@ const LogForm = ({ user }) => {
                         entityName="LogPreview_OutputsLogs"
                         data={draft.logs.outputLogs}
                         height={350}
+                        columnSchema={prodLogEntity.schema.columns}
                     />
                 </Box>
             </Grid>            
-        </Grid>
-        <Grid container>
-            <Grid item size={6}>
+            <Grid item size={12}>
                 <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
                     <Typography variant="h6" gutterBottom>
                         Czasy Maszyn
@@ -133,10 +137,11 @@ const LogForm = ({ user }) => {
                         entityName="LogPreview_MachineLogs"
                         data={draft.logs.machineLogs}
                         height={350}
+                        columnSchema={machineLogEntity.schema.columns}
                     />
                 </Box>
             </Grid>
-            <Grid item size={6}>
+            <Grid item size={12}>
                 <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
                     <Typography variant="h6" gutterBottom>
                         Materiały
@@ -145,10 +150,10 @@ const LogForm = ({ user }) => {
                         entityName="LogPreview_MaterialsLogs"
                         data={draft.logs.materialLogs}
                         height={350}
+                        columnSchema={matLogEntity.schema.columns}
                     />
                 </Box>
             </Grid>
-            
         </Grid>
     </Box>;
 }
