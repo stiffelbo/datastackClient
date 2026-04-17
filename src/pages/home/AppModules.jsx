@@ -101,6 +101,11 @@ const renderAssignedPerson = (entry, pageId, index) => {
   const person = entry.person || entry.employee || null;
   const personName = getPersonName(person);
 
+  const storageUrl = import.meta.env.VITE_STORAGE_URL || "";
+  const profileUrl = person?.profile_url
+    ? `${storageUrl.replace(/\/$/, "")}/${person.profile_url.replace(/^\//, "")}`
+    : undefined;
+
   return (
     <Box
       key={`${pageId}-${entry.user_id}-${index}`}
@@ -113,7 +118,7 @@ const renderAssignedPerson = (entry, pageId, index) => {
     >
       <Stack direction="row" spacing={1.25} alignItems="flex-start">
         <Avatar
-          src={person?.profile_url || undefined}
+          src={profileUrl}
           alt={personName}
           sx={{ width: 36, height: 36 }}
         >
