@@ -17,7 +17,7 @@ import http from '../../http';
 const Register = () => {
   const [form, setForm] = useState({
     email: '',
-    name: '',
+    first_name: '',
     last_name: '',
     password: '',
     confirm: '',
@@ -76,10 +76,10 @@ const Register = () => {
           <TextField
             fullWidth
             margin="normal"
-            name="name"
+            name="first_name"
             label="Imię"
             required
-            value={form.name}
+            value={form.first_name}
             onChange={handleChange}
           />
           <TextField

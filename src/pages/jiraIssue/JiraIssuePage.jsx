@@ -1,4 +1,3 @@
-// pages/Employees/JiraIssuePage.jsx
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 

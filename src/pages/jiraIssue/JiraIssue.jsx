@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import useEntity from '../../hooks/useEntity';
 
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
