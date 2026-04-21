@@ -41,6 +41,7 @@ const PowerTable = ({
   //core table
   data = [],
   columnSchema = [],
+  strictSchema = false,
   schemaVersion = 0,
   treeConfig = null,
   //Form Schemas
@@ -77,7 +78,7 @@ const PowerTable = ({
 
   const presets = usePresets({ entityName, enablePresets });
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
-  const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit});
+  const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit, strictSchema : strictSchema});
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
   const editing = useTableEditing(onEdit);

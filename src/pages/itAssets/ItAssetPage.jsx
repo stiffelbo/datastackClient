@@ -22,6 +22,12 @@ const ItAssetPage = ({
             label: 'Edytuj',
             pageKey: 'it_asset_details', // klucz z rejestru stron
             component: <ItAssetDetails id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard} />,
+        },
+        {
+            key: 'shifts',
+            label: 'Wydania',
+            pageKey: 'it_asset_shifts', // klucz z rejestru stron
+            component: <ItAssetShifts id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard} />,
         }
     ];
 

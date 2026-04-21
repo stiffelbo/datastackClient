@@ -227,7 +227,11 @@ export const sortData = (data = [], sortModel = [], columns = []) => {
     for (const sort of sortModel) {
       const { field, direction } = sort;
       const col = getCol(field);
-      const type = col?.type || 'string';
+      
+      const type =
+        field === 'id'
+          ? 'number'
+          : (col?.type || 'string');
 
       let aValue = a?.[field];
       let bValue = b?.[field];
@@ -236,9 +240,10 @@ export const sortData = (data = [], sortModel = [], columns = []) => {
       if (aValue === null || aValue === undefined) aValue = '';
       if (bValue === null || bValue === undefined) bValue = '';
 
+      console.log(type);
       // 🔹 FK/select: sortujemy po label (string), nie po id
       // (u Ciebie type 'fk' już istnieje w switchu)
-      if (type === 'fk' || (col?.optionsMap && col?.input === 'select')) {
+      if (field !== 'id' && (type === 'fk' || (col?.optionsMap && col?.input === 'select'))) {
         aValue = normalizeString(resolveFkLabel(col, aValue));
         bValue = normalizeString(resolveFkLabel(col, bValue));
       } else {

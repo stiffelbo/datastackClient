@@ -44,7 +44,6 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
   // --------------------------------------------------------------------------
 
   //SINGLE SELECT
-
   if (type === "select") {
     if (parent === "body" || parent === "grouprow" || parent === "tree") {
       if (selected === params.id) {
@@ -65,7 +64,6 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
   }
 
   //MULTI SELECT
-
   else if (type === "multiSelect") {
     if (parent === "header") {
       // ids z obecnego widoku / filtrowanych wierszy
@@ -166,7 +164,6 @@ const getButton = ({ parent, column, columnsSchema, params, actionsApi, data = [
   }
 
   //DELETE
-
   else if (type === "delete") {
     if (parent === "body" || parent === "grouprow"  || parent === "tree") {
       button.icon = <DeleteIcon fontSize="small" />;

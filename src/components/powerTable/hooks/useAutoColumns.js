@@ -1,23 +1,13 @@
-/**
- * useAutoColumns - automatyczne generowanie schematu kolumn PowerTable na podstawie danych
- * 
- * Tworzy pełny schemat z właściwościami:
- * field, headerName, type, input, options, validationFn,
- * editable, hidden, styleFn, align, sortable, width, filters,
- * aggregationFn, formatterKey, renderCell, groupBy, groupIndex, source
- */
-
 import { useMemo } from 'react';
 
 /* -------------------------------------------------------------------------- */
 /* 🔹 TYPE DETECTORS                                                          */
 /* -------------------------------------------------------------------------- */
 
-/** Detekcja typu danych */
 const detectType = (value) => {
   if (value === null || value === undefined) return 'string';
   if (typeof value === 'number' && !isNaN(value)) return 'number';
-  if (typeof value === 'bool') return 'bool';
+  if (typeof value === 'boolean') return 'bool';
   if (typeof value === 'string') {
     const num = Number(value);
     if (!isNaN(num) && value.trim() !== '') return 'number';
@@ -28,7 +18,6 @@ const detectType = (value) => {
   return 'string';
 };
 
-/** Detekcja preferowanej szerokości kolumny */
 const detectWidth = (value) => {
   if (value === null || value === undefined) return 90;
   const str = String(value);
@@ -41,15 +30,12 @@ const detectWidth = (value) => {
   return 320;
 };
 
-/** Upiększanie nazw kolumn */
 export const prettifyHeader = (str) => {
   if (!str) return '';
   return String(str)
     .trim()
     .split(/[_\s-]+/)
-    .map(
-      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    )
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
 
@@ -57,8 +43,7 @@ export const prettifyHeader = (str) => {
 /* 🔹 TYPE → INPUT / DISPLAY MAP                                              */
 /* -------------------------------------------------------------------------- */
 
-/** Automatyczne dopasowanie typu inputa do typu danych */
-const inferinput = (type) => {
+const inferInput = (type) => {
   switch (type) {
     case 'number':
       return 'number';
@@ -74,7 +59,6 @@ const inferinput = (type) => {
   }
 };
 
-/** Automatyczne dopasowanie typu wyświetlania (displayType) */
 const inferDisplayType = (type) => {
   switch (type) {
     case 'bool':
@@ -94,80 +78,103 @@ const inferDisplayType = (type) => {
 const inferAlign = (type) => {
   switch (type) {
     case 'bool':
+    case 'boolean':
       return 'center';
     case 'number':
       return 'right';
     default:
       return 'left';
   }
-}
+};
+
+/* -------------------------------------------------------------------------- */
+/* 🔹 HELPERS                                                                 */
+/* -------------------------------------------------------------------------- */
+
+const buildColumn = ({ key, value, devCol = {} }) => {
+  const type = devCol?.type ?? detectType(value);
+  const input = devCol?.input ?? inferInput(type);
+  const width = devCol?.width ?? detectWidth(value);
+  const aggregationFn = devCol?.aggregationFn ?? devCol?.aggregation ?? null;
+
+  return {
+    /* 📘 Identyfikacja */
+    field: key,
+    fieldGroup: devCol?.fieldGroup ?? '',
+    headerName: devCol?.headerName ?? prettifyHeader(key),
+
+    /* 📗 Typy danych i renderowania */
+    type,
+    input,
+    displayType: devCol?.displayType ?? inferDisplayType(type),
+
+    /* 📙 Edycja / Walidacja */
+    editable: devCol?.editable ?? false,
+    validationFn: devCol?.validationFn ?? null,
+    options: devCol?.options ?? [],
+    optionsMap: devCol?.optionsMap ?? {},
+
+    /* 📒 Formatowanie i wygląd */
+    styleFn: devCol?.styleFn ?? null,
+    formatterKey: devCol?.formatterKey ?? null,
+    renderCell: devCol?.renderCell ?? null,
+    align: devCol?.align ?? inferAlign(type),
+    hidden: devCol?.hidden ?? false,
+    sortable: devCol?.sortable ?? true,
+    width,
+
+    /* 📕 Grupowanie i agregacje */
+    aggregationFn,
+    groupBy: devCol?.groupBy ?? false,
+    groupIndex: devCol?.groupIndex ?? null,
+
+    /* 📔 Dodatkowe */
+    filters: devCol?.filters ?? null,
+    source: devCol?.source ?? (Object.keys(devCol || {}).length ? 'dev+auto' : 'auto'),
+
+    /* meta opcjonalnie przepuszczamy jeśli dev ma */
+    ...(devCol?.meta ? { meta: devCol.meta } : {}),
+  };
+};
 
 /* -------------------------------------------------------------------------- */
 /* 🔹 HOOK                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const useAutoColumns = ({data = [], dev = {}}) => {
-  //console.log(dev);
+const useAutoColumns = ({ data = [], dev = {}, strictSchema = false }) => {
   return useMemo(() => {
-    if (!Array.isArray(data) || data.length === 0) return [];
+    const safeData = Array.isArray(data) ? data : [];
+    const sample = safeData[0] && typeof safeData[0] === 'object' ? safeData[0] : null;
+    const devKeys = dev && typeof dev === 'object' ? Object.keys(dev) : [];
 
-    const sample = data[0];
-    if (!sample || typeof sample !== 'object') return [];
+    if (strictSchema) {
+      if (devKeys.length === 0) return [];
+
+      return devKeys.map((key) => {
+        const value = sample?.[key];
+        const devCol = dev[key] || {};
+        return buildColumn({ key, value, devCol });
+      });
+    }
+
+    if (!sample) return [];
 
     return Object.entries(sample).map(([key, value]) => {
-
-      const type = dev[key]?.type ? dev[key].type : detectType(value);
-      const input = dev[key]?.input ? dev[key].input : inferinput(value);
-      const width = dev[key]?.width ? dev[key].width : detectWidth(value);
-      const aggregationFn = dev[key]?.aggregation ? dev[key].aggregation : null
-      return {
-        /* 📘 Identyfikacja */
-        field: key,
-        fieldGroup: '',
-        headerName: prettifyHeader(key),
-
-        /* 📗 Typy danych i renderowania */
-        type,
-        input,
-        displayType: inferDisplayType(type),
-
-        /* 📙 Edycja / Walidacja */
-        editable: false, // lub (params) => bool
-        validationFn: null, // (val, params) => true | false | 'error message'
-        options: [], // dla selectów / lookupów
-        optionsMap: {}, // dla selectów / lookupów
-
-        /* 📒 Formatowanie i wygląd */
-        styleFn: null, // (val, params) => sx
-        formatterKey: null, // np. 'currencyPL'
-        renderCell: null, // niestandardowy renderer: params => <Component />
-        align: inferAlign(type),
-        hidden: false,
-        sortable: true,
-        width,
-
-        /* 📕 Grupowanie i agregacje */
-        aggregationFn, // 'sum' | 'avg' | fn
-        groupBy: false,
-        groupIndex: null,
-
-        /* 📔 Dodatkowe */
-        filters: null,
-        source: 'auto',
-      };
+      const devCol = dev[key] || {};
+      return buildColumn({ key, value, devCol });
     });
-  }, [data]);
+  }, [data, dev, strictSchema]);
 };
 
 export default useAutoColumns;
 
 /* -------------------------------------------------------------------------- */
-/* 🔹 FABRYKA KOLUMN AKCJI                                                   */
+/* 🔹 FABRYKA KOLUMN AKCJI                                                    */
 /* -------------------------------------------------------------------------- */
 
-export const createActionColumns = ({isDeleteCol, isSelectCol, isSelectedItemsCol}) => {
-  
+export const createActionColumns = ({ isDeleteCol, isSelectCol, isSelectedItemsCol }) => {
   const columns = [];
+
   const makeColumn = (name, width = 26) => {
     return {
       field: `__action_${name}`,
@@ -176,21 +183,21 @@ export const createActionColumns = ({isDeleteCol, isSelectCol, isSelectedItemsCo
       order: 0,
       type: 'action',
       align: 'center',
-      width: width,
+      width,
       sortable: false,
       filterable: false,
       editable: false,
       groupBy: false,
       hidden: false,
-      meta : {
+      meta: {
         type: name,
-      }
-    }
-  }
-  
-  if(isDeleteCol) columns.push(makeColumn('delete'));
-  if(isSelectCol) columns.push(makeColumn('select'));
-  if(isSelectedItemsCol) columns.push(makeColumn('multiSelect'));
+      },
+    };
+  };
+
+  if (isDeleteCol) columns.push(makeColumn('delete'));
+  if (isSelectCol) columns.push(makeColumn('select'));
+  if (isSelectedItemsCol) columns.push(makeColumn('multiSelect'));
+
   return columns;
 };
-
