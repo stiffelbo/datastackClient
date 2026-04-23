@@ -10,7 +10,7 @@ const defaultRwd = {
   height: window.innerHeight,
 };
 
-const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
+const ResourceProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
   // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
   const optionsEntity = useEntity({
     endpoint: '/processes/',
@@ -21,9 +21,9 @@ const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
 
   // lewa strona – pozycje przypisane
   const assignedEntity = useEntity({
-    endpoint: '/processes_materials/',
-    entityName: 'ProcessesMaterials',
-    query: { material_id: id },
+    endpoint: '/processes_resources/',
+    entityName: 'ProcessesResources',
+    query: { resource_id: id },
   });
   const assigned = assignedEntity.rows;
 
@@ -41,7 +41,7 @@ const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
       // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
         process_id: mappedItemData.id,
-        material_id: id,
+        resource_id: id,
         quantity_per_unit: 1,
         unit: 'szt',
         is_required: true,
@@ -91,8 +91,8 @@ const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
       }}
     >
       <Mapper
-        entityName='MaterialsProcessesMapper'
-        ownerLabel="Procesy Materiału"
+        entityName='ResourcesProcessesMapper'
+        ownerLabel="Procesy Zasobu"
         owner={{ id }}
 
         leftData={assigned}
@@ -107,7 +107,7 @@ const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
         idField="id"
         orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
         distinct={true}
-        distinctField='material_id'
+        distinctField='resource_id'
 
         onAdd={handleAdd}
         onEditLeft={handleEditLeft}
@@ -121,4 +121,4 @@ const MaterialProcesses = ({ id = null, data = {}, rwd = defaultRwd }) => {
   );
 };
 
-export default MaterialProcesses;
+export default ResourceProcesses;

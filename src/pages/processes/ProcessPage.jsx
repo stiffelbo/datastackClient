@@ -5,8 +5,8 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import ProcessUsers from './ProcessUsers';
 import ProcessMachines from './ProcessMachines';
-import ProcessMaterials from './ProcessMaterials';
 import ProcessDetails from './ProcessDetails';
+import ProcessResources from './ProcessResources';
 
 const ProcessPage = ({
   entityName,
@@ -42,10 +42,10 @@ const ProcessPage = ({
       component: <ProcessMachines id={id} data={row} rwd={rwd}/>,
     },
     {
-      key: 'process_materials',
-      label: 'Materiały',
-      pageKey: 'process_materials', // klucz z rejestru stron
-      component: <ProcessMaterials id={id} data={row} rwd={rwd}/>,
+      key: 'process_resources',
+      label: 'Zasoby',
+      pageKey: 'process_resources', // klucz z rejestru stron
+      component: <ProcessResources id={id} data={row} rwd={rwd}/>,
     },
   ];
 

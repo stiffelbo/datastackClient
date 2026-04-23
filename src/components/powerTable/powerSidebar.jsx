@@ -16,7 +16,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import AllFilters from './filter/allFilters';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false , showExport = false, showPresets = false}) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false, showExport = false, showPresets = false }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -27,7 +27,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   const renderSearchControl = () => {
     const allFilters = columnsSchema.getAllFilters();
     const activeFiltersCount = allFilters.length + (columnsSchema.globalSearch ? 1 : 0);
-    const {globalSearch} = columnsSchema;
+    const { globalSearch } = columnsSchema;
 
     const title = globalSearch ? `Fraza: ${globalSearch}` : 'Szukaj...';
 
@@ -57,8 +57,8 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          
-          <AllFilters 
+
+          <AllFilters
             columnsSchema={columnsSchema}
           />
         </Menu>
@@ -67,7 +67,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   };
 
   const renderAdd = () => {
-    if(!showAdd) return;
+    if (!showAdd) return;
     return <Tooltip title="Dodaj">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='primary' onClick={() => onOpenSettings('addForm')}>
         <AddCircleOutlineIcon fontSize="small" />
@@ -76,51 +76,63 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   };
 
   const renderShowSelected = () => {
-    if(actionsApi.selectedIds.length){
-      if(!columnsSchema.showSelected){
+    if (actionsApi.selectedIds.length) {
+      if (!columnsSchema.showSelected) {
         return <Tooltip title={"Filtruj zaznaczone (" + actionsApi.selectedIds.length + ")"}>
-      <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(true)}>
-        <CheckCircleIcon  fontSize="small" />
-      </IconButton>
-    </Tooltip>
-      }else{
+          <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(true)}>
+            <CheckCircleIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      } else {
         return <Tooltip title={"Usuń filtr zaznaczone (" + actionsApi.selectedIds.length + ")"}>
-      <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(false)}>
-        <ClearIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
+          <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(false)}>
+            <ClearIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       }
     }
   }
 
   const renderBulkEditControl = () => {
-    if(actionsApi.selectedIds.length && bulkEdit){
+    if (actionsApi.selectedIds.length && bulkEdit) {
       return <Tooltip title="Multi Edycja">
         <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => onOpenSettings('bulkForm')}>
           <ChecklistIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-    }    
+    }
   }
 
   const renderBulkDeleteControl = () => {
     const handle = async () => {
-      const res = await onBulkDelete(actionsApi.selectedIds);
-      console.log(res);
+      const confirmed = window.confirm(
+        `Usunąć ${actionsApi.selectedIds.length} zaznaczonych rekordów?`
+      );
+
+      if (!confirmed) return;
+
+      await onBulkDelete(actionsApi.selectedIds);
       actionsApi.clearMultiSelect();
+    };
+
+    if (actionsApi.selectedIds.length) {
+      return (
+        <Tooltip title="Usuń zaznaczone">
+          <IconButton
+            size="small"
+            sx={{ width: 40, height: 40 }}
+            color="error"
+            onClick={handle}
+          >
+            <DeleteForeverIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      );
     }
-
-    if(actionsApi.selectedIds.length){
-      return <Tooltip title="Usuń zaznaczone">
-        <IconButton size="small" sx={{ width: 40, height: 40 }} color="error" onClick={handle}>
-          <DeleteForeverIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    }    
-  }
-
+  };
+  
   const renderPresetControl = () => {
-    if(!showPresets) return;
+    if (!showPresets) return;
     return <Tooltip title="Preset">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color="primary" onClick={() => onOpenSettings('presets')}>
         <TuneIcon fontSize="small" />
@@ -137,16 +149,16 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema, presets, actionsApi, onEx
   );
 
   const renderExportControl = () => {
-    if(!showExport) return;
+    if (!showExport) return;
     return <Tooltip title="Export Data">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={onExport}>
         <FileDownloadIcon fontSize="small" />
       </IconButton>
-    </Tooltip> 
+    </Tooltip>
   }
 
   const renderUploadControl = () => {
-    if(!showUpload) return;
+    if (!showUpload) return;
     return <Tooltip title="Upload XSLSX">
       <IconButton size="small" sx={{ width: 40, height: 40 }} color='info' onClick={() => onOpenSettings('uploadData')}>
         <UploadFileIcon fontSize="small" />

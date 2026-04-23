@@ -5,11 +5,11 @@ import useEntity from '../../hooks/useEntity';
 
 // Comp
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
-import MaterialPage from './MaterialPage';
+import ResourcePage from './ResourcePage';
 
-const entityName = "Materials";
-const basePath = "/materials";
-const endpoint = "/materials/";
+const entityName = "Resources";
+const basePath = "/resources";
+const endpoint = "/resources/";
 
 const Dashboard = () => {
     
@@ -17,7 +17,7 @@ const Dashboard = () => {
     
     return (
         <BaseEntityDashboard
-            renderPage={(props) => <MaterialPage entity={entity} entityName={entityName} {...props} />}
+            renderPage={(props) => <ResourcePage entity={entity} entityName={entityName} {...props} />}
             entity={entity}
             entityName={entityName}
             basePath={basePath}

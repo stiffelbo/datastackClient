@@ -3,10 +3,10 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
-import MaterialProcesses from './MaterialProcesses';
-import MaterialDetails from './MaterialDetails';
+import ResourceProcesses from './ResourceProcesses';
+import ResourceDetails from './ResourceDetails';
 
-const MaterialPage = ({
+const ResourcePage = ({
   entityName,
   entity,
   dashboard,
@@ -24,14 +24,14 @@ const MaterialPage = ({
     {
       key: 'details',
       label: 'Szczegóły',
-      pageKey: 'material_details', // klucz z rejestru stron
-      component: <MaterialDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+      pageKey: 'resource_details', // klucz z rejestru stron
+      component: <ResourceDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
     {
       key: 'processes',
       label: 'Procesy',
-      pageKey: 'material_process', // klucz z rejestru stron
-      component: <MaterialProcesses id={id} data={row} rwd={rwd} />,
+      pageKey: 'resource_process', // klucz z rejestru stron
+      component: <ResourceProcesses id={id} data={row} rwd={rwd} />,
     },
   ];
 
@@ -50,4 +50,4 @@ const MaterialPage = ({
   );
 };
 
-export default MaterialPage;
+export default ResourcePage;

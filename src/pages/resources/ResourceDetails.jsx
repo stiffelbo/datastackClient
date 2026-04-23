@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 
 import FormTemplate from '../../components/powerTable/form/formTemplate';
 
-const MaterialDetails = ({id, row, entity, rwd, dashboard}) => {
+const ResourceDetails = ({id, row, entity, rwd, dashboard}) => {
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
@@ -14,7 +14,7 @@ const MaterialDetails = ({id, row, entity, rwd, dashboard}) => {
     return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
 
         <FormTemplate 
-            formLabel={"Edytuj Materiał"}
+            formLabel={"Edytuj Zasób"}
             sendFormData={false}
             data={row}
             schema={entity.schema.editForm.schema}    
@@ -24,4 +24,4 @@ const MaterialDetails = ({id, row, entity, rwd, dashboard}) => {
     </Box>
 }
 
-export default MaterialDetails;
+export default ResourceDetails;

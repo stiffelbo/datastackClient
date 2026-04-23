@@ -34,7 +34,7 @@ const LogForm = ({ user }) => {
     const { height } = useRwd();
 
     const opLogEntity = useEntity({entityName: 'JiraIssueOperationLog', endpoint: '/jira_issue_operation_log/', schemaOnly: true});
-    const matLogEntity = useEntity({entityName: 'JiraIssueMaterialsUsageLog', endpoint: '/jira_issue_material_usage_log/', schemaOnly: true});
+    const matLogEntity = useEntity({entityName: 'JiraIssueResourceUsageLog', endpoint: '/jira_issue_resource_usage_log/', schemaOnly: true});
     const machineLogEntity = useEntity({entityName: 'JiraIssueMachineUsageLog', endpoint: '/jira_issue_machine_usage_log/', schemaOnly: true});
     const prodLogEntity = useEntity({entityName: 'JiraIssueProductionLog', endpoint: '/jira_issue_production_output_log/', schemaOnly: true});
 

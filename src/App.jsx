@@ -19,15 +19,14 @@ import Costs from './pages/costs/Costs';
 import Periods from './pages/periods/Periods';
 import Contractor from './pages/contractor/Contractor';
 import Processes from './pages/processes/Processes';
-import Materials from './pages/materials/Materials';
+import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
-import CostItemDict from './pages/costItemDict/CostItemDict';
 import JiraIssueGroups from './pages/jiraIssueGroups/JiraIssueGroups';
-import JiraIssueCosts from './pages/jiraIssueCosts/JiraIssueCosts';
+import JiraIssueDirectPurchase from './pages/jiraIssueDirectPurchase/JiraIssueDirectPurchase';
 import JiraIssueMachineUsageLog from './pages/jiraIssueMachineUsageLog/JiraIssueMachineUsageLog';
-import JiraIssueMaterialUsageLog from './pages/jiraIssueMaterialUsageLog/JiraIssueMaterialUsageLog';
+import JiraIssueResourceUsageLog from './pages/jiraIssueResourceUsageLog/JiraIssueResourceUsageLog';
 import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperationLog';
 import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
@@ -63,9 +62,9 @@ const App = () => (
         <Route path="salaries" element={<Salaries />} />
         
         <Route path="jiraissuegroups" element={<JiraIssueGroups />} />
-        <Route path="jiraissuecosts" element={<JiraIssueCosts />} />
+        <Route path="jiraissuedirectpurchase" element={<JiraIssueDirectPurchase />} />
         <Route path="jiraissuemachineusagelog" element={<JiraIssueMachineUsageLog />} />
-        <Route path="jiraissuematerialusagelog" element={<JiraIssueMaterialUsageLog />} />
+        <Route path="jiraissueresourcesusagelog" element={<JiraIssueResourceUsageLog />} />
         <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
         <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
@@ -81,10 +80,6 @@ const App = () => (
         <Route path="pages/:id/:tab" element={<Pages />} />
         <Route path="pages/:id" element={<Pages />} />
         <Route path="pages" element={<Pages />} />
-
-        <Route path="costitemdict/:id/:tab" element={<CostItemDict />} />
-        <Route path="costitemdict/:id" element={<CostItemDict />} />
-        <Route path="costitemdict" element={<CostItemDict />} />
 
         <Route path="periods/:id/:tab" element={<Periods />} />
         <Route path="periods/:id" element={<Periods />} />
@@ -125,9 +120,9 @@ const App = () => (
         <Route path="processes/:id" element={<Processes />} />
         <Route path="processes" element={<Processes />} />
 
-        <Route path="materials/:id/:tab" element={<Materials />} />
-        <Route path="materials/:id" element={<Materials />} />
-        <Route path="materials" element={<Materials />} />
+        <Route path="resources/:id/:tab" element={<Resources />} />
+        <Route path="resources/:id" element={<Resources />} />
+        <Route path="resources" element={<Resources />} />
 
         <Route path="itassetstypes" element={<ItAssetsTypes />} />
 

@@ -10,19 +10,19 @@ const defaultRwd = {
   height: window.innerHeight,
 };
 
-const ProcessMaterials = ({ id = null, data = {}, rwd = defaultRwd }) => {
+const ProcessResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
   // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
   const optionsEntity = useEntity({
-    endpoint: '/materials/',
-    entityName: 'Materials',
+    endpoint: '/resources/',
+    entityName: 'Resources',
     readOnly: true,
   });
   const options = optionsEntity.rows;
 
   // lewa strona – pozycje przypisane
   const assignedEntity = useEntity({
-    endpoint: '/processes_materials/',
-    entityName: 'ProcessesMaterials',
+    endpoint: '/processes_resources/',
+    entityName: 'ProcessesResources',
     query: { process_id: id },
   });
   const assigned = assignedEntity.rows;
@@ -41,7 +41,7 @@ const ProcessMaterials = ({ id = null, data = {}, rwd = defaultRwd }) => {
       // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
         process_id: id,
-        material_id: mappedItemData.id,
+        resource_id: mappedItemData.id,
         quantity_per_unit: 1,
         unit: 'szt',
         is_required: true,
@@ -91,8 +91,8 @@ const ProcessMaterials = ({ id = null, data = {}, rwd = defaultRwd }) => {
       }}
     >
       <Mapper
-        entityName='ProcessesMaterialsMapper'
-        ownerLabel="Materiały Procesu"
+        entityName='ProcessesResourcesMapper'
+        ownerLabel="Zasoby Procesu"
         owner={{ id }}
 
         leftData={assigned}
@@ -107,7 +107,7 @@ const ProcessMaterials = ({ id = null, data = {}, rwd = defaultRwd }) => {
         idField="id"
         orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
         distinct={true}
-        distinctField='material_id'
+        distinctField='resource_id'
 
         onAdd={handleAdd}
         onEditLeft={handleEditLeft}
@@ -121,4 +121,4 @@ const ProcessMaterials = ({ id = null, data = {}, rwd = defaultRwd }) => {
   );
 };
 
-export default ProcessMaterials;
+export default ProcessResources;
