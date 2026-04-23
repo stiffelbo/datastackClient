@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import {
   Button,
   Menu,
   MenuItem,
   Box,
-  Typography,
-  IconButton,
   Chip
 } from '@mui/material';
 
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 import { useNav } from '../context/NavContext';
 
 const MainNav = ({ pages }) => {
-  if (!pages) return;
+  if (!pages?.length) return null;
+
   const { page } = useNav();
   const [anchorEls, setAnchorEls] = useState({});
 
-  // Grupowanie stron po `group`
-  const groupedPages = pages.reduce((acc, p) => {
-    if (!acc[p.group]) acc[p.group] = [];
-    acc[p.group].push(p);
+  const isExternal = (route) =>
+    /^https?:\/\//i.test(String(route));
+
+  const internalPages = pages.filter((p) => !isExternal(p.route));
+  const externalLinks = pages.filter((p) => isExternal(p.route));
+
+  const groupedPages = internalPages.reduce((acc, p) => {
+    const groupName = p.group || 'Pozostałe';
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(p);
     return acc;
   }, {});
 
@@ -35,15 +39,49 @@ const MainNav = ({ pages }) => {
     setAnchorEls((prev) => ({ ...prev, [group]: null }));
   };
 
-  const renderGroup = (group, pages) => {
-    if (pages.length === 1) {
-      const p = pages[0];
+  const renderNavItem = (p, onClick) => {
+    const external = isExternal(p.route);
+
+    if (external) {
+      return (
+        <MenuItem
+          key={p.name}
+          component="a"
+          href={p.route}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClick}
+        >
+          {p.label}
+        </MenuItem>
+      );
+    }
+
+    return (
+      <MenuItem
+        key={p.name}
+        component={RouterLink}
+        to={p.route}
+        selected={p.name === page}
+        onClick={onClick}
+      >
+        {p.label}
+      </MenuItem>
+    );
+  };
+
+  const renderSingleButton = (p) => {
+    const external = isExternal(p.route);
+
+    if (external) {
       return (
         <Button
           key={p.name}
-          color={p.name === page ? 'primary' : 'inherit'}
-          component={RouterLink}
-          to={p.name}
+          color="inherit"
+          component="a"
+          href={p.route}
+          target="_blank"
+          rel="noopener noreferrer"
           size="small"
         >
           {p.label}
@@ -52,31 +90,46 @@ const MainNav = ({ pages }) => {
     }
 
     return (
+      <Button
+        key={p.name}
+        color={p.name === page ? 'primary' : 'inherit'}
+        component={RouterLink}
+        to={p.route}
+        size="small"
+      >
+        {p.label}
+      </Button>
+    );
+  };
+
+  const renderGroup = (group, items) => {
+    if (!items?.length) return null;
+
+    if (items.length === 1) {
+      return renderSingleButton(items[0]);
+    }
+
+    const hasActiveInternalPage = items.some(
+      (p) => !isExternal(p.route) && p.name === page
+    );
+
+    return (
       <Box key={group} sx={{ display: 'inline-block' }}>
         <Button
           onClick={handleOpen(group)}
-          color={pages.some((p) => p.name === page) ? 'primary' : 'inherit'}
+          color={hasActiveInternalPage ? 'primary' : 'inherit'}
           endIcon={<ArrowDropDownIcon />}
           size="small"
         >
           {group}
         </Button>
+
         <Menu
           anchorEl={anchorEls[group]}
           open={Boolean(anchorEls[group])}
           onClose={handleClose(group)}
         >
-          {pages.map((p) => (
-            <MenuItem
-              key={p.name}
-              component={RouterLink}
-              to={p.name}
-              selected={p.name === page}
-              onClick={handleClose(group)}
-            >
-              {p.label}
-            </MenuItem>
-          ))}
+          {items.map((p) => renderNavItem(p, handleClose(group)))}
         </Menu>
       </Box>
     );
@@ -84,16 +137,14 @@ const MainNav = ({ pages }) => {
 
   const renderActivePage = () => {
     let activePageLabel = '';
+
     if (!page) {
       activePageLabel = 'Strona domowa';
-    }
-    else if (page === 'userdashboard') {
+    } else if (page === 'userdashboard') {
       activePageLabel = 'Panel użytkownika';
-    }
-    else if (page === 'userlogform') {
+    } else if (page === 'userlogform') {
       activePageLabel = 'Logi użytkownika';
-    }
-    else {
+    } else {
       const activePage = pages.find((p) => p.name === page);
       if (!activePage) return null;
       activePageLabel = activePage.label;
@@ -101,20 +152,17 @@ const MainNav = ({ pages }) => {
 
     return (
       <Chip
-        key={activePageLabel} // ⬅️ WAŻNE: reset animacji przy zmianie
+        key={activePageLabel}
         label={activePageLabel}
         size="medium"
         variant="outlined"
-        color='primary'
+        color="primary"
         title={`Aktualnie na stronie: ${activePageLabel}`}
         sx={{
           height: 32,
           borderRadius: 999,
           fontWeight: 600,
-
-          // start animacji
           animation: 'dsChipIn 220ms ease-out, dsChipPulse 900ms ease-out',
-
           '@keyframes dsChipIn': {
             from: {
               opacity: 0,
@@ -125,7 +173,6 @@ const MainNav = ({ pages }) => {
               transform: 'translateY(0)',
             },
           },
-
           '@keyframes dsChipPulse': {
             '0%': {
               boxShadow: '0 0 0 0 rgba(37,99,235,0.35)',
@@ -143,10 +190,13 @@ const MainNav = ({ pages }) => {
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
       {Object.entries(groupedPages).map(([group, groupPages]) =>
         renderGroup(group, groupPages)
       )}
+
+      {!!externalLinks.length && renderGroup('Strony zewnętrzne', externalLinks)}
+
       {renderActivePage()}
     </Box>
   );

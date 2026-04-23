@@ -26,8 +26,6 @@ const Home = () => {
       });
   }, []);
 
-  console.log(pagesData);
-
   return (
     <Box sx={{mt: 1, height: contentHeight, maxHeight: contentHeight, overflowY: 'hidden'}}>
       <AppDescription pages={pagesData}/>

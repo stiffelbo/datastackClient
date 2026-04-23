@@ -43,7 +43,7 @@ const UserDropdown = () => {
                 <Box sx={{ px: 2, py: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                     <AppVersion />
                     <Typography variant="subtitle1">
-                        {userData.name} {userData.last_name} 
+                        {userData.first_name} {userData.last_name} 
                         <Chip label={userData.role} size="small" variant="outlined" color="default" sx={{ ml: 1 }} />
                     </Typography>        
                     
