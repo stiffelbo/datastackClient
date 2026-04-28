@@ -5,6 +5,8 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import MachineDetails from './MachineDetails';
 import MachineProcesses from './MachineProcesses';
+import MachineResources from './MachineResources';
+import MachineToolsTypes from './MachineToolsTypes';
 
 const MachinePage = ({
   entityName,
@@ -31,6 +33,18 @@ const MachinePage = ({
       label: 'Procesy',
       pageKey: 'machine_processes', // klucz z rejestru stron
       component: <MachineProcesses id={id} data={row} rwd={rwd}/>,
+    },
+    {
+      key: 'resources',
+      label: 'Zasoby',
+      pageKey: 'machine_resources', // klucz z rejestru stron
+      component: <MachineResources id={id} data={row} rwd={rwd}/>,
+    },
+    {
+      key: 'toolstypes',
+      label: 'Typy Narzedzi',
+      pageKey: 'machine_tools_types', // klucz z rejestru stron
+      component: <MachineToolsTypes id={id} data={row} rwd={rwd}/>,
     },
   ];
 

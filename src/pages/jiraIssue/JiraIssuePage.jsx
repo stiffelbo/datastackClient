@@ -3,7 +3,6 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 import JiraIssueDetails from './JiraIssueDetails';
 import JiraIssueClockify from './JiraIssueClockify';
-import JiraIssueCosts from './JiraIssueCosts';
 import JiraIssueProductionTasks from './JiraIssueProductionTasks';
 import JiraIssueMaterials from './JiraIssueMaterials';
 import JiraIssueWorklog from './JiraIssueWorklog';
@@ -42,12 +41,6 @@ const JiraIssuePage = ({
       label: 'Czas pracy',
       pageKey: 'jiraissue.worklog', // klucz z rejestru stron
       component: <JiraIssueWorklog id={id} row={row} rwd={rwd}/>,
-    },
-    {
-      key: 'costs',
-      label: 'Zakupy',
-      pageKey: 'jiraissue.costs', // klucz z rejestru stron
-      component: <JiraIssueCosts id={id} rwd={rwd}/>,
     },
     {
       key: 'productionTasks',

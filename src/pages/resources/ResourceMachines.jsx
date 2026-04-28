@@ -1,4 +1,4 @@
-// pages/Employees/JiraIssueCosts.jsx
+// pages/Employees/PageUser.jsx
 import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 
@@ -10,22 +10,22 @@ const defaultRwd = {
   height: window.innerHeight,
 };
 
-const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
-  // prawa strona – słownik kosztów, w trybie readOnly (odchudzony schema)
-  const costsDictEntity = useEntity({
-    endpoint: '/cost_item_dict/',
-    entityName: 'cost_item_dict',
+const ResourceMachines = ({ id = null, data = {}, rwd = defaultRwd }) => {
+  // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
+  const optionsEntity = useEntity({
+    endpoint: '/machines/',
+    entityName: 'Maszyny',
     readOnly: true,
   });
-  const availableCosts = costsDictEntity.rows;
+  const options = optionsEntity.rows;
 
-  // lewa strona – pozycje przypisane do issue
-  const jiraIssueCostsEntity = useEntity({
-    endpoint: '/jira_issue_costs/',
-    entityName: 'jira_issue_costs',
-    query: { issue_id: id },
+  // lewa strona – pozycje przypisane
+  const assignedEntity = useEntity({
+    endpoint: '/machines_resources/',
+    entityName: 'MachinesResources',
+    query: { resource_id: id },
   });
-  const assignedCosts = jiraIssueCostsEntity.rows;
+  const assigned = assignedEntity.rows;
 
   // ---- CALLBACK: dodawanie z prawej do lewej ----
   // mappedItemData – wiersz z prawej (CostItemDict)
@@ -34,48 +34,35 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
     async ({ mappedItemData, prevElementData }) => {
       if (!mappedItemData) return;
       if (!id) return;
-      if (typeof jiraIssueCostsEntity.create !== 'function') return;
+      if (typeof assignedEntity.create !== 'function') return;
 
       const today = new Date().toISOString().slice(0, 10);
 
       // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
-        issue_id: id,
-        item_id: mappedItemData.id,
-
-        // plan vs wykonanie – na start ustawiamy plan
-        qty_plan: 0,
-        price_net_plan: mappedItemData.defaultRate ?? 0,
-        margin: mappedItemData.margin ?? '1',
-        qty: 0,
-        price_net: mappedItemData.defaultRate ?? 0,
-
-        currency: mappedItemData.currency ?? 'PLN',
-
-        // jako domyślny opis można wrzucić nazwę pozycji ze słownika
-        note: mappedItemData.name ?? null,
-
-        cost_date: today,
-        is_planned: 1,
-        is_billable: mappedItemData.is_billable
-        // seq: tutaj kiedyś możesz dorzucić sekwencję na podstawie prevElementData
+        machine_id: mappedItemData.id,
+        resource_id: id,
+        quantity_per_unit: 1,
+        unit: 'szt',
+        is_required: true,
+        notes: '',
       };
 
       try {
-        await jiraIssueCostsEntity.create(payload);
+        await assignedEntity.create(payload);
         // create w useEntity i tak robi getOne(id) → odświeży cache wierszy
       } catch (e) {
         console.error('Error creating jira_issue_cost row', e);
       }
     },
-    [id, jiraIssueCostsEntity.create]
+    [id, assignedEntity.create]
   );
 
   // ---- CALLBACK: edycja w lewej tabeli (qty, price_net, note, ...) ----
   // Mapper woła: onEditLeft(newValue, params)
   // useEntity.updateField oczekuje: ({ id, field, value })
   const handleEditLeft = (params) => {
-    jiraIssueCostsEntity.updateField(params);
+    assignedEntity.updateField(params);
   }
 
   // ---- CALLBACK: usuwanie z lewej ----
@@ -83,15 +70,15 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
   const handleDeleteLeft = useCallback(
     async (row) => {
       if (!row) return;
-      if (!jiraIssueCostsEntity.remove) return;
+      if (!assignedEntity.remove) return;
 
       try {
-        await jiraIssueCostsEntity.remove(row.id);
+        await assignedEntity.remove(row.id);
       } catch (e) {
         console.error('Error removing row', e);
       }
     },
-    [jiraIssueCostsEntity.remove]
+    [assignedEntity.remove]
   );
 
   return (
@@ -104,21 +91,23 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
       }}
     >
       <Mapper
-        entityName='JiraIssueCostsItems'
-        ownerLabel="Jira issue"
+        entityName='ResourcesMaschinesMapper'
+        ownerLabel="Maszyny Zasobu"
         owner={{ id }}
 
-        leftData={assignedCosts}
-        leftColumns={jiraIssueCostsEntity.schema.columns}
-        leftSearchFields={['note', 'jira_key', 'itemName', 'itemGroup']} // albo ['note'] w zależności od joinedFields
+        leftData={assigned}
+        leftColumns={assignedEntity.schema.columns}
+        leftSearchFields={['pageName', 'pageLabel', 'groupKey', 'groupLabel', 'pageKey']} // albo ['note'] w zależności od joinedFields
         leftProps={{showSidebar : true, enablePresets: true, }}
 
-        rightData={availableCosts}
-        rightColumnsBase={costsDictEntity.schema.columns}
-        rightSearchFields={['name', 'type']}
+        rightData={options}
+        rightColumnsBase={optionsEntity.schema.columns}
+        rightSearchFields={['userName', 'userLastName']}
 
         idField="id"
         orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
+        distinct={true}
+        distinctField='machine_id'
 
         onAdd={handleAdd}
         onEditLeft={handleEditLeft}
@@ -132,4 +121,4 @@ const JiraIssueCosts = ({ id = null, data = {}, rwd = defaultRwd }) => {
   );
 };
 
-export default JiraIssueCosts;
+export default ResourceMachines;

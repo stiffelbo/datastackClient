@@ -5,6 +5,8 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import ResourceProcesses from './ResourceProcesses';
 import ResourceDetails from './ResourceDetails';
+import ResourceMachines from './ResourceMachines';
+import ResourceRelations from './ResourceRelations';
 
 const ResourcePage = ({
   entityName,
@@ -32,6 +34,18 @@ const ResourcePage = ({
       label: 'Procesy',
       pageKey: 'resource_process', // klucz z rejestru stron
       component: <ResourceProcesses id={id} data={row} rwd={rwd} />,
+    },
+    {
+      key: 'machines',
+      label: 'Maszyny',
+      pageKey: 'resource_machines', // klucz z rejestru stron
+      component: <ResourceMachines id={id} data={row} rwd={rwd} />,
+    },
+    {
+      key: 'resources',
+      label: 'Pod Zasoby',
+      pageKey: 'resource_relations', // klucz z rejestru stron
+      component: <ResourceRelations id={id} data={row} rwd={rwd} />,
     },
   ];
 

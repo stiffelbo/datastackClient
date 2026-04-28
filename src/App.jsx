@@ -42,6 +42,7 @@ import NotFound from './pages/NotFound';
 //DevOnly
 import Comments from './pages/_dev/Comments';
 import JiraIssueSingle from './pages/jiraIssue/JiraIssueSingle';
+import ToolsTypes from './pages/toolsTypes/ToolsTypes';
 
 const App = () => (
     <Routes>
@@ -111,6 +112,10 @@ const App = () => (
         <Route path="locations/:id/:tab" element={<Locations />} />
         <Route path="locations/:id" element={<Locations />} />
         <Route path="locations" element={<Locations />} />
+
+        <Route path="toolstypes/:id/:tab" element={<ToolsTypes />} />
+        <Route path="toolstypes/:id" element={<ToolsTypes />} />
+        <Route path="toolstypes" element={<ToolsTypes />} />
 
         <Route path="machines/:id/:tab" element={<Machines />} />
         <Route path="machines/:id" element={<Machines />} />
