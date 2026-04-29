@@ -350,6 +350,52 @@ const FormTemplate = ({
             </Col>
           );
 
+        case 'datetime':
+          const normalizeDateTimeLocal = (val) => {
+            if (!val) return '';
+
+            // obsługa "2025-01-15 10:36:48"
+            const d = new Date(val.replace(' ', 'T'));
+
+            if (isNaN(d.getTime())) return '';
+
+            const pad = (n) => String(n).padStart(2, '0');
+
+            return (
+              d.getFullYear() +
+              '-' +
+              pad(d.getMonth() + 1) +
+              '-' +
+              pad(d.getDate()) +
+              'T' +
+              pad(d.getHours()) +
+              ':' +
+              pad(d.getMinutes())
+            );
+          };
+
+          return (
+            <Col key={field.name} {...colProps}>
+              <TextField
+                fullWidth
+                name={field.name}
+                label={field.label}
+                type="datetime-local"
+                value={normalizeDateTimeLocal(value)}
+                onChange={(e) => setField(field.name, e.target.value)}
+                error={!!errorsText}
+                helperText={errorsText || field.helperText}
+                InputLabelProps={{ shrink: true }}
+                size={field.size || 'small'}
+                disabled={field.disabled}
+                required={field.required}
+                placeholder={field.placeholder || ''}
+                {...(field.textFieldProps || {})}
+                inputProps={{ ...(field.inputProps || {}) }}
+              />
+            </Col>
+          );
+
         case 'textarea':
           return (
             <Col key={field.name} {...colProps}>
@@ -648,14 +694,14 @@ const FormTemplate = ({
             <Col key={field.name} {...colProps}>
               {typeof field.render === 'function'
                 ? field.render({
-                    value,
-                    field,
-                    formState,
-                    setField,
-                    errors,
-                    row: data,
-                    mode,
-                  })
+                  value,
+                  field,
+                  formState,
+                  setField,
+                  errors,
+                  row: data,
+                  mode,
+                })
                 : null}
             </Col>
           );

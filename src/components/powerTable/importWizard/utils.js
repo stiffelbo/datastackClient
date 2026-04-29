@@ -1,6 +1,106 @@
 // utils.js
 import * as XLSX from "xlsx";
 
+export const EMPTY_MAPPING = "";
+export const NONE_MAPPING = "__none__";
+export const CONSTANT_PREFIX = "__constant__:";
+
+export const SUPPORTED_FIELD_TYPES = new Set([
+  "string",
+  "int",
+  "decimal",
+  "bool",
+  "date",
+  "datetime",
+  "time",
+  "json",
+]);
+
+export function normalizeImportField(field = {}) {
+  const type = SUPPORTED_FIELD_TYPES.has(field.type)
+    ? field.type
+    : "string";
+
+  return {
+    field: String(field.field ?? "").trim(),
+    type,
+    input: field.input ?? null,
+
+    required: Boolean(field.required),
+    nullable: field.nullable !== false,
+    default: field.default ?? null,
+
+    formats: Array.isArray(field.formats) ? field.formats : [],
+    computed: field.computed || null,
+    fk: Boolean(field.fk),
+
+    description: String(field.description ?? ""),
+    mapsTo: field.mapsTo ?? null,
+
+    // miejsce na przyszłe dane z backendu bez psucia frontu
+    raw: field,
+  };
+}
+
+export function normalizeImportSchema(schema = []) {
+  if (!Array.isArray(schema)) return [];
+
+  return schema
+    .map(normalizeImportField)
+    .filter((field) => field.field);
+}
+
+export function getValueByHeader(row = {}, header) {
+  if (!header) return null;
+
+  if (Object.prototype.hasOwnProperty.call(row, header)) {
+    return row[header];
+  }
+
+  const found = Object.keys(row).find(
+    (key) => key.toLowerCase() === String(header).toLowerCase()
+  );
+
+  return found ? row[found] : null;
+}
+
+export function coerceValueByField(value, field = {}) {
+  if (value == null || value === "") return value;
+
+  switch (field.type) {
+    case "date":
+      return normalizeToIsoDate(value);
+
+    case "int":
+      return Number.isFinite(Number(value)) ? parseInt(value, 10) : value;
+
+    case "decimal":
+      return Number.isFinite(Number(String(value).replace(",", ".")))
+        ? Number(String(value).replace(",", "."))
+        : value;
+
+    case "bool":
+      return normalizeBool(value);
+
+    case "json":
+      return typeof value === "string" ? value : JSON.stringify(value);
+
+    default:
+      return value;
+  }
+}
+
+export function normalizeBool(value) {
+  if (typeof value === "boolean") return value ? 1 : 0;
+
+  const v = String(value).trim().toLowerCase();
+
+  if (["1", "true", "yes", "y", "tak", "t"].includes(v)) return 1;
+  if (["0", "false", "no", "n", "nie", "f"].includes(v)) return 0;
+
+  return value;
+}
+
 /**
  * autoMap(hdrs, schema)
  *  - zwraca map { field -> header } z heurystycznym dopasowaniem
@@ -200,48 +300,52 @@ export function normalizeToIsoDate(val) {
   return val;
 }
 
+export const encodeConstantMapping = (value) =>
+  `${CONSTANT_PREFIX}${value ?? ""}`;
 
+export const isConstantMapping = (value) =>
+  typeof value === "string" && value.startsWith(CONSTANT_PREFIX);
 
-/**
- * buildMappedRows(rows, importSchema, mapping)
- */
+export const decodeConstantMapping = (value) =>
+  isConstantMapping(value) ? value.slice(CONSTANT_PREFIX.length) : value;
+
 export function buildMappedRows(rows = [], importSchema = [], mapping = {}) {
+  const schema = normalizeImportSchema(importSchema);
+
   if (!Array.isArray(rows) || rows.length === 0) return [];
 
   return rows.map((r) => {
     const out = {};
-    for (const f of importSchema) {
+
+    for (const f of schema) {
       const key = f.field;
       const mappedHeader = mapping?.[key];
 
       if (f.computed) {
-        out[key] = null;
+        out[key] = f.default ?? null;
         continue;
       }
 
       let val = null;
 
-      if (mappedHeader && mappedHeader !== "__none__") {
-        if (Object.prototype.hasOwnProperty.call(r, mappedHeader)) val = r[mappedHeader];
-        else {
-          const found = Object.keys(r).find((k) => k.toLowerCase() === String(mappedHeader).toLowerCase());
-          val = found ? r[found] : null;
-        }
-      } else if (mappedHeader === "__none__") {
+      if (mappedHeader === NONE_MAPPING) {
         val = null;
+      } else if (isConstantMapping(mappedHeader)) {
+        val = decodeConstantMapping(mappedHeader);
+      } else if (mappedHeader) {
+        val = getValueByHeader(r, mappedHeader);
+      } else if (f.default !== null && f.default !== "") {
+        val = f.default;
       }
 
-      // 🔹 Koercja typów wg schematu — na razie interesuje nas data
-      if (f.type === 'date' || f.input === 'date') {
-        val = normalizeToIsoDate(val);
-      }
+      val = coerceValueByField(val, f);
 
       out[key] = val;
     }
+
     return out;
   });
 }
-
 
 /**
  * computeMappingStats(importSchema, mapping, rows)

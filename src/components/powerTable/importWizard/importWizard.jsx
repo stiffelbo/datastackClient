@@ -7,7 +7,7 @@ import {
     CircularProgress
 } from "@mui/material";
 
-import { parseFile, downloadTemplate, buildMappedRows, computeMappingStats } from "./utils";
+import { parseFile, downloadTemplate, buildMappedRows, computeMappingStats, normalizeImportSchema } from "./utils";
 
 import TopBar from "./topBar";
 import ImportTable from "./importTable";
@@ -21,6 +21,8 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
     const [mapping, setMapping] = useState({});
     const [options, setOptions] = useState({}); // { period_id: '', structure_id: '' }
     const [error, setError] = useState(null);
+
+    const safeSchema = normalizeImportSchema(importSchema);
 
     // initialize options from lists (or when lists prop changes)
     useEffect(() => {
@@ -50,7 +52,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
         setParsing(true);
         setError(null);
         try {
-            const { headers: hdrs, rows: parsedRows, mapping: auto } = await parseFile(file, importSchema);
+            const { headers: hdrs, rows: parsedRows, mapping: auto } = await parseFile(file, safeSchema);
             setHeaders(hdrs);
             setRows(parsedRows);
             setMapping(auto);
@@ -65,7 +67,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
     // download template wrapper
     const handleDownload = () => {
         try {
-            downloadTemplate(importSchema);
+            downloadTemplate(safeSchema);
         } catch (e) {
             console.error(e);
             setError("Błąd generowania szablonu");
@@ -73,7 +75,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
     };
 
     // stats (delegated)
-    const { totalRows, mappedCount, requiredMissingList, uploadEnabled: baseUploadEnabled } = computeMappingStats(importSchema, mapping, rows);
+    const { totalRows, mappedCount, requiredMissingList, uploadEnabled: baseUploadEnabled } = computeMappingStats(safeSchema, mapping, rows);
 
     // handle list value changes called from TopBar (or other UI)
     const handleListChange = ({ field, value }) => {
@@ -101,7 +103,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
         }
 
         setError(null);
-        let mappedRows = buildMappedRows(rows, importSchema, mapping);
+        let mappedRows = buildMappedRows(rows, safeSchema, mapping);
 
         // inject list values into each mapped row
         if (mappedRows.length > 0 && (lists || []).length > 0) {
@@ -116,10 +118,9 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
                 return copy;
             });
         }
-
         // call onUpload(mappedRows, importSchema, options) — third param optional
         try {
-            onUpload(mappedRows, importSchema, options);
+            onUpload(mappedRows, safeSchema, options);
         } catch (e) {
             console.error("onUpload handler threw:", e);
             setError("Błąd podczas wywołania onUpload");
@@ -137,7 +138,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
                 parsing={parsing}
                 rowsCount={rows.length}
                 alertsProps={{ totalRows, mappedCount, requiredMissingList }}
-                importSchema={importSchema}
+                importSchema={safeSchema}
                 mapping={mapping}
                 loading={loading}
                 lists={lists}
@@ -148,7 +149,7 @@ const ImportWizard = ({ importSchema = [], lists = null, onUpload = () => { }, l
             <Divider sx={{ mb: 1 }} />
             <Box>
                 <ImportTable
-                    importSchema={importSchema}
+                    importSchema={safeSchema}
                     rows={rows}
                     headers={headers}
                     mapping={mapping}

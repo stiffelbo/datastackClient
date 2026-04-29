@@ -29,6 +29,8 @@ const JiraIssueDetails = ({ id, row, entity, rwd, dashboard }) => {
         dashboard.setTab(null);
     }
 
+    console.log(row);
+    
     return <Box sx={{ width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%' }}>
 
         <FormTemplate

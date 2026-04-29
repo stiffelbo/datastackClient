@@ -1,20 +1,21 @@
 // MappingSelect.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import PropTypes from "prop-types";
-import { Select, MenuItem } from "@mui/material";
+import { Autocomplete, TextField } from "@mui/material";
+
+import {
+  CONSTANT_PREFIX,
+  isConstantMapping,
+  encodeConstantMapping,
+  decodeConstantMapping,
+  NONE_MAPPING,
+  EMPTY_MAPPING
+} from "./utils";
 
 /**
- * MappingSelect - mały, kontrolowany select używany do mapowania pól
- *
- * Props:
- *  - value: string        // obecna wartość (header | "" | "__none__")
- *  - headers: string[]    // lista nagłówków z arkusza
- *  - onChange: fn(value)  // wywoływane z nową wartością
- *  - includeNone: bool    // czy dodać opcję "__none__" (explicit empty)
- *  - includeEmpty: bool   // czy dodać opcję pustą ("")
- *  - minWidth: number     // minimalna szerokość selecta
- *  - size: "small"|"medium"
- *  - sx: object           // dodatkowy sx
+ * MappingSelect - kontrolowany input/select używany do mapowania pól.
+ * Pozwala wybrać nagłówek z pliku albo wpisać stałą wartość,
+ * która zostanie rozlana na całą kolumnę.
  */
 const MappingSelect = ({
   value,
@@ -26,29 +27,115 @@ const MappingSelect = ({
   size = "small",
   sx = {},
 }) => {
+  const options = useMemo(() => {
+    const base = [];
+
+    if (includeEmpty) {
+      base.push({ value: EMPTY_MAPPING, label: "-- brak --", type: "system" });
+    }
+
+    if (includeNone) {
+      base.push({ value: NONE_MAPPING, label: "Pusta wartość", type: "system" });
+    }
+
+    headers.forEach((header) => {
+      base.push({ value: header, label: header, type: "header" });
+    });
+
+    return base;
+  }, [headers, includeEmpty, includeNone]);
+
+  const selectedValue = value ?? "";
+
+  const selectedOption = options.find(
+    (option) => option.value === selectedValue
+  );
+
+  const autocompleteValue =
+    selectedOption ??
+    (isConstantMapping(selectedValue)
+      ? decodeConstantMapping(selectedValue)
+      : selectedValue);
+
+  const commitValue = (nextValue) => {
+    if (nextValue === null) {
+      onChange("");
+      return;
+    }
+
+    if (typeof nextValue === "string") {
+      const trimmed = nextValue.trim();
+
+      if (!trimmed) {
+        onChange("");
+        return;
+      }
+
+      const matchingOption = options.find(
+        (option) => option.label === trimmed || option.value === trimmed
+      );
+
+      onChange(
+        matchingOption
+          ? matchingOption.value
+          : encodeConstantMapping(trimmed)
+      );
+
+      return;
+    }
+
+    onChange(nextValue.value ?? "");
+  };
+
   return (
-    <Select
+    <Autocomplete
+      freeSolo
+      autoSelect
+      selectOnFocus
+      clearOnBlur
+      handleHomeEndKeys
       size={size}
-      value={value ?? ""}
-      onChange={(e) => onChange(e.target.value)}
-      displayEmpty
+      value={autocompleteValue}
+      options={options}
+      getOptionLabel={(option) => {
+        if (typeof option === "string") return option;
+        return option?.label ?? "";
+      }}
+      isOptionEqualToValue={(option, selected) => {
+        const selectedRaw =
+          typeof selected === "string" ? selected : selected?.value;
+
+        return option.value === selectedRaw;
+      }}
+      onChange={(_, nextValue) => commitValue(nextValue)}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          placeholder="Wybierz lub wpisz"
+          variant="outlined"
+          sx={{
+            "& .MuiInputBase-root": {
+              mt: 0.5,
+              minWidth,
+              fontSize: "0.72rem",
+              py: 0,
+            },
+            "& .MuiInputBase-input": {
+              py: "6px !important",
+              px: "6px !important",
+              fontSize: "0.72rem",
+            },
+          }}
+        />
+      )}
+      slotProps={{
+        paper: { sx: { maxHeight: 320 } },
+      }}
       sx={{
-        mt: 0.5,
-        fontSize: "0.72rem",
         minWidth,
-        ".MuiSelect-select": { py: "6px", px: "6px", fontSize: "0.72rem" },
         ...sx,
       }}
-      MenuProps={{ PaperProps: { sx: { maxHeight: 320 } } }}
-    >
-      {includeEmpty && <MenuItem value="">-- brak --</MenuItem>}
-      {includeNone && <MenuItem value="__none__">Pusta wartość</MenuItem>}
-      {headers.map((h) => (
-        <MenuItem key={h} value={h} sx={{ fontSize: "0.72rem" }}>
-          {h}
-        </MenuItem>
-      ))}
-    </Select>
+    />
   );
 };
 

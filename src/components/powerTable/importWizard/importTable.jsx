@@ -16,6 +16,7 @@ import {
 
 import { useTheme, alpha } from "@mui/material/styles";
 import MappingSelect from "./mappingSelect";
+import {isConstantMapping, decodeConstantMapping} from "./utils";
 
 const ImportTable = ({
   importSchema = [],
@@ -36,6 +37,7 @@ const ImportTable = ({
   // helper: case-insensitive cell fetch
   const getCellValue = (row, header) => {
     if (!header || header === "__none__") return null;
+    if (isConstantMapping(header)) return decodeConstantMapping(header);
     if (Object.prototype.hasOwnProperty.call(row, header)) return row[header];
     const key = Object.keys(row).find((k) => k.toLowerCase() === String(header).toLowerCase());
     return key ? row[key] : null;
