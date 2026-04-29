@@ -36,8 +36,9 @@ import { Row, Col } from '../grid/flexGrid'; // Twój flex grid
 import BulkPreview from './bulkPreview';
 
 //Utils
-import { bulkFormState, createInitialStateFromSchema, createInitialBulkStateFromSchema, applyCompute, normalizeOptions } from './utils';
-const emptyColor = "#f6f6f6ff";
+import { bulkFormState, createInitialStateFromSchema, createInitialBulkStateFromSchema, applyCompute, normalizeOptions, prepareFormData, normalizeDateTimeLocalInputValue, normalizeDateInputValue } from './utils';
+import { useForm } from './useForm';
+import { normalizeSchema, emptyColor } from './schemaUtils';
 
 // --- component ---
 const FormTemplate = ({
@@ -49,47 +50,44 @@ const FormTemplate = ({
   loading = false,
   success = false,
   error = false,
-  submitButtonText = 'Zapisz',
-  cancelButtonText = 'Anuluj',
+  submitButtonText = "Zapisz",
+  cancelButtonText = "Anuluj",
   cardSX = {},
-  formLabel = '',
+  formLabel = "",
   action = null,
   sendFormData = true,
   validator = null,
-  mode = 'add',
-  addons = {}
+  mode = "add",
+  addons = {},
 }) => {
+  
+  const normalizedSchema = normalizeSchema(schema);
 
-  const validateFn = validator || validatorDefault;
+  const {
+    formState,
+    errors,
+    isChanged,
+    isValid,
+    setField,
+    reset,
+    setIsChanged,
+    submit,
+  } = useForm({
+    data,
+    schema: normalizedSchema,
+    mode,
+    validator,
+    onChange,
+    onSubmit,
+    sendFormData,
+    addons,
+  });
 
-  const [formState, setFormState] = useState(() =>
-    mode === 'bulk'
-      ? createInitialBulkStateFromSchema(schema)
-      : createInitialStateFromSchema(data, schema)
-  );
   const [fileInputKeys, setFileInputKeys] = useState({});
-  const [errors, setErrors] = useState({});
-  const [isChanged, setIsChanged] = useState(false);
-  const [isValid, setIsValid] = useState(true);
-
-  useEffect(() => {
-    const init = mode === 'bulk'
-      ? createInitialBulkStateFromSchema(schema)
-      : createInitialStateFromSchema(data, schema);
-
-    const computed = applyCompute(init, schema);
-    setFormState(computed);
-    setErrors({});
-    setIsChanged(false);
-  }, [mode, JSON.stringify(data), JSON.stringify(schema)]);
 
   useEffect(() => {
     setIsChanged(false);
-  }, [loading]);
-
-  useEffect(() => {
-    setIsValid(Object.keys(errors || {}).length === 0);
-  }, [errors]);
+  }, [loading, setIsChanged]);
 
   const bumpFileInputKey = (fieldName) => {
     setFileInputKeys((prev) => ({
@@ -98,158 +96,19 @@ const FormTemplate = ({
     }));
   };
 
-  const runValidation = (state) => {
-    try {
-      const v = validateFn(schema, state) || {};
-      setErrors(v);
-      return v;
-    } catch (e) {
-      console.error('validator error', e);
-      setErrors({});
-      return {};
-    }
-  };
-
-  // setField: opts = { runValidate: boolean, raw: boolean }
-  const setField = (key, value, opts = { runValidate: true, raw: false }) => {
-    setFormState((prev) => {
-      const candidate = { ...prev, [key]: value };
-      const next = opts.raw ? candidate : applyCompute(candidate, schema);
-
-      if (opts.runValidate) runValidation(next);
-
-      if (typeof onChange === 'function') {
-        try {
-          onChange(next);
-        } catch (err) {
-          console.error('onChange callback error', err);
-        }
-      }
-
-      setIsChanged(true);
-      return next;
-    });
-  };
-
-  const reset = () => {
-    const init = createInitialStateFromSchema(data, schema);
-    const computed = applyCompute(init, schema);
-    setFormState(computed);
-    setErrors({});
-    setIsChanged(false);
-  };
-
-  const prepareFormData = (state) => {
-    const formData = new FormData();
-
-    Object.keys(state).forEach((k) => {
-      const v = state[k];
-
-      if (v instanceof File || v instanceof Blob) {
-        formData.append(k, v);
-        return;
-      }
-
-      if (Array.isArray(v)) {
-        v.forEach((it) => {
-          if (it instanceof File || it instanceof Blob) {
-            formData.append(`${k}[]`, it);
-          } else if (it instanceof Date) {
-            formData.append(`${k}[]`, it.toISOString());
-          } else if (typeof it === 'object' && it !== null) {
-            formData.append(`${k}[]`, JSON.stringify(it));
-          } else {
-            formData.append(`${k}[]`, it != null ? String(it) : '');
-          }
-        });
-        return;
-      }
-
-      if (v instanceof Date) {
-        formData.append(k, v.toISOString());
-        return;
-      }
-
-      if (typeof v === 'boolean') {
-        formData.append(k, v ? '1' : '0');
-        return;
-      }
-
-      if (typeof v === 'object' && v !== null) {
-        formData.append(k, JSON.stringify(v));
-        return;
-      }
-
-      formData.append(k, v != null ? String(v) : '');
-    });
-
-    return formData;
-  };
-
   const handleSubmit = () => {
-    if (!onSubmit || typeof onSubmit !== 'function') {
-      console.warn('Brak funkcji submit');
-      return;
-    }
-
-    const finalData = mode === 'bulk' ? bulkFormState(formState, schema) : formState;
-    const validationErrors = runValidation(finalData);
-
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
-
-    if (mode === 'bulk') {
-      const keys = Object.keys(finalData || {});
-      if (keys.length === 0) {
-        window.alert('Brak zmian do wysłania.');
-        return;
-      }
-
-      const previewLines = keys.map(k => {
-        const f = (Array.isArray(schema) ? schema.find(s => s.name === k) : null) || { label: k };
-        let v = finalData[k];
-
-        if (v === null || v === '') v = '[WYCZYŚĆ]';
-        else if (Array.isArray(v)) {
-          v = v.map(item => item?.name || String(item)).join(', ');
-        }
-        else if (v instanceof File) {
-          v = v.name;
-        }
-        else v = String(v);
-
-        if (v.length > 80) v = v.slice(0, 77) + '...';
-        return `• ${f.label || k}: ${v}`;
-      });
-
-      const count = addons?.selectedIds ? addons.selectedIds : 0;
-      const msg = `Na pewno chcesz wprowadzić zmiany do ${count} rekordów?\n\nPola do zmiany:\n${previewLines.join('\n')}\n\nKontynuować?`;
-
-      if (!window.confirm(msg)) {
-        return;
-      }
-
-      if (sendFormData) onSubmit(prepareFormData(finalData));
-      else onSubmit(finalData);
-      return;
-    }
-
-
-    if (sendFormData) onSubmit(prepareFormData(finalData));
-    else onSubmit(finalData);
+    submit();
   };
-
 
   const handleCancel = () => {
-    if (typeof onCancel === 'function') return onCancel();
+    if (typeof onCancel === "function") return onCancel();
     reset();
   };
 
   const buildForm = () => {
-    if (!Array.isArray(schema)) return null;
+    if (!Array.isArray(normalizedSchema)) return null;
 
-    return schema.map((field) => {
+    return normalizedSchema.map((field) => {
       if (!field || !field.name) return null;
 
       const md = field.md || 6;
@@ -327,52 +186,20 @@ const FormTemplate = ({
             </Col>
           );
 
-        case 'date':
-          return (
-            <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                type="date"
-                value={value || ''}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                InputLabelProps={{ shrink: true }}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                placeholder={field.placeholder || ''}
-                {...(field.textFieldProps || {})}
-                inputProps={{ ...(field.inputProps || {}) }}
-              />
-            </Col>
-          );
+        case "date":
+        case "datetime":
+        case "datetime-local": {
+          const isDateTime =
+            field.type === "datetime" ||
+            field.type === "datetime-local" ||
+            field.input === "datetime" ||
+            field.input === "datetime-local";
 
-        case 'datetime':
-          const normalizeDateTimeLocal = (val) => {
-            if (!val) return '';
+          const inputType = isDateTime ? "datetime-local" : "date";
 
-            // obsługa "2025-01-15 10:36:48"
-            const d = new Date(val.replace(' ', 'T'));
-
-            if (isNaN(d.getTime())) return '';
-
-            const pad = (n) => String(n).padStart(2, '0');
-
-            return (
-              d.getFullYear() +
-              '-' +
-              pad(d.getMonth() + 1) +
-              '-' +
-              pad(d.getDate()) +
-              'T' +
-              pad(d.getHours()) +
-              ':' +
-              pad(d.getMinutes())
-            );
-          };
+          const inputValue = isDateTime
+            ? normalizeDateTimeLocalInputValue(value)
+            : normalizeDateInputValue(value);
 
           return (
             <Col key={field.name} {...colProps}>
@@ -380,21 +207,22 @@ const FormTemplate = ({
                 fullWidth
                 name={field.name}
                 label={field.label}
-                type="datetime-local"
-                value={normalizeDateTimeLocal(value)}
+                type={inputType}
+                value={inputValue}
                 onChange={(e) => setField(field.name, e.target.value)}
                 error={!!errorsText}
                 helperText={errorsText || field.helperText}
                 InputLabelProps={{ shrink: true }}
-                size={field.size || 'small'}
+                size={field.size || "small"}
                 disabled={field.disabled}
                 required={field.required}
-                placeholder={field.placeholder || ''}
+                placeholder={field.placeholder || ""}
                 {...(field.textFieldProps || {})}
                 inputProps={{ ...(field.inputProps || {}) }}
               />
             </Col>
           );
+        }
 
         case 'textarea':
           return (
@@ -747,7 +575,7 @@ const FormTemplate = ({
         </Row>
 
         <Row gap={2}>
-          <BulkPreview mode={mode} selectedCount={addons?.selectedIds?.length ?? 0} formState={formState} schema={schema} />
+          <BulkPreview mode={mode} selectedCount={addons?.selectedIds?.length ?? 0} formState={formState} schema={normalizedSchema} />
         </Row>
 
         <Row gap={2} style={{ marginTop: 8 }}>

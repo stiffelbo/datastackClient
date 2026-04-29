@@ -130,7 +130,7 @@ export const applyCompute = (state, schemaRef = []) => {
 // helper: normalizuj selectOptions do postaci { value, label, title, disabled }
 export const normalizeOptions = (opts = []) => {
   if (!Array.isArray(opts)) return [];
-  if(!opts.length) return [];
+  if (!opts.length) return [];
   return opts.map((o) => {
     if (o === null || typeof o === 'undefined') return { value: o, label: String(o ?? ''), title: null, disabled: false };
     if (typeof o === 'object') {
@@ -139,7 +139,7 @@ export const normalizeOptions = (opts = []) => {
         label: o.label ?? o.val ?? String(o.value ?? o.id ?? ''),
         title: o.title ?? null,
         disabled: !!o.disabled,
-        group : o.group ?? ''
+        group: o.group ?? ''
       };
     }
     return { value: o, label: String(o), title: null, disabled: false, group: '' };
@@ -190,4 +190,117 @@ export const formatFieldValue = (field = {}, value) => {
       if (typeof value === 'object') return JSON.stringify(value);
       return String(value);
   }
+};
+
+export const prepareFormData = (state) => {
+  const formData = new FormData();
+
+  Object.keys(state).forEach((k) => {
+    const v = state[k];
+
+    if (v instanceof File || v instanceof Blob) {
+      formData.append(k, v);
+      return;
+    }
+
+    if (Array.isArray(v)) {
+      v.forEach((it) => {
+        if (it instanceof File || it instanceof Blob) {
+          formData.append(`${k}[]`, it);
+        } else if (it instanceof Date) {
+          formData.append(`${k}[]`, it.toISOString());
+        } else if (typeof it === 'object' && it !== null) {
+          formData.append(`${k}[]`, JSON.stringify(it));
+        } else {
+          formData.append(`${k}[]`, it != null ? String(it) : '');
+        }
+      });
+      return;
+    }
+
+    if (v instanceof Date) {
+      formData.append(k, v.toISOString());
+      return;
+    }
+
+    if (typeof v === 'boolean') {
+      formData.append(k, v ? '1' : '0');
+      return;
+    }
+
+    if (typeof v === 'object' && v !== null) {
+      formData.append(k, JSON.stringify(v));
+      return;
+    }
+
+    formData.append(k, v != null ? String(v) : '');
+  });
+
+  return formData;
+};
+
+export const pad2 = (n) => String(n).padStart(2, "0");
+
+export const normalizeDateInputValue = (val) => {
+  if (!val) return "";
+
+  if (val instanceof Date && !isNaN(val)) {
+    return `${val.getFullYear()}-${pad2(val.getMonth() + 1)}-${pad2(val.getDate())}`;
+  }
+
+  const s = String(val).trim();
+
+  // YYYY-MM-DD
+  const dateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnly) return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+
+  // YYYY-MM-DD HH:mm:ss / YYYY-MM-DDTHH:mm:ss
+  const dateTime = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T]/);
+  if (dateTime) return `${dateTime[1]}-${dateTime[2]}-${dateTime[3]}`;
+
+  const d = new Date(s);
+  if (!isNaN(d)) {
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+  }
+
+  return "";
+};
+
+export const normalizeDateTimeLocalInputValue = (val) => {
+  if (!val) return "";
+
+  if (val instanceof Date && !isNaN(val)) {
+    return (
+      `${val.getFullYear()}-${pad2(val.getMonth() + 1)}-${pad2(val.getDate())}` +
+      `T${pad2(val.getHours())}:${pad2(val.getMinutes())}`
+    );
+  }
+
+  const s = String(val).trim();
+
+  // YYYY-MM-DDTHH:mm / YYYY-MM-DDTHH:mm:ss
+  const isoLocal = s.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2})?/
+  );
+  if (isoLocal) {
+    return `${isoLocal[1]}-${isoLocal[2]}-${isoLocal[3]}T${isoLocal[4]}:${isoLocal[5]}`;
+  }
+
+  // YYYY-MM-DD HH:mm / YYYY-MM-DD HH:mm:ss
+  const sqlDateTime = s.match(
+    /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})(?::\d{2})?/
+  );
+  if (sqlDateTime) {
+    return `${sqlDateTime[1]}-${sqlDateTime[2]}-${sqlDateTime[3]}T${sqlDateTime[4]}:${sqlDateTime[5]}`;
+  }
+
+  const d = new Date(s);
+  if (!isNaN(d)) {
+    return (
+      `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}` +
+      `T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+    );
+  }
+
+  return "";
 };
