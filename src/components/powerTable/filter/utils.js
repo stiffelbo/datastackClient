@@ -1,7 +1,7 @@
 import { startOfDay, parseDate } from './dateUtils';
 
 export const operatorsByType = {
-    string: ['contains', 'multiSelect', 'isEmpty', 'notEmpty'],
+    string: ['multiSelect', 'contains', 'equals', 'notEquals', 'startsWith', 'endsWith', 'isEmpty', 'notEmpty'],
     number: ['equals', 'notEquals', 'gt', 'gte', 'lt', 'lte', 'between', 'isEmpty', 'notEmpty'],
     date: ['between', 'isEmpty', 'notEmpty', 'isPast', 'isFuture'],
     boolean: ['isTrue', 'isFalse', 'isEmpty', 'notEmpty'],
@@ -14,6 +14,10 @@ export const defaultFilterValue = (op, type) => {
     if (op === 'fk' || op === 'FK') return { include: [], exclude: [] };
     if (op === 'multiSelect') return { include: [], exclude: [] };
     if (op === 'constains') return '';
+    if (op === 'equals') return '';
+    if (op === 'notEquals') return '';
+    if (op === 'startsWith') return '';
+    if (op === 'endsWith') return '';
     if (['isEmpty', 'notEmpty', 'isTrue', 'isFalse'].includes(op)) return null;
     return type === 'number' ? 0 : '';
 };
@@ -27,6 +31,8 @@ export const createFilter = (field, type = 'string') => {
         op: firstOp,
         value: defaultFilterValue(firstOp, type),
     };
+
+    console.log(newFilter);
 
     return newFilter;
 };
