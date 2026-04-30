@@ -135,7 +135,6 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                             helperText={errorsText || merged.helperText}
                             InputLabelProps={{ shrink: true }}
                             disabled={merged.disabled}
-                            {...props}
                         />
                     </Box>
 
@@ -156,7 +155,6 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                             helperText={errorsText || merged.helperText}
                             InputLabelProps={{ shrink: true }}
                             disabled={merged.disabled}
-                            {...props}
                         />
                     </Box>
                 );
@@ -377,20 +375,30 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Podstawowe / konfiguracja" defaultOpen>
-                        {renderReadonly("status")}
-                        {renderReadonly("product_group")}
+                        <Row>
+                            {renderReadonly("jira_issue_type", {
+                                variant: "chip",
+                                chipProps: { size: "small", variant: "outlined" },
+                            })}
+                            {renderReadonly("product_group")}
+                            {renderInput("is_order")}
+                        </Row>
                         {renderInput("jira_issue_groups_id")}
                         {renderInput("contractor_id")}
-                        {renderInput("is_order")}
-                        {renderInput("is_active")}
+                        
+                        
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Ilości" defaultOpen={false}>
                         {renderInput("qty_ordered")}
-                        {renderInput("qty_to_do")}
-                        {renderInput("qty_done")}
-                        {renderInput("qty_invoiced")}
-                        {renderInput("qty_dispatched")}
+                        <Row>
+                            {renderInput("qty_to_do")}
+                            {renderInput("qty_done")}
+                        </Row>
+                        <Row>
+                            {renderInput("qty_invoiced")}
+                            {renderInput("qty_dispatched")}
+                        </Row>
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Finanse" defaultOpen={false}>
@@ -413,24 +421,28 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                 </Col>
 
                 <Col xs={12} md={4} xl={4}>
-                    <CollapsibleSection title="Status" defaultOpen>
-                        {renderReadonly("jira_issue_type", {
-                            variant: "chip",
-                            chipProps: { size: "small", variant: "outlined" },
-                        })}
+                    <CollapsibleSection title="Status" defaultOpen={true}>
+                        {renderInput("is_active")}
+                        {renderReadonly("status")}
+                        
                         {renderReadonly("jira_status_category", {
                             variant: "chip",
                             chipProps: { size: "small", color: "info", variant: "outlined" },
                         })}
                         {renderReadonly("created_at_jira")}
-
                         {renderReadonly("updated_at_jira")}
 
                         {renderReadonly("resolved_at_jira")}
 
                         {renderReadonly("jira_resolution")}
                     </CollapsibleSection>
-                    <CollapsibleSection title="Osoby" defaultOpen>
+                    <CollapsibleSection title="Daty Operacyjne" defaultOpen={true}>
+                        {renderInput("receipt_date")}
+                        {renderInput("production_request_date")}
+                        {renderInput("start_date")}
+                        {renderInput("end_date")}
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Osoby" defaultOpen={true}>
                         {renderInput("reporter_id")}
                         {renderInput("assignee_id")}
                         {renderInput("production_manager_id")}
