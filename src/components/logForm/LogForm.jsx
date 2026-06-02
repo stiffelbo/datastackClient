@@ -35,6 +35,7 @@ const LogForm = ({initialTasks = []}) => {
     if (!user.processes.length) return <Alert severity="warning">Brak danych o procesach do raportownaia</Alert>
 
     const [time, setTime] = useState(defaultTime());
+    const [showControlData, setShowControlData] = useState(false);
     //Hooks
     const { height } = useRwd();
 
@@ -198,13 +199,22 @@ const LogForm = ({initialTasks = []}) => {
                     onClear={brigade.actions.clearAll}
                     onEmployeeTimeChange={brigade.actions.setEmployeeTime}
                 />
+                <Button
+                    onClick={()=>setShowControlData(!showControlData)}
+                    color={showControlData ? 'warning' : 'primary'}
+                    size="small"
+                    sx={{width: '100%'}}
+                    variant="outlined"
+                >
+                    {showControlData ? 'Ukryj dane kontrolne' : 'Pokaż dane kontrolne'}
+                </Button>
             </Grid>
             <Grid item size={12}>
                 {renderSubmit({ dataErrors: draft.meta.errors, logError: log.error, loading: log.loading, onSave: () => log.save(draft.logs), onClear: () => log.clear() })}
             </Grid>
         </Grid>
 
-        {renderControlTables(true)}
+        {renderControlTables(showControlData)}
     </Box>;
 }
 
