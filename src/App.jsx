@@ -19,6 +19,9 @@ import Costs from './pages/costs/Costs';
 import Periods from './pages/periods/Periods';
 import Contractor from './pages/contractor/Contractor';
 import Processes from './pages/processes/Processes';
+import ProcessesMachines from './pages/processesMachines/ProcessesMachines';
+import ProcessesResources from './pages/processesResources/ProcessesResources';
+import ProcessesUsers from './pages/processesUsers/ProcessesUsers';
 import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
 import Locations from './pages/locations/Locations';
@@ -128,6 +131,10 @@ const App = () => (
         <Route path="resources/:id/:tab" element={<Resources />} />
         <Route path="resources/:id" element={<Resources />} />
         <Route path="resources" element={<Resources />} />
+
+        <Route path="processesresources" element={<ProcessesResources />} />
+        <Route path="processesmachines" element={<ProcessesMachines />} />
+        <Route path="processesusers" element={<ProcessesUsers />} />
 
         <Route path="itassetstypes" element={<ItAssetsTypes />} />
 

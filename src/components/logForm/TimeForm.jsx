@@ -47,6 +47,7 @@ const TimeForm = ({
     onChange,
     label = "Czas",
     dense = true,
+    sx={},
 }) => {
     const [date, setDate] = useState(value.date ?? todayISO());
     const [start, setStart] = useState(value.start ?? "");
@@ -140,6 +141,7 @@ const TimeForm = ({
                 borderColor: borderColor,
                 borderRadius: 2,
                 p: 2,
+                ...sx,
             }}
         >
             <Stack spacing={2} direction={"row"}>

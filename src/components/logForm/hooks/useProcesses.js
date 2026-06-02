@@ -9,6 +9,7 @@ function createMaterialReportRow(material) {
         unit: material?.unit ?? "",
         step: material?.step ?? 0.01,
         required: Boolean(material?.required),
+        canWaste: Boolean(material?.canWaste),
 
         qty: "",
         wasteQty: "",
@@ -48,19 +49,74 @@ function areMaterialReportsEqual(a = {}, b = {}) {
     });
 }
 
+function timeToMinutes(value) {
+    const time = String(value ?? "").padStart(4, "0");
+
+    const hours = Number(time.slice(0, 2));
+    const minutes = Number(time.slice(2, 4));
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+
+    return hours * 60 + minutes;
+}
+
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    return `${String(hours).padStart(2, "0")}${String(mins).padStart(2, "0")}`;
+}
+
+function getMachineTime(employeeTimeMap = {}) {
+    const employeeTimes = Object.values(employeeTimeMap)
+        .filter((item) => item?.date && item?.start && item?.end)
+        .map((item) => ({
+            ...item,
+            startMinutes: timeToMinutes(item.start),
+            endMinutes: timeToMinutes(item.end),
+        }))
+        .filter((item) => (
+            item.startMinutes !== null &&
+            item.endMinutes !== null &&
+            item.endMinutes > item.startMinutes
+        ));
+
+    if (employeeTimes.length === 0) {
+        return normalizeTimeValue(null);
+    }
+
+    const startMinutes = Math.min(
+        ...employeeTimes.map((item) => item.startMinutes)
+    );
+
+    const endMinutes = Math.max(
+        ...employeeTimes.map((item) => item.endMinutes)
+    );
+
+    return normalizeTimeValue({
+        date: employeeTimes[0].date,
+        start: minutesToTime(startMinutes),
+        end: minutesToTime(endMinutes),
+        duration: (endMinutes - startMinutes) / 60,
+    });
+}
+
 export default function useProcessForm({
     processes = [],
     initialProcessId = "",
     initialMachineTime = null,
+    setInitialMachineTime = null,
     initialIsRework = false,
     onChange,
+    employeeTimeMap = {}
 }) {
+
     const [processId, setProcessId] = useState(initialProcessId);
     const [machineId, setMachineId] = useState("");
     const [isRework, setIsRework] = useState(Boolean(initialIsRework));
     const [machineTime, setMachineTime] = useState(
-        normalizeTimeValue(initialMachineTime)
-    );
+        getMachineTime(employeeTimeMap)
+    )
     const [materialsReport, setMaterialsReport] = useState({});
 
     const selectedProcess = useMemo(() => {
@@ -82,6 +138,7 @@ export default function useProcessForm({
         return machines.map((machine) => ({
             id: machine.id,
             val: machine.name,
+            isConstant: machine.isConstant,
         }));
     }, [machines]);
 
@@ -93,18 +150,13 @@ export default function useProcessForm({
     }, [processId]);
 
     useEffect(() => {
-        const nextTime = normalizeTimeValue(initialMachineTime);
+        const nextTime = getMachineTime(employeeTimeMap);
 
         setMachineTime((prev) => {
             if (isSameTime(prev, nextTime)) return prev;
             return nextTime;
         });
-    }, [
-        initialMachineTime?.date,
-        initialMachineTime?.start,
-        initialMachineTime?.end,
-        initialMachineTime?.duration,
-    ]);
+    }, [employeeTimeMap]);
 
     useEffect(() => {
         if (typeof onChange !== "function") return;

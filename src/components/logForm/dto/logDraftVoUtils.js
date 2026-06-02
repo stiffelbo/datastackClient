@@ -45,6 +45,9 @@ export function splitAmountByRatio(amount, ratio) {
 }
 
 export function getTaskAllocations(tasks = []) {
+
+    //ilosci proporcjonalnie do czasu
+
     const normalized = safeArray(tasks)
         .map((task) => ({
             task,
@@ -138,6 +141,33 @@ export function allocateIntegerAcrossPeople(total, items = []) {
     return safeItems.map((item, index) => ({
         ...item,
         allocatedInt: base + (index < remainder ? 1 : 0),
+    }));
+}
+
+export function allocateAmountAcrossPeopleWithStep(total, employees = [], step = 0.01) {
+    const safeEmployees = safeArray(employees);
+    const totalAmount = Number(total || 0);
+
+    if (!safeEmployees.length) return [];
+    if (!totalAmount) {
+        return safeEmployees.map((employee) => ({
+            employee,
+            allocatedAmount: 0,
+        }));
+    }
+
+    const employeeRatio = 1 / safeEmployees.length;
+
+    return allocateAmountByRatioWithStep(
+        totalAmount,
+        safeEmployees.map((employee) => ({
+            employee,
+            ratio: employeeRatio,
+        })),
+        step
+    ).map((allocation) => ({
+        employee: allocation.employee,
+        allocatedAmount: allocation.allocatedAmount,
     }));
 }
 

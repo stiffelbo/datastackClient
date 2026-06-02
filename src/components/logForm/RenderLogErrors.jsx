@@ -10,7 +10,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
-const RenderLogErrors = ({ errors = [] }) => {
+const RenderLogErrors = ({ errors = [], sx = {} }) => {
     const [show, setShow] = useState(false);
 
     const normalizedErrors = useMemo(() => {
@@ -94,6 +94,7 @@ const RenderLogErrors = ({ errors = [] }) => {
                         boxShadow: "0 0 0 0 rgba(237, 108, 2, 0)",
                     },
                 },
+                ...sx
             }}
         >
             {renderSummary()}

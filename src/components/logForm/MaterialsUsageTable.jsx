@@ -27,6 +27,7 @@ const MaterialsUsageTable = ({
         const row = value?.[material.id] ?? {};
         const qty = row.qty ?? "";
         const wasteQty = row.wasteQty ?? "";
+        const canWaste = Boolean(material.canWaste);
 
         const labelTitle = material.required ? "wartość jest wymagana" : "";
 
@@ -68,17 +69,24 @@ const MaterialsUsageTable = ({
                 </TableCell>
 
                 <TableCell sx={{ width: 160 }}>
-                    <InputNumber
-                        label="Odpad"
-                        value={wasteQty}
-                        min={0}
-                        step={material.step}
-                        required={false}
-                        disabled={disabled}
-                        onChange={(nextValue) =>
-                            onFieldChange?.(material.id, "wasteQty", nextValue)
-                        }
-                    />
+                    {canWaste && (
+                        <InputNumber
+                            label="Odpad"
+                            value={wasteQty}
+                            min={0}
+                            step={material.step}
+                            required={false}
+                            disabled={disabled}
+                            onChange={(nextValue) =>
+                                onFieldChange?.(material.id, "wasteQty", nextValue)
+                            }
+                        />
+                    )}
+                    {!canWaste && (
+                        <Typography variant="body2" color="text.secondary">
+                            —
+                        </Typography>
+                    )}
                 </TableCell>
             </TableRow>
         );

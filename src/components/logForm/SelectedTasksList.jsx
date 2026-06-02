@@ -96,7 +96,7 @@ function renderTaskInputs(task, tasksHook) {
     );
 }
 
-function renderTaskItem(task, tasksHook) {
+function renderTaskItem(task, tasksHook, showDelete) {
     return (
         <Box
             key={getTaskKey(task)}
@@ -108,6 +108,7 @@ function renderTaskItem(task, tasksHook) {
             <TaskInfo
                 data={task}
                 onRemove={tasksHook.actions.removeTask}
+                showDelete={showDelete}
             >
                 {renderTaskInputs(task, tasksHook)}
             </TaskInfo>
@@ -115,10 +116,10 @@ function renderTaskItem(task, tasksHook) {
     );
 }
 
-function renderList(taskItems, tasksHook) {
+function renderList(taskItems, tasksHook, showDelete) {
     return (
         <Stack spacing={1}>
-            {taskItems.map((task) => renderTaskItem(task, tasksHook))}
+            {taskItems.map((task) => renderTaskItem(task, tasksHook, showDelete))}
         </Stack>
     );
 }
@@ -126,6 +127,8 @@ function renderList(taskItems, tasksHook) {
 export default function SelectedTasksList({
     tasks,
     emptyMessage = "Brak dodanych tasków.",
+    sx = {},
+    showDelete = true,
 }) {
     const taskItems = tasks?.state?.tasks ?? [];
     const requiresTasks = tasks?.computed?.requiresTasks ?? false;
@@ -140,6 +143,7 @@ export default function SelectedTasksList({
                 borderRadius: 2,
                 p: 2,
                 bgcolor: "grey.50",
+                ...sx,
             }}
         >
             <Typography
@@ -151,7 +155,7 @@ export default function SelectedTasksList({
 
             {isEmpty
                 ? renderEmpty(emptyMessage, requiresTasks)
-                : renderList(taskItems, tasks)}
+                : renderList(taskItems, tasks, showDelete)}
         </Box>
     );
 }

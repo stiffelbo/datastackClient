@@ -25,6 +25,8 @@ const MachineResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
     entityName: 'MachinesResources',
     query: { machine_id: id },
   });
+
+
   const assigned = assignedEntity.rows;
 
   // ---- CALLBACK: dodawanie z prawej do lewej ----
@@ -60,24 +62,24 @@ const MachineResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
   // Mapper woła: onEditLeft(newValue, params)
   // useEntity.updateField oczekuje: ({ id, field, value })
   const handleEditLeft = (params) => {
+    console.log(params);
     assignedEntity.updateField(params);
   }
 
   // ---- CALLBACK: usuwanie z lewej ----
   // Mapper woła onDeleteLeft(row) – my chcemy remove(row.id)
-  const handleDeleteLeft = useCallback(
-    async (row) => {
-      if (!row) return;
-      if (!assignedEntity.remove) return;
+  const handleDeleteLeft = async (row) => {
+    console.log('Delete left');
+    console.log(assignedEntity);
+    if (!row) return;
+    if (!assignedEntity.remove) return;
 
-      try {
-        await assignedEntity.remove(row.id);
-      } catch (e) {
-        console.error('Error removing row', e);
-      }
-    },
-    [assignedEntity.remove]
-  );
+    try {
+      await assignedEntity.remove(row.id);
+    } catch (e) {
+      console.error('Error removing row', e);
+    }
+  }
 
   return (
     <Box

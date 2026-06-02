@@ -38,12 +38,11 @@ const ProcessMachines = ({ id = null, data = {}, rwd = defaultRwd }) => {
 
       const today = new Date().toISOString().slice(0, 10);
 
-      // 🔑 payload zgodny ze schematem jira_issue_costs
       const payload = {
         process_id: id,
         machine_id: mappedItemData.id,
-        importance_score: 5,
-        is_required: true,
+        is_constant_work: false,
+        is_required: false,
         notes: '',
       };
 

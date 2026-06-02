@@ -55,7 +55,7 @@ const entitySpec = {
             ]
         }
     ]
-}
+};
 
 const entities = {
     processes: {
@@ -3224,4 +3224,416 @@ const entities = {
             }
         ]
     }
+};
+
+const mesObjectives = [
+    {
+        key: 'orderTechnicalSpecification',
+        label: 'Order technical specification',
+        content: [
+            'Represent Jira issue as order or project context for production planning.',
+            'Convert order requirements into marchrute, ProductionTasks, processes, machines, resources, tools and outsourcing needs.',
+            'Keep technical production specification separated from commercial Jira description.'
+        ]
+    },
+
+    {
+        key: 'workflowAndProductionKpi',
+        label: 'Workflow KPI and production KPI',
+        content: [
+            'Track task status, planned dates, actual execution, completion and delays.',
+            'Measure progress by task, process, department, employee, machine and whole Jira issue.',
+            'Compare planned quantity, actual output, good quantity, scrap and released quantity.'
+        ]
+    },
+
+    {
+        key: 'apsLikeProductionMonitoring',
+        label: 'APS-like production monitoring',
+        content: [
+            'Use marchrute, task sequence, dependencies and reporting logs to show what should be done now or today.',
+            'Prepare structure for future APS with machine schedules and employee schedules.',
+            'Support production priorities using task status, deadline, critical flag, available quantity and predecessor output.'
+        ]
+    },
+
+    {
+        key: 'inventoryAndSemiProducts',
+        label: 'Inventory, semi-products and transformation tracking',
+        content: [
+            'Track transformation of input quantities into good output, scrap, waste and released semi-products.',
+            'Use ProductionTasks and output logs as history of production state changes.',
+            'Support visibility of half-products available between production stages.'
+        ]
+    },
+
+    {
+        key: 'purchaseAndCostPipeline',
+        label: 'Purchase and cost pipeline',
+        content: [
+            'Track planned and actual direct purchases, contractor cooperation and outsourced task costs.',
+            'Combine labor, machine, resource, purchase, salary and department costs into production cost view.',
+            'Connect production costs with sales data to support layered profitability analysis by order, product, process and department.'
+        ]
+    },
+
+    {
+        key: 'qualityScrapAndCorrections',
+        label: 'Quality, scrap and corrections',
+        content: [
+            'Capture defects, scrap, waste, rework and correction work as separate production signals.',
+            'Identify where value is lost by process, machine, resource, task or department.',
+            'Support correction mode without losing original production history.'
+        ]
+    },
+
+    {
+        key: 'traceabilityAndAudit',
+        label: 'Traceability and audit',
+        content: [
+            'Answer who did what, when, with which process, machine, resource and under which Jira issue.',
+            'Keep report logs as business history, not only current task state.',
+            'Allow reconstruction of production flow from planning through execution, output, waste and cost.'
+        ]
+    },
+
+    {
+        key: 'masterDataGovernance',
+        label: 'Master data governance',
+        content: [
+            'Keep processes, machines, resources, tools and associations clean enough to drive automation.',
+            'Use definitions and association parameters to validate task planning and reporting.',
+            'Prevent invalid production configuration such as incompatible machine, missing required resource or recursive BOM.'
+        ]
+    }
+];
+
+const taskInventoryModel = {
+  taskAsInventoryPosition: true,
+
+  quantityBasis: {
+    orderedQty: 'customer required final units',
+    plannedInputQty: 'what task expects to consume',
+    plannedOutputQty: 'what task expects to produce',
+    goodQty: 'accepted usable output',
+    scrapQty: 'unusable output',
+    leftoverQty: 'usable but not needed output',
+    testQty: 'used for setup/testing'
+  },
+
+  transformation: {
+    multiplier: 'how many output units are produced from one input unit',
+    yieldRatio: 'expected good output ratio',
+    scrapRatio: 'expected waste ratio',
+    overproductionQty: 'planned safety/spare amount'
+  }
+}
+
+const taskQuantityAndInventoryArchitecture = {
+  principle: 'Every production task creates an inventory position.',
+  sourceOfTruth: 'inventory ledger, not task fields',
+  taskFields: 'store planned values and cached summaries',
+  reports: 'create inventory movements',
+  multiplier: 'planned conversion ratio',
+  goodScrapLeftover: 'derived from movements',
+  cost: 'rolled forward through consumption and production'
+}
+
+const businessLogic = {
+  taskFlowModel: {
+    content: [
+      'ProductionTask is a first-class operational unit.',
+      'Jira issue is a container for task flow, not the full boundary of production logic.',
+      'successor_task_id is the main flow relation and must be maintained from first task to final task.',
+      'sequence_no is only derived UI/order helper used for fast sorting and display.'
+    ]
+  },
+
+  successorChain: {
+    content: [
+      'Task flow is defined by successor_task_id.',
+      'Backend must recalculate sequence_no whenever task structure changes.',
+      'Marchrute should resolve from one or more start tasks into one or more endgame tasks.',
+      'Disconnected task islands are not allowed unless task is explicitly marked as standalone.'
+    ],
+    rules: [
+      'No cyclic successor dependency.',
+      'No task may point to itself as successor.',
+      'Successor task should belong to same Jira issue unless cross-issue dependency is explicitly allowed.',
+      'Every non-endgame task should have successor_task_id.',
+      'Every non-start task should be referenced as successor by at least one previous task.'
+    ]
+  },
+
+  dragDropEditing: {
+    content: [
+      'User edits task flow mostly by drag and drop.',
+      'Frontend should provide instant validation before committing structural changes.',
+      'Domain hook should expose validation callbacks for move, insert, connect, disconnect and reorder operations.',
+      'Backend remains authoritative and recalculates sequence_no after accepted change.'
+    ],
+    frontendCallbacks: [
+      'canMoveTask',
+      'canInsertTaskAfter',
+      'canConnectTasks',
+      'canDisconnectTask',
+      'validateTaskFlow',
+      'getTaskFlowWarnings'
+    ]
+  },
+
+  backendAuthority: {
+    content: [
+      'Backend owns final validation of task structure.',
+      'Backend owns transactional update of successor_task_id and sequence_no.',
+      'Backend should reject cycles, disconnected flow and invalid cross-issue dependency.',
+      'Frontend may optimistically update layout but must reconcile with backend response.'
+    ]
+  },
+
+  outsourcedTasks: {
+    content: [
+      'Outsourced tasks are not updated from production work reporting by default.',
+      'Outsourced task progress, status, quantity and cost may be updated manually or through direct purchase/cooperation records.',
+      'Outsourced task should still participate in successor flow and readiness calculation.'
+    ]
+  },
+
+  reportingAsStateDriver: {
+    content: [
+      'Internal production tasks are updated mainly from report logs.',
+      'Operation logs update actual labor time.',
+      'Machine usage logs update machine time and machine cost.',
+      'Resource usage logs update material demand, consumption, waste and cost.',
+      'Output logs update current quantity, good quantity, scrap quantity, released quantity and semi-product availability.',
+      'Manual-progress and outsourced tasks may override or bypass report-driven progress.'
+    ]
+  }
+};
+
+const generalAppFlow = {
+  content: [
+    'Manager is mounted inside one Jira issue context.',
+    'Backend provides prepared task manager cookbook through settings endpoint.',
+    'Frontend loads only settings and existing tasks.',
+    'User edits task flow locally through draft graph operations.',
+    'Frontend validates obvious interaction errors before commit.',
+    'Backend validates transaction, updates successor_task_id, recalculates sequence_no and returns normalized tasks with meta.',
+    'Reports update task state through backend aggregation, not direct UI assumptions.'
+  ],
+
+  basicFlow: [
+    'load issue',
+    'load task manager settings',
+    'load production tasks',
+    'build local task flow graph',
+    'render two-column manager',
+    'allow draft drag/drop/edit actions',
+    'validate draft locally',
+    'commit changes to backend',
+    'refresh tasks and meta'
+  ],
+
+  layout: {
+    topBar: [
+      'issue context',
+      'view mode',
+      'dirty state',
+      'errors and warnings',
+      'save / discard actions'
+    ],
+
+    leftPanel: [
+      'marchrute task list',
+      'task graph / gantt-like route view',
+      'drag/drop target for processes and existing tasks'
+    ],
+
+    rightPanel: [
+      'closed when not needed',
+      'process library when no task is selected',
+      'selected task context when task is selected',
+      'related issue tasks when connecting external dependencies'
+    ]
+  }
+};
+
+const frontendDataArchitecture = {
+  apiCommunication: {
+    hook: 'useEntity',
+
+    responsibility: [
+      'fetch schemas',
+      'fetch entity data',
+      'expose CRUD methods',
+      'stay backend-controlled'
+    ],
+
+    inputStructure: {
+      endpoint: 'string',
+      entityName: 'string',
+      query: 'object|null',
+      schemaQuery: 'object|null',
+      readOnly: 'boolean',
+      schemaOnly: 'boolean',
+      processRows: 'function|null',
+      itemId: 'number|string|null'
+    },
+
+    outputStructure: {
+      loading: 'boolean',
+      error: 'any',
+      clearError: 'function',
+      rows: 'array',
+      schema: 'object',
+      schemaVersion: 'string|number|null',
+
+      create: 'function|null',
+      updateField: 'function|null',
+      update: 'function|null',
+      updateFD: 'function|null',
+      updateMany: 'function|null',
+      remove: 'function|null',
+      removeMany: 'function|null',
+      upload: 'function|null',
+      uploadImg: 'function|null',
+      getOne: 'function|null',
+
+      refresh: 'function',
+      fetchSchema: 'function',
+      fetchRows: 'function',
+      heightSpan: 'number'
+    }
+  },
+
+  requiredStores: {
+    settings: {
+      entityName: 'JITaskSettings',
+      content: [
+        'Prepared backend cookbook for manager.',
+        'Contains process library, related machines, resources, tools, related issue tasks, permissions, rules and UI meta.'
+      ]
+    },
+
+    tasks: {
+      entityName: 'JiraIssueProductionTasks',
+      content: [
+        'Existing task set for current Jira issue.',
+        'Contains CRUD methods and backend-provided meta per task.'
+      ]
+    }
+  },
+
+  managerDomainLayer: {
+    hook: 'useProductionTasks',
+
+    responsibility: [
+      'receive issue, settings store and tasks store from props',
+      'build task flow from successor_task_id and sequence_no',
+      'manage local draft graph before backend commit',
+      'prepare DTOs for create, move, connect, delete and update actions',
+      'call useEntity CRUD or dedicated service endpoints',
+      'apply frontend-safe validation',
+      'expose task actions and validation callbacks',
+      'refresh or reconcile data after backend mutation'
+    ],
+
+    exposes: [
+      'tasks',
+      'taskFlow',
+      'draftGraph',
+      'selected task helpers',
+      'process library helpers',
+      'validation results',
+      'task action handlers',
+      'commitDraft',
+      'discardDraft'
+    ]
+  },
+
+  managerUiLayer: {
+    hook: 'useProductionTaskManagerUi',
+
+    responsibility: [
+      'selection',
+      'right panel mode',
+      'tabs',
+      'dialogs',
+      'drag and drop',
+      'filters',
+      'view mode',
+      'local interaction state'
+    ],
+
+    state: [
+      'selectedTaskId',
+      'rightPanelMode',
+      'activeTaskTab',
+      'viewMode',
+      'dragState',
+      'openDialog',
+      'filters',
+      'expandedSections'
+    ]
+  }
+}
+
+const backendArchitecture = {
+  settingsEndpoint: {
+    responsibility: [
+      'return full task manager cookbook for given Jira issue',
+      'return available processes already filtered for issue context',
+      'include related machines, resources, tools and defaults',
+      'include related issue tasks for cross-issue connection',
+      'include permissions, RLS flags, manager rules and validation hints'
+    ]
+  },
+
+  tasksEndpoint: {
+    responsibility: [
+      'return current ProductionTasks for issue',
+      'include task meta: readonly, blocked, canMove, canDelete, hasReports, warnings, errors and RLS',
+      'expose CRUD where allowed',
+      'stay source of truth for persisted task state'
+    ]
+  },
+
+  taskManagerService: {
+    responsibility: [
+      'create task from process definition',
+      'validate task graph changes transactionally',
+      'maintain successor_task_id as main flow relation',
+      'recalculate sequence_no after every structural change',
+      'prevent cycles and disconnected task islands',
+      'protect reported tasks from unsafe deletion',
+      'handle cross-issue dependency rules',
+      'support cleanup/override actions for privileged users'
+    ]
+  },
+
+  reportingAggregationService: {
+    responsibility: [
+      'aggregate operation logs into task current_time',
+      'aggregate machine usage logs into machine time and machine cost',
+      'aggregate resource usage logs into material plan, actual usage, waste and cost',
+      'aggregate output logs into current_qty, good_qty, scrap_qty and released_qty',
+      'skip automatic report-based progress for outsourced or manual-progress tasks unless explicitly allowed'
+    ]
+  },
+
+  validationModel: {
+    backend: [
+      'authoritative validation',
+      'transaction safety',
+      'permission and RLS enforcement',
+      'final graph normalization'
+    ],
+
+    frontend: [
+      'fast UX validation',
+      'drag/drop guards',
+      'local draft warnings',
+      'optimistic preview before commit'
+    ]
+  }
 }

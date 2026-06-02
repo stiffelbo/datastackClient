@@ -32,8 +32,6 @@ export const createFilter = (field, type = 'string') => {
         value: defaultFilterValue(firstOp, type),
     };
 
-    console.log(newFilter);
-
     return newFilter;
 };
 
@@ -169,6 +167,50 @@ export const applyFilterToValue = (rawValue, filter, type) => {
     return false; // 👈 default powinien być false, nie true!
 };
 
+const resolveOptionLabel = (rawValue, column) => {
+    if (rawValue == null || rawValue === '') return '';
+
+    if (column?.optionsMap) {
+        const mapped =
+            column.optionsMap[rawValue] ??
+            column.optionsMap[String(rawValue)];
+
+        if (mapped != null) return mapped;
+    }
+
+    if (Array.isArray(column?.options)) {
+        const option = column.options.find((opt) => {
+            if (opt && typeof opt === 'object') {
+                return String(opt.value) === String(rawValue);
+            }
+            return String(opt) === String(rawValue);
+        });
+
+        if (option) {
+            return typeof option === 'object'
+                ? option.label ?? option.value
+                : option;
+        }
+    }
+
+    return rawValue;
+};
+
+const resolveSearchValue = (row, column) => {
+    const rawValue = row?.[column.field];
+
+    if (
+        column?.type === 'fk' ||
+        column?.input === 'select' ||
+        column?.optionsMap ||
+        Array.isArray(column?.options)
+    ) {
+        return resolveOptionLabel(rawValue, column);
+    }
+
+    return rawValue ?? '';
+};
+
 /**
  * Filtruj cały dataset
  */
@@ -195,6 +237,7 @@ export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selecte
     });
 
     const fieldsToJoin = Object.keys(optionsDict) || [];
+
     if (data && Array.isArray(data)) {
         return data.filter((row) => {
             if (showSelected) {
@@ -211,10 +254,11 @@ export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selecte
             if (globalSearch && globalSearch.trim()) {
                 const normalized = globalSearch.replace(/\s+/g, ';'); // spacje = OR
                 const orGroups = normalized.split(';').map(g => g.trim()).filter(Boolean);
-                let rowSlug = Object.values(row).join(' ').toLowerCase();
-                fieldsToJoin.forEach(field => {
-                    rowSlug += ` ${optionsDict[field][row[field]]}`;
-                });
+                const rowSlug = columns
+                    .filter(col => col.type !== 'action')
+                    .map(col => resolveSearchValue(row, col))
+                    .join(' ')
+                    .toLowerCase();
 
                 const matchGlobal = orGroups.some(group => {
                     const terms = group.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
@@ -237,7 +281,7 @@ export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selecte
 
             return true;
         });
-    }else{
+    } else {
         return [];
     }
 

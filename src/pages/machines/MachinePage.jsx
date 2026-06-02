@@ -7,6 +7,7 @@ import MachineDetails from './MachineDetails';
 import MachineProcesses from './MachineProcesses';
 import MachineResources from './MachineResources';
 import MachineToolsTypes from './MachineToolsTypes';
+import MachineRawLogs from './MachineRawLogs';
 
 const MachinePage = ({
   entityName,
@@ -45,6 +46,12 @@ const MachinePage = ({
       label: 'Typy Narzedzi',
       pageKey: 'machine_tools_types', // klucz z rejestru stron
       component: <MachineToolsTypes id={id} data={row} rwd={rwd}/>,
+    },
+    {
+      key: 'tkp',
+      label: 'Wpisy w tkp',
+      pageKey: 'machine_tkp_logs', // klucz z rejestru stron
+      component: <MachineRawLogs id={id} data={row} rwd={rwd}/>,
     },
   ];
 

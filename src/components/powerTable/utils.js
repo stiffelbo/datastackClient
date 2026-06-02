@@ -240,7 +240,6 @@ export const sortData = (data = [], sortModel = [], columns = []) => {
       if (aValue === null || aValue === undefined) aValue = '';
       if (bValue === null || bValue === undefined) bValue = '';
 
-      console.log(type);
       // 🔹 FK/select: sortujemy po label (string), nie po id
       // (u Ciebie type 'fk' już istnieje w switchu)
       if (field !== 'id' && (type === 'fk' || (col?.optionsMap && col?.input === 'select'))) {

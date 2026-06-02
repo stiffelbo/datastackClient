@@ -4,6 +4,17 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
 
+function toDatetimeLocalValue(value) {
+  if (!value) return "";
+
+  // backend: "2026-05-29 12:00:00"
+  if (typeof value === "string") {
+    return value.replace(" ", "T").slice(0, 16);
+  }
+
+  return "";
+}
+
 const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange, column = {}, params = {} }) => {
   const [value, setValue] = useState(initialValue ?? "");
   const [error, setError] = useState(null);
@@ -15,10 +26,10 @@ const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange,
 
   const virtualizedClampSx = isVirtual
     ? {
-        height: settings.rowHeight,
-        maxHeight: settings.rowHeight,
-        overflow: "hidden",
-      }
+      height: settings.rowHeight,
+      maxHeight: settings.rowHeight,
+      overflow: "hidden",
+    }
     : {};
 
   useEffect(() => {
@@ -75,10 +86,26 @@ const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange,
   };
 
   // commit helper
+  const toBackendValue = (v) => {
+    if (inputType === "datetime") {
+      if (!v) return null;
+
+      // "2026-05-29T12:00" -> "2026-05-29 12:00:00"
+      if (typeof v === "string" && v.includes("T")) {
+        return v.replace("T", " ") + (v.length === 16 ? ":00" : "");
+      }
+    }
+
+    return v;
+  };
+
   const handleCommit = async (maybeValue = undefined) => {
-    const v = maybeValue === undefined ? value : maybeValue;
+    const rawValue = maybeValue === undefined ? value : maybeValue;
+    const v = toBackendValue(rawValue);
+
     const ok = validate(v);
     if (!ok) return false;
+
     try {
       if (typeof onCommit === "function") {
         await onCommit(v, params);
@@ -141,7 +168,25 @@ const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange,
         title={error || undefined}
       />
     );
-  } else if (inputType === "select") {
+  } else if (inputType === "datetime") {
+    inputElement = (
+      <TextField
+        inputRef={inputRef}
+        value={toDatetimeLocalValue(value)}
+        onChange={(e) => handleLocalChange(e.target.value)}
+        onBlur={() => handleCommit()}
+        onKeyDown={handleKeyDown}
+        fullWidth
+        size="small"
+        variant="standard"
+        type="datetime-local"
+        error={!!error}
+        helperText={error || ""}
+        title={error || undefined}
+      />
+    );
+  }
+  else if (inputType === "select") {
     const opts = Array.isArray(column?.options) ? column.options : [];
 
     const handleChangeSelect = async (e) => {

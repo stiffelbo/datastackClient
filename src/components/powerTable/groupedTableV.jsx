@@ -149,7 +149,6 @@ const GroupedTableV = ({ initialData, data, columnsSchema, height, actionsApi, s
     const rowHeight = settings?.rowHeight || 45;
     const totalHeight = flatData.length * rowHeight;
     const maxScroll = Math.max(totalHeight - viewportHeight, 0);
-    console.log(maxScroll, rowHeight);
     setScrollTop(prev => (prev > maxScroll ? maxScroll : prev));
   }, [flatData.length, viewportHeight, settings?.rowHeight]);
 

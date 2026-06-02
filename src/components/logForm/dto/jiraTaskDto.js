@@ -32,6 +32,7 @@ export function mapJiraTaskResponseToDto(response) {
         name: raw.name ?? null,
         status: raw.status ?? null,
         productGroup: raw.product_group ?? null,
+        qtyToDo: raw.qty_to_do ?? null,
         //placeholder for reports
         report : {
             quantity: null, //ilosc procesów wykonanych

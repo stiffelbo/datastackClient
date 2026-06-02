@@ -27,12 +27,77 @@ const normalize = (str) =>
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
 
-const buildSlug = (row, fields = []) => {
+const resolveOptionLabel = (rawValue, column) => {
+    if (rawValue == null || rawValue === '') return '';
+
+    if (column?.optionsMap) {
+        const mapped =
+            column.optionsMap[rawValue] ??
+            column.optionsMap[String(rawValue)];
+
+        if (mapped != null) return mapped;
+    }
+
+    if (Array.isArray(column?.options)) {
+        const option = column.options.find((opt) => {
+            if (opt && typeof opt === 'object') {
+                return String(opt.value) === String(rawValue);
+            }
+            return String(opt) === String(rawValue);
+        });
+
+        if (option) {
+            return typeof option === 'object'
+                ? option.label ?? option.value
+                : option;
+        }
+    }
+
+    return rawValue;
+};
+
+const resolveSearchValue = (row, column) => {
+    const rawValue = row?.[column.field];
+
+    if (
+        column?.type === 'fk' ||
+        column?.input === 'select' ||
+        column?.optionsMap ||
+        Array.isArray(column?.options)
+    ) {
+        return resolveOptionLabel(rawValue, column);
+    }
+
+    return rawValue ?? '';
+};
+
+const buildSlug = (row, columns = [], fields = []) => {
     const parts = [];
-    fields.forEach((f) => {
-        if (row && row[f] != null) parts.push(String(row[f]));
-    });
+
+    const safeColumns = Array.isArray(columns) ? columns : [];
+    const safeFields = Array.isArray(fields) ? fields : [];
+
+    if (safeFields.length > 0) {
+        safeFields.forEach((field) => {
+            const column = safeColumns.find((c) => c.field === field);
+
+            if (column) {
+                parts.push(resolveSearchValue(row, column));
+            } else if (row && row[field] != null) {
+                parts.push(row[field]);
+            }
+        });
+    }
+
+    safeColumns
+        .filter((col) => col.type !== 'action')
+        .forEach((col) => {
+            parts.push(resolveSearchValue(row, col));
+        });
+
+    // 🔑 fallback jak wcześniej — dzięki temu search nie umiera
     parts.push(JSON.stringify(row ?? {}));
+
     return normalize(parts.join(' | '));
 };
 
@@ -42,15 +107,15 @@ const Mapper = ({
     entityName = 'defaultMapper',
     ownerLabel,
     owner,
-    
+
     leftData = [],
     leftColumns = [],
     leftSearchFields = [],
-    
+
     rightData = [],
     rightColumnsBase = [],
     rightSearchFields = [],
-    
+
     distinct = false,
     idField = 'id',
     distinctField = 'id',
@@ -115,9 +180,9 @@ const Mapper = ({
     const needle = normalize(search.trim());
 
     const matchesSearch = useCallback(
-        (row, fields) => {
+        (row, columns, fields) => {
             if (!needle) return true;
-            return buildSlug(row, fields).includes(needle);
+            return buildSlug(row, columns, fields).includes(needle);
         },
         [needle]
     );
@@ -133,24 +198,34 @@ const Mapper = ({
     }, [leftData, distinct, distinctField]);
 
     const filteredLeftData = useMemo(
-        () => leftData.filter((row) => matchesSearch(row, leftSearchFields)),
-        [leftData, leftSearchFields, matchesSearch]
+        () => leftData.filter((row) =>
+            matchesSearch(row, leftColumns, leftSearchFields)
+        ),
+        [leftData, leftColumns, leftSearchFields, matchesSearch]
     );
 
     const filteredRightData = useMemo(
         () =>
             rightData.filter((row) => {
-                // najpierw globalne szukanie
-                if (!matchesSearch(row, rightSearchFields)) return false;
+                if (!matchesSearch(row, rightColumnsBase, rightSearchFields)) {
+                    return false;
+                }
 
-                // distinct: chowamy pozycje, które już są przypisane
                 if (distinct && usedIds && usedIds.has(row[idField])) {
                     return false;
                 }
 
                 return true;
             }),
-        [rightData, rightSearchFields, matchesSearch, distinct, usedIds, idField]
+        [
+            rightData,
+            rightColumnsBase,
+            rightSearchFields,
+            matchesSearch,
+            distinct,
+            usedIds,
+            idField,
+        ]
     );
 
     // 🔑 aktualny "prevElement" – np. pierwszy zaznaczony w filtrach

@@ -292,7 +292,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   };
 
   const addFilter = (field, filter) => {
-    console.log(field,filter);
     setColumns(prev =>
       prev.map(col =>
         col.field === field

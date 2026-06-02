@@ -4,7 +4,7 @@ import { materialLogDto } from "./materialLogDto";
 import { outputLogDto } from "./outputLogDto";
 
 import { normalizeTimeValue } from "../utils";
-import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate } from "./logDraftVoUtils";
+import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate } from "./logDraftVoUtils";
 
 
 export function logDraftVo({
@@ -35,6 +35,7 @@ export function logDraftVo({
     const selectedEmployees = safeArray(brigadesState).filter((item) => item.isSelected);
 
     const selectedProcess = processesState?.selectedProcess ?? null;
+
     const selectedMachine = processesState?.selectedMachine ?? null;
     const machineTime = normalizeTimeValue(processesState?.machineTime ?? null);
     const materialsReport = processesState?.materialsReport ?? {};
@@ -70,6 +71,7 @@ export function logDraftVo({
     // TRYB TASKOWY
     if (requiresTasks) {
         // 1. OPERATIONS
+
         allocations.forEach((allocation) => {
             const employeeQtyAllocations = allocateIntegerAcrossPeople(
                 allocation.quantity,
@@ -102,7 +104,7 @@ export function logDraftVo({
                         productionTaskId,
                         remarks: getTaskRemarks(allocation.task),
                         isRepair: isRework || getTaskIsRework(allocation.task),
-                        qty: requiresQuantity ? employeeAllocation.allocatedInt : null,
+                        qty: requiresQuantity ? employeeAllocation.allocatedInt : 1,
                     })
                 );
             });
@@ -163,102 +165,133 @@ export function logDraftVo({
             const row = materialsReport?.[material.id];
             if (!row) return;
 
-            const qty = Number(row.qty || 0);
-            const wasteQty = Number(row.wasteQty || 0);
             const materialStep = Number(material.step || row.step || 0.01);
 
-            if (!qty && !wasteQty) return;
+            const materialMovements = [
+                {
+                    movementType: "consume_good",
+                    qty: Number(row.qty || 0),
+                    remarks: materialRemarks,
+                },
+                {
+                    movementType: "consume_defect",
+                    qty: Number(row.wasteQty || 0),
+                    remarks: materialRemarks,
+                },
+            ];
 
-            const qtyAllocations = allocateAmountByRatioWithStep(
-                qty,
-                allocations,
-                materialStep
-            );
+            materialMovements.forEach((movement) => {
+                if (!movement.qty) return;
 
-            const wasteAllocations = allocateAmountByRatioWithStep(
-                wasteQty,
-                allocations,
-                materialStep
-            );
-
-            qtyAllocations.forEach((qtyAllocation, index) => {
-                const wasteAllocation = wasteAllocations[index];
-
-                materialLogs.push(
-                    materialLogDto({
-                        task: qtyAllocation.task,
-                        employee: selectedEmployees[0] ?? null,
-                        process: selectedProcess,
-                        material,
-                        workDate:
-                            selectedEmployees[0]?.time?.date ??
-                            machineTime?.date ??
-                            null,
-                        structureId,
-                        periodId,
-                        productionTaskId,
-                        isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-
-                        isPlan: materialIsPlan,
-                        isActive: materialIsActive,
-                        source: materialSource,
-
-                        isPrimaryMaterial: true,
-                        isWaste: false,
-
-                        qty: qtyAllocation.allocatedAmount,
-                        unit: row.unit ?? material.unit,
-                        wasteQty: wasteAllocation?.allocatedAmount ?? 0,
-
-                        unitCost: null,
-                        costAmount: null,
-                        remarks: materialRemarks ?? getTaskRemarks(qtyAllocation.task),
-                        attrs: null,
-                    })
+                const qtyAllocations = allocateAmountByRatioWithStep(
+                    movement.qty,
+                    allocations,
+                    materialStep
                 );
+
+                qtyAllocations.forEach((qtyAllocation) => {
+                    const employeeAllocations = allocateAmountAcrossPeopleWithStep(
+                        qtyAllocation.allocatedAmount,
+                        selectedEmployees,
+                        materialStep
+                    );
+
+                    employeeAllocations.forEach((employeeAllocation) => {
+                        if (!employeeAllocation.allocatedAmount) return;
+
+                        materialLogs.push(
+                            materialLogDto({
+                                task: qtyAllocation.task,
+                                employee: employeeAllocation.employee,
+                                process: selectedProcess,
+                                material,
+
+                                workDate:
+                                    employeeAllocation.employee?.time?.date ??
+                                    machineTime?.date ??
+                                    null,
+
+                                structureId,
+                                periodId,
+                                productionTaskId,
+
+                                isRepair: isRework || getTaskIsRework(qtyAllocation.task),
+                                isPlan: materialIsPlan,
+                                isActive: materialIsActive,
+
+                                movementType: movement.movementType,
+                                qty: employeeAllocation.allocatedAmount,
+
+                                unitCost: null,
+                                costAmount: null,
+
+                                remarks:
+                                    movement.remarks ??
+                                    getTaskRemarks(qtyAllocation.task),
+
+                                docNr: null,
+                                attrs: null,
+                            })
+                        );
+                    });
+                });
             });
         });
 
         // 4. OUTPUTS
-        console.log(allocations);
+        selectedTasks.forEach((task) => {
+            const quantityGood = Number(task?.report?.quantityGood || 0);
+            const quantityScrap = Number(task?.report?.quantityScrap || 0);
 
-        allocations.forEach((allocation) => {
-            const outputQty = getTaskQuantity(allocation.task);
-            const goodQty = getTaskQuantityGood(allocation.task);
-            const defectQty = getTaskQuantityScrap(allocation.task);
+            if (!quantityGood && !quantityScrap) return;
 
-            const hasAnyOutput =
-                Number(outputQty || 0) > 0 ||
-                Number(goodQty || 0) > 0 ||
-                Number(defectQty || 0) > 0;
+            const outputMovements = [
+                {
+                    movementType: "dobre",
+                    qty: quantityGood,
+                },
+                {
+                    movementType: "brak",
+                    qty: quantityScrap,
+                },
+            ];
 
-            if (!hasAnyOutput) return;
+            outputMovements.forEach((movement) => {
+                if (!movement.qty) return;
 
-            outputLogs.push(
-                outputLogDto({
-                    task: allocation.task,
-                    employee: selectedEmployees[0] ?? null,
-                    process: selectedProcess,
-                    workDate: outputWorkDate,
-                    structureId,
-                    periodId,
-                    productionTaskId,
-                    isRepair: isRework || getTaskIsRework(allocation.task),
+                const employeeAllocations = allocateAmountAcrossPeopleWithStep(
+                    movement.qty,
+                    selectedEmployees,
+                    1
+                );
 
-                    source: outputSource,
-                    defectCategory: outputReport?.defectCategory ?? null,
-                    defectReason: outputReport?.defectReason ?? null,
+                employeeAllocations.forEach((employeeAllocation) => {
+                    if (!employeeAllocation.allocatedAmount) return;
 
-                    outputQty,
-                    defectQty,
-                    goodQty,
-                    wasteQty: null,
-                    unit: outputReport?.unit ?? null,
+                    outputLogs.push(
+                        outputLogDto({
+                            task,
+                            employee: employeeAllocation.employee,
+                            process: selectedProcess,
 
-                    remarks: outputRemarks ?? getTaskRemarks(allocation.task),
-                    attrs: outputReport?.attrs ?? null,
-                })
-            );
+                            workDate:
+                                employeeAllocation.employee?.time?.date ??
+                                machineTime?.date ??
+                                null,
+
+                            structureId,
+                            periodId,
+                            productionTaskId,
+
+                            movementType: movement.movementType,
+                            qty: employeeAllocation.allocatedAmount,
+
+                            remarks: outputRemarks ?? getTaskRemarks(task),
+                            attrs: null,
+                        })
+                    );
+                });
+            });
         });
     }
 

@@ -8,6 +8,7 @@ import JiraIssueMaterials from './JiraIssueMaterials';
 import JiraIssueWorklog from './JiraIssueWorklog';
 import JiraIssueMachinesUsage from './JiraIssueMachinesUsage';
 import JiraIssueBilans from './JiraIssueBilans';
+import LogForm from '../../components/logForm/LogForm';
 
 const JiraIssuePage = ({
   entityName,
@@ -29,6 +30,12 @@ const JiraIssuePage = ({
       label: 'Edytuj',
       pageKey: 'jiraissue.details', // klucz z rejestru stron
       component: <JiraIssueDetails id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard}/>,
+    },
+    {
+      key: 'opLog',
+      label: 'Raportuj',
+      pageKey: 'jiraissue.oplog', // klucz z rejestru stron
+      component: <LogForm initialTasks={[row]} />,
     },
     {
       key: 'clockify',

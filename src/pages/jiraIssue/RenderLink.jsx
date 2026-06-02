@@ -4,10 +4,13 @@ import React from "react";
 import { Box, Typography, Chip } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-export default function RenderLink ({id}){
-    if(!id) return;
+export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, icon = null}){
+    if(!id && !baseUrl) return;
     
-    const url = `http://192.168.1.135/datastack/jiraissuesingle/${id}`;
+    let url = `${baseUrl}${id}`;
+    if(!id){
+        url = `${baseUrl}`;
+    }
 
     const handleClick = () => {
         window.open(url, '_blank', 'noopener,noreferrer');
@@ -18,8 +21,9 @@ export default function RenderLink ({id}){
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                label={`#${id}`}
-                icon={<OpenInNewIcon />}
+                label={`${id}`}
+                title={title ? title : 'Link'}
+                icon={icon ? icon : <OpenInNewIcon />}
                 clickable
                 variant="outlined"
                 size="small"

@@ -16,6 +16,9 @@ const MachineUsageForm = ({
         return null;
     }
 
+    const selectedMachine = machineOptions.find((option) => String(option.id) === String(machineId));
+    const showTimeForm = !Boolean(selectedMachine?.isConstant) && machineId;
+
     function renderForm() {
         return (
             <Box
@@ -39,13 +42,15 @@ const MachineUsageForm = ({
                         disabled={disabled}
                     />
 
-                    <TimeForm
-                        value={machineTime}
-                        onChange={onMachineTimeChange}
-                        label="Czas użycia maszyny"
-                        dense
-                        disabled={disabled || !machineId}
-                    />
+                    {showTimeForm && (
+                        <TimeForm
+                            value={machineTime}
+                            onChange={onMachineTimeChange}
+                            label="Czas użycia maszyny"
+                            dense
+                            disabled={disabled || !machineId}
+                        />
+                    )}
                 </Stack>
             </Box>
         );

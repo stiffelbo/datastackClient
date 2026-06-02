@@ -14,6 +14,7 @@ export default function TaskInfo({
     data,
     onAdd = null,
     onRemove = null,
+    showDelete = true,
     sx = {},
     children = null,
 }) {
@@ -55,7 +56,7 @@ export default function TaskInfo({
             );
         }
 
-        if (typeof onRemove === "function") {
+        if (typeof onRemove === "function" && showDelete) {
             return (
                 <Button
                     size="small"
@@ -137,6 +138,11 @@ export default function TaskInfo({
                     {data.status ? (
                         <Typography variant="caption" color="text.secondary">
                             Status: {data.status}
+                        </Typography>
+                    ) : null}
+                    {data.qtyToDo ? (
+                        <Typography variant="caption" color="text.secondary">
+                            Do zrobienia: {data.qtyToDo}
                         </Typography>
                     ) : null}
                 </Stack>

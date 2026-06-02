@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { mapJiraTaskResponseToDto } from '../dto/jiraTaskDto';
 
 function getTaskIdentity(task) {
     if (!task || typeof task !== 'object') return null;
@@ -25,18 +26,13 @@ function getTaskKey(task) {
 }
 
 function normalizeTask(task) {
-    return {
-        ...task,
-        report: {
-            quantity: task?.report?.quantity ?? null,
-            quantityGood: task?.report?.quantityGood ?? null,
-            quantityScrap: task?.report?.quantityScrap ?? null,
-            is_rework: task?.report?.is_rework ?? false,
-            remarks: task?.report?.remarks ?? "",
-            requiresQuantity: task?.report?.requiresQuantity ?? true,
-            requiresRemarks: task?.report?.requiresRemarks ?? false,
-        },
-    };
+    if (!task || typeof task !== 'object') return null;
+    console.log(task);
+    if(Object.prototype.hasOwnProperty(task, 'report')) {
+        return task;
+    }else {
+        return mapJiraTaskResponseToDto({data:task});
+    }
 }
 
 function updateTaskReport(taskOrId, patch) {
@@ -64,8 +60,22 @@ function updateTaskReport(taskOrId, patch) {
 
 export default function useTasks({ onSubmit, initialValues = {}, requiresQuantity = true, requiresRemarks = false, requiresTasks = false }) {
     const [tasks, setTasks] = useState(
-        Array.isArray(initialValues.tasks) ? initialValues.tasks : []
+        Array.isArray(initialValues.tasks)
+            ? initialValues.tasks.map(normalizeTask)
+            : []
     );
+
+    const initialTasksKey = Array.isArray(initialValues.tasks)
+        ? initialValues.tasks.map(getTaskIdentity).join('|')
+        : '';
+
+    useEffect(() => {
+        setTasks(
+            Array.isArray(initialValues.tasks)
+                ? initialValues.tasks.map(normalizeTask)
+                : []
+        );
+    }, [initialTasksKey]);
 
     function hasTask(taskOrId) {
         const identity =
@@ -102,7 +112,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
 
             if (exists) return prev;
 
-            return [...prev, normalizeTask(task)];
+            return [...prev, task];
         });
     }
 

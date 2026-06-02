@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Alert, Grid, Box, Typography } from "@mui/material";
+import { Alert, Grid, Box, Typography, LinearProgress, Button } from "@mui/material";
 import { useRwd } from "../../context/RwdContext";
+import {useAuth} from "../../context/AuthContext";
 
 //Hooks
-import useEntity from "../../hooks/useEntity";
 import useTasks from "./hooks/useTasks";
 import useBrigades from "./hooks/useBrigades";
 import useProcesses from "./hooks/useProcesses";
+import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 
 //DTO
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
@@ -25,25 +26,26 @@ import BrigadeEmployeesForm from "./BrigadeEmployeesForm";
 import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
 
-const LogForm = ({ user }) => {
+const LogForm = ({initialTasks = []}) => {
+
+    const { user } = useAuth();
+
     if (!user) return <Alert severity="error">Brak danych użytkownika. Zaloguj się ponownie.</Alert>;
+    if (!user.brigades.length) return <Alert severity="warning">Brak danych o pracownikach powiązanych z użytkownikiem</Alert>
+    if (!user.processes.length) return <Alert severity="warning">Brak danych o procesach do raportownaia</Alert>
 
     const [time, setTime] = useState(defaultTime());
-
     //Hooks
     const { height } = useRwd();
-
-    const opLogEntity = useEntity({entityName: 'JiraIssueOperationLog', endpoint: '/jira_issue_operation_log/', schemaOnly: true});
-    const matLogEntity = useEntity({entityName: 'JiraIssueResourceUsageLog', endpoint: '/jira_issue_resource_usage_log/', schemaOnly: true});
-    const machineLogEntity = useEntity({entityName: 'JiraIssueMachineUsageLog', endpoint: '/jira_issue_machine_usage_log/', schemaOnly: true});
-    const prodLogEntity = useEntity({entityName: 'JiraIssueProductionLog', endpoint: '/jira_issue_production_output_log/', schemaOnly: true});
 
     const brigade = useBrigades({ initialTime: time, employees: brigadeEmployeesDto(user.brigades) });
 
     const processes = useProcesses({
         processes: processesDto(user.processes),
         initialMachineTime: time,
-        onChange: null
+        setInitialMachineTime: setTime,
+        onChange: null,
+        employeeTimeMap: brigade.computed.employeeTimeMap,
     });
 
     let requiresTasks = true;
@@ -56,7 +58,8 @@ const LogForm = ({ user }) => {
         requiresRemarks = processes.data.selectedProcess.requires_remarks;
     }
 
-    const tasks = useTasks({ requiresQuantity, requiresRemarks, requiresTasks });
+    const tasks = useTasks({ requiresQuantity, requiresRemarks, requiresTasks, initialValues: { tasks: initialTasks } });
+
 
     const draft = logDraftVo({
         tasksState: tasks.state.tasks,
@@ -73,20 +76,117 @@ const LogForm = ({ user }) => {
         periodId: null,
     });
 
+    const log = useJiraIssueUserLogs();
+
+    const renderSubmit = ({ dataErrors = null, logError = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
+
+        if (!dataErrors.length && !logError) {
+            if (loading) {
+                return <LinearProgress />
+            } else {
+                return <Button
+                    color='primary'
+                    onClick={onSave}
+                    size="small"
+                    sx={{ ...sx }}
+                >
+                    Wprowadź dane
+                </Button>
+            }
+        }
+
+        if (logError) {
+            return <Button
+                color='error'
+                onClick={onClear}
+                size="small"
+                sx={{ ...sx }}
+            >
+                Błąd podczas zapisu danych
+            </Button>
+        }
+
+    }
+
+    const renderControlTables = (show = true) => {
+        if(!show) return;
+        return (
+            <Grid container>
+                <Grid item size={12}>
+                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Czasy Pracownika
+                        </Typography>
+                        <PowerTable
+                            entityName="LogPreview_Operation"
+                            data={draft.logs.operationLogs}
+                            height={350}
+                            rowHeight={60}
+                        />
+                    </Box>
+                </Grid>
+                <Grid item size={12}>
+                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Ilosci Produkcyjne
+                        </Typography>
+                        <PowerTable
+                            entityName="LogPreview_OutputsLogs"
+                            data={draft.logs.outputLogs}
+                            height={350}
+                            rowHeight={60}
+                        />
+                    </Box>
+                </Grid>
+                <Grid item size={12}>
+                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Czasy Maszyn
+                        </Typography>
+                        <PowerTable
+                            entityName="LogPreview_MachineLogs"
+                            data={draft.logs.machineLogs}
+                            height={350}
+                            rowHeight={60}
+                        />
+                    </Box>
+                </Grid>
+                <Grid item size={12}>
+                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
+                        <Typography variant="h6" gutterBottom>
+                            Materiały
+                        </Typography>
+                        <PowerTable
+                            entityName="LogPreview_MaterialsLogs"
+                            data={draft.logs.materialLogs}
+                            height={350}
+                            rowHeight={60}
+                        />
+                    </Box>
+                </Grid>
+            </Grid>
+        )
+    }
+
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
-            <Grid item size={6} spacing={1}>
-                <JiraTaskLookup onAdd={tasks.actions.addTask} sx={{ my: 2 }} />
+            <Grid item size={6}>
+                {initialTasks.length === 0 && (
+                    <JiraTaskLookup onAdd={tasks.actions.addTask} sx={{ mb: 2 }} />
+                )}
                 <SelectedTasksList
                     tasks={tasks}
                     requiresTasks={requiresTasks}
+                    sx={{ mb: 2 }}
+                    showDelete={initialTasks.length === 0}
                 />
-                {brigade.state.brigades.length !== 1 ? <TimeForm onChange={setTime} value={time} /> : null}
+                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
                 <ProcessForm processes={processes} />
-                <Box sx={{ my: 2, width: '100%', maxWidth: '100%' }}>
-                    <RenderLogErrors errors={draft.meta.errors} />
-                </Box>
+
+                <RenderLogErrors errors={draft.meta.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
+
             </Grid>
+
             <Grid item size={6}>
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
@@ -99,62 +199,12 @@ const LogForm = ({ user }) => {
                     onEmployeeTimeChange={brigade.actions.setEmployeeTime}
                 />
             </Grid>
+            <Grid item size={12}>
+                {renderSubmit({ dataErrors: draft.meta.errors, logError: log.error, loading: log.loading, onSave: () => log.save(draft.logs), onClear: () => log.clear() })}
+            </Grid>
         </Grid>
 
-        <Grid container>
-            <Grid item size={12}>
-                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                    <Typography variant="h6" gutterBottom>
-                        Czasy Pracownika
-                    </Typography>
-                    <PowerTable
-                        entityName="LogPreview_Operation"
-                        data={draft.logs.operationLogs}
-                        height={350}
-                        columnSchema={opLogEntity.schema.columns}
-                    />
-                </Box>
-            </Grid>
-            <Grid item size={12}>
-                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                    <Typography variant="h6" gutterBottom>
-                        Ilosci Produkcyjne
-                    </Typography>
-                    <PowerTable
-                        entityName="LogPreview_OutputsLogs"
-                        data={draft.logs.outputLogs}
-                        height={350}
-                        columnSchema={prodLogEntity.schema.columns}
-                    />
-                </Box>
-            </Grid>            
-            <Grid item size={12}>
-                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                    <Typography variant="h6" gutterBottom>
-                        Czasy Maszyn
-                    </Typography>
-                    <PowerTable
-                        entityName="LogPreview_MachineLogs"
-                        data={draft.logs.machineLogs}
-                        height={350}
-                        columnSchema={machineLogEntity.schema.columns}
-                    />
-                </Box>
-            </Grid>
-            <Grid item size={12}>
-                <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                    <Typography variant="h6" gutterBottom>
-                        Materiały
-                    </Typography>
-                    <PowerTable
-                        entityName="LogPreview_MaterialsLogs"
-                        data={draft.logs.materialLogs}
-                        height={350}
-                        columnSchema={matLogEntity.schema.columns}
-                    />
-                </Box>
-            </Grid>
-        </Grid>
+        {renderControlTables(true)}
     </Box>;
 }
 

@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import RemoveIcon from "@mui/icons-material/Remove";
 
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import LinkIcon from '@mui/icons-material/Link';
 
 import { useForm } from "../../components/powerTable/form/useForm";
 import { normalizeSchema } from "../../components/powerTable/form/schemaUtils";
@@ -65,9 +66,6 @@ const renderLoading = () => (
 
 
 const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
-
-    console.log(row);
-
     const schema = normalizeSchema(entity.schema.editForm.schema);
 
     const onCancel = () => {
@@ -360,7 +358,8 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     {form.formState.jira_parent_key || form.formState.jira_key || "—"}
                     {form.formState.jira_parent_key ? ` / ${form.formState.jira_key || ""}` : ""}
                 </Typography>
-                <RenderLink id={id} />
+                <RenderLink id={id} title={`Strona ${form.formState.jira_key}`}/>
+                <RenderLink baseUrl="https://germaniamint.atlassian.net/browse/" id={form.formState.jira_key} title={"Link do jiry"} icon={<LinkIcon />}/>
             </Row>
             <Row>
                 <Typography variant="h6" sx={{ mt: 0.5 }}>
@@ -389,9 +388,10 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                         
                     </CollapsibleSection>
 
-                    <CollapsibleSection title="Ilości" defaultOpen={false}>
-                        {renderInput("qty_ordered")}
+                    <CollapsibleSection title="Ilości" defaultOpen={true}>
+                        
                         <Row>
+                            {renderInput("qty_ordered")}
                             {renderInput("qty_to_do")}
                             {renderInput("qty_done")}
                         </Row>
@@ -401,7 +401,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                         </Row>
                     </CollapsibleSection>
 
-                    <CollapsibleSection title="Finanse" defaultOpen={false}>
+                    <CollapsibleSection title="Finanse" defaultOpen={true}>
                             {renderInput("ro_nr")}
                             {renderInput("design_price")}
                             {renderInput("setup_price")}

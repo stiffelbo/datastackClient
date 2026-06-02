@@ -45,6 +45,7 @@ const ProcessResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
         quantity_per_unit: 1,
         unit: 'szt',
         is_required: true,
+        can_waste: false,
         notes: '',
       };
 

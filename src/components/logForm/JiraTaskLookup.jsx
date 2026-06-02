@@ -31,7 +31,7 @@ function isValidTaskKey(value = "") {
 }
 
 const JiraTaskLookup = ({
-    endpoint = "/jira_issue/jira.php?jira_key=",
+    endpoint = "/jira_issue_user_logs/jira.php?jira_key=",
     onAdd,
     buttonLabel = "Sprawdź",
     addLabel = "Dodaj",

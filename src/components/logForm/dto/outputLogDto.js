@@ -1,45 +1,36 @@
-import {buildDateTimeFromTimeValue, toStringOrNull, toIntOrNull, toBool01, toNumberOrNull } from "../utils";
+import {
+    toStringOrNull,
+    toIntOrNull,
+    toNumberOrNull,
+} from "../utils";
 
 export function outputLogDto({
     task,
     employee,
     process,
+
     workDate = null,
-    structureId,
-    periodId,
+    structureId = null,
+    periodId = null,
+
     productionTaskId = null,
-    isRepair = false,
+    fromProductionTaskId = null,
 
-    source = null,
-    defectCategory = null,
-    defectReason = null,
-
-    outputQty = null,
-    defectQty = null,
-    goodQty = null,
-    wasteQty = null,
-    unit = null,
+    movementType = "produce_good",
+    qty = null,
 
     remarks = null,
     attrs = null,
 }) {
     return {
-        task: toStringOrNull(task?.jiraKey),
-        issue_id: toIntOrNull(task?.id),
+        task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
+        issue_id: toIntOrNull(task?.id ?? task?.issue_id),
         production_task_id: toIntOrNull(productionTaskId),
-
+        from_production_task_id: toIntOrNull(fromProductionTaskId),
         process_id: toIntOrNull(process?.id),
-        is_repair: toBool01(isRepair),
 
-        source: toStringOrNull(source),
-        defect_category: toStringOrNull(defectCategory),
-        defect_reason: toStringOrNull(defectReason),
-
-        output_qty: toNumberOrNull(outputQty) ?? 0,
-        defect_qty: toNumberOrNull(defectQty) ?? 0,
-        good_qty: toNumberOrNull(goodQty) ?? 0,
-        waste_qty: toNumberOrNull(wasteQty),
-        unit: toStringOrNull(unit),
+        movement_type: toStringOrNull(movementType) ?? "produce_good",
+        qty: toNumberOrNull(qty) ?? 0,
 
         work_date: toStringOrNull(workDate),
         employee_id: toIntOrNull(employee?.id),

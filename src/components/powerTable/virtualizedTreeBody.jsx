@@ -50,8 +50,6 @@ const VirtualizedTreeBody = ({
 
   const visibleColumns = columnsSchema.getVisibleColumns();
 
-  // console.log('tree startIndex:', startIndex, 'endIndex:', endIndex);
-
   return (
     <TableBody>
       {paddingTop > 0 && (
