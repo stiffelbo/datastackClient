@@ -27,7 +27,6 @@ function getTaskKey(task) {
 
 function normalizeTask(task) {
     if (!task || typeof task !== 'object') return null;
-    console.log(task);
     if(Object.prototype.hasOwnProperty(task, 'report')) {
         return task;
     }else {

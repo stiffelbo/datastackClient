@@ -100,8 +100,7 @@ const PowerTableHead = ({
               // tu możesz kiedyś wrzucić np. ikonę drzewa / expand-all
               title="Struktura drzewa"
             >
-              {/* Na razie pusto lub jakiś symbol, np.: */}
-              {/* <span>🌳</span> */}
+              <span>🌳</span>
             </TableCell>
           )}
 

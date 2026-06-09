@@ -1,14 +1,5 @@
 import React, { useMemo, useState } from "react";
 
-import UserCard from './UserCard';
-import LSUsage from "./LSUsage";
-import UsersTechStack from "./UsersTechStack";
-import AppVersion from "./AppVersion";
-
-import LogForm from "../logForm/LogForm";
-
-import OperationLog from "./OperationalLog";
-
 import {
     Box,
     List,
@@ -31,67 +22,57 @@ import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturi
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import PersonIcon from '@mui/icons-material/Person';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
-import { useRwd } from "../../context/RwdContext";
+import LogForm from '../../components/logForm/LogForm';
+import OperationLog from "../../components/user/OperationalLog";
 
-const NAV_ITEMS = [
-    {
-        key: "profile",
-        label: "Profil",
-        icon: <PersonIcon fontSize="small" color="default" />,
-        component: <UserCard />,
-    },
-    {
-        key: "logForm",
-        label: "Raportuj",
-        icon: <AlarmAddIcon fontSize="small" color="success" />,
-        component: <LogForm />,
-    },
-    {
-        key: "operationLog",
-        label: "Czasy Pracy",
-        icon: <AccessTimeIcon fontSize="small" color="primary" />,
-        component: <OperationLog entityName={'UserOperationLog'} endpoint={'/jira_issue_user_logs/operation_log/'}/>,
-    },
-    {
-        key: "machineUsageLog",
-        label: "Czasy Maszyn",
-        icon: <PrecisionManufacturingIcon fontSize="small" color="primary" />,
-        component: <OperationLog entityName={'UserMachineUsageLog'} endpoint={'/jira_issue_user_logs/machine_usage_log/'}/>,
-    },
-    {
-        key: "resourceUsageLog",
-        label: "Użycie zasobów",
-        icon: <InventoryIcon fontSize="small" color="primary" />,
-        component: <OperationLog entityName={'UserResourceUsageLog'} endpoint={'/jira_issue_user_logs/resource_usage_log/'}/>,
-    },
-    {
-        key: "productionOutputLog",
-        label: "Wydania produkcyjne",
-        icon: <AssignmentTurnedInIcon fontSize="small" color="primary" />,
-        component: <OperationLog entityName={'UserProductionOutputLog'} endpoint={'/jira_issue_user_logs/production_output_log/'}/>,
-    },
-    {
-        key: "techstack",
-        label: "Procesy użytkownika",
-        icon: <AccountTreeIcon fontSize="small" color="secondary"/>,
-        component: <UsersTechStack />,
-    },
-    {
-        key: "usage",
-        label: "Presety Dashboardów",
-        icon: <StorageIcon fontSize="small" />,
-        component: <LSUsage />,
-    },
-];
+const JiraIssueReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
 
-const UserDashboard = () => {
-    const rwd = useRwd();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-    const height = rwd.height - 78;
+    const height = rwd.height - 190;
 
-    const [activeView, setActiveView] = useState("profile");
+    const NAV_ITEMS = [
+        {
+            key: "logForm",
+            label: "Raportuj",
+            icon: <AlarmAddIcon fontSize="small" color="success" />,
+            component: <LogForm initialTasks={[row]}/>,
+        },
+        {
+            key: "operationLog",
+            label: "Czasy Pracy",
+            icon: <AccessTimeIcon fontSize="small" color="primary" />,
+            component: <OperationLog entityName={'IssueOperationLog'} endpoint={'/jira_issue_operation_log/'} height={height} issue={row}/>,
+        },        
+        {
+            key: "machineUsageLog",
+            label: "Czasy Maszyn",
+            icon: <PrecisionManufacturingIcon fontSize="small" color="primary" />,
+            component: <OperationLog entityName={'IssueMachineUsageLog'} endpoint={'/jira_issue_machine_usage_log/'} height={height} issue={row}/>,
+        },
+        {
+            key: "resourceUsageLog",
+            label: "Użycie zasobów",
+            icon: <InventoryIcon fontSize="small" color="primary" />,
+            component: <OperationLog entityName={'IssueResourceUsageLog'} endpoint={'/jira_issue_resource_usage_log/'} height={height} issue={row}/>,
+        },
+        {
+            key: "productionOutputLog",
+            label: "Wydania produkcyjne",
+            icon: <AssignmentTurnedInIcon fontSize="small" color="primary" />,
+            component: <OperationLog entityName={'IssueProductionOutputLog'} endpoint={'/jira_issue_production_output_log/'} height={height} issue={row}/>,
+        },
+        {
+            key: "directPurchaseLog",
+            label: "Zakupy bezpośrednie",
+            icon: <ShoppingCartIcon fontSize="small" color="primary" />,
+            component: <OperationLog entityName={'IssueDirectPurchaseLog'} endpoint={'/jira_issue_direct_purchase/'} height={height} issue={row}/>,
+        }
+    ];
+
+    const [activeView, setActiveView] = useState("operationLog");
 
     const activeItem = useMemo(() => {
         return NAV_ITEMS.find((item) => item.key === activeView) ?? NAV_ITEMS[0];
@@ -198,19 +179,6 @@ const UserDashboard = () => {
                         overflow: "auto",
                     }}
                 >
-                    <Box
-                        sx={{
-                            px: 2,
-                            py: 1.5,
-                            borderBottom: 1,
-                            borderColor: "divider",
-                        }}
-                    >
-                        <Typography variant="h6">
-                            {activeItem.label}
-                        </Typography>
-                    </Box>
-
                     <Box sx={{ p: 2 }}>
                         {activeItem.component}
                     </Box>
@@ -218,6 +186,6 @@ const UserDashboard = () => {
             </Box>
         </Box>
     );
-};
+}
 
-export default UserDashboard;
+export default JiraIssueReports;

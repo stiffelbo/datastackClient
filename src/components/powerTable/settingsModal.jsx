@@ -6,13 +6,6 @@ import FormTemplate from './form/formTemplate';
 const SettingsModal = ({ open, onClose, settings, onSave }) => {
     const formSchema = [
         {
-            name: 'density',
-            label: 'Density',
-            type: 'select',
-            selectOptions: ['compact', 'standard', 'comfortable'],
-            md: 4
-        },
-        {
             name: 'rowHeight',
             label: 'Wysokość wiersza (px)',
             type: 'number',

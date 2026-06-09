@@ -6,29 +6,33 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../powerTable/powerTable';
 
-const OperationLog = ({entityName, endpoint}) => {
-    const entity = useEntity({ entityName, endpoint });
+const OperationLog = ({entityName, endpoint, height = null, issue = {}}) => {
+
+    const entity = useEntity({ entityName, endpoint, query: {issue_id : issue.id}, schemaQuery : {issue_id : issue.id}});
 
     useEffect(() => {
         entity.refresh();
     }, [entityName, endpoint]);
 
+    const effectiveHeight = height ? height : window.innerHeight - 166;
+
     return (
         <PowerTable
             entityName={entityName}
             width={window.innerWidth}
-            height={window.innerHeight - 166}
+            height={effectiveHeight}
             rowHeight={45}
             loading={entity.loading}
             data={entity.rows}
             columnSchema={entity.schema.columns}
 
-            addFormSchema={null}
+            addFormSchema={entity.schema.addForm}
+            addFormInitialValues={{issue_id: issue.id}}
             bulkEditFormSchema={null}
             importSchema={null}
 
             onRefresh={entity.refresh}
-            onPost={null}
+            onPost={entity.create}
             onEdit={entity.updateField}
             onUpload={null}
             onBulkEdit={null}

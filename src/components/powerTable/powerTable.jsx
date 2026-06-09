@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 
 import useAutoColumns from './hooks/useAutoColumns';
@@ -36,7 +36,7 @@ const PowerTable = ({
   entityName = 'default',
   width = 1500,
   height = 600,
-  rowHeight = 100,
+  rowHeight = 45,
   loading = false,
   //core table
   data = [],
@@ -63,6 +63,7 @@ const PowerTable = ({
   //Select
   selected = null,
   onSelect = null,
+  onFilter = null,
 
   //Utitlity Controls
   enablePresets = true,
@@ -78,7 +79,7 @@ const PowerTable = ({
 
   const presets = usePresets({ entityName, enablePresets });
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
-  const autoColumns = useAutoColumns({data, dev : devColumnsLookup, enableEdit : !!onEdit, strictSchema : strictSchema});
+  const autoColumns = useAutoColumns({ data, dev: devColumnsLookup, enableEdit: !!onEdit, strictSchema: strictSchema });
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
   const editing = useTableEditing(onEdit);
@@ -158,8 +159,28 @@ const PowerTable = ({
   };
 
   // 🔑 Filtrowanie → Sortowanie
-  const filteredData = applyFilters({ data: data, columnsSchema: columnsSchema, omit: [], selectedIds: actionsApi.selectedIds });
-  const sortedData = sortData(filteredData, columnsSchema.sortModel, columnsSchema.columns);
+  const filteredData = useMemo(() => {
+    return applyFilters({
+      data,
+      columnsSchema,
+      omit: [],
+      selectedIds: actionsApi.selectedIds,
+    });
+  }, [data, columnsSchema, actionsApi.selectedIds]);
+
+  useEffect(() => {
+    if (typeof onFilter === 'function') {
+      onFilter(filteredData);
+    }
+  }, [onFilter, filteredData]);
+
+  const sortedData = useMemo(() => {
+    return sortData(
+      filteredData,
+      columnsSchema.sortModel,
+      columnsSchema.columns
+    );
+  }, [filteredData, columnsSchema.sortModel, columnsSchema.columns]);
 
   const cellNodes = (filteredData?.length * columnsSchema?.getVisibleColumns()?.length);
   const isVirtualized = cellNodes > V_N_COUNT ? true : false;
@@ -178,11 +199,11 @@ const PowerTable = ({
     treeColumnWidth: settings?.treeColumnWidth ?? 140,
     treeIndentStep: settings?.treeIndentStep ?? 2,
     height,
-    rowHeight,
+    rowHeight : settings?.rowHeight ?? rowHeight,
     isVirtualized
   };
 
-  const tableKey = `${entityName}:${schemaVersion}:${isGrouped?'g':'n'}:${isTree?'t':'n'}`;
+  const tableKey = `${entityName}:${schemaVersion}:${isGrouped ? 'g' : 'n'}:${isTree ? 't' : 'n'}`;
 
   const renderTable = () =>
     isGrouped ? (
@@ -222,7 +243,7 @@ const PowerTable = ({
       />
     );
 
-    if (data === null) {
+  if (data === null) {
     return <Alert severity="info">Brak danych dla PowerTable w {entityName}</Alert>;
   }
   if (data === undefined) {
@@ -264,8 +285,8 @@ const PowerTable = ({
             settings.background === 'light'
               ? '#f9f9f9'
               : settings.background === 'dark'
-              ? '#1e1e1e'
-              : 'transparent',
+                ? '#1e1e1e'
+                : 'transparent',
         }}
       >
         {/* Sidebar (opcjonalnie) */}

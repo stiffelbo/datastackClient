@@ -2,13 +2,10 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 import JiraIssueDetails from './JiraIssueDetails';
-import JiraIssueClockify from './JiraIssueClockify';
-import JiraIssueProductionTasks from './JiraIssueProductionTasks';
-import JiraIssueMaterials from './JiraIssueMaterials';
-import JiraIssueWorklog from './JiraIssueWorklog';
-import JiraIssueMachinesUsage from './JiraIssueMachinesUsage';
-import JiraIssueBilans from './JiraIssueBilans';
 import LogForm from '../../components/logForm/LogForm';
+import JiraIssueClockify from './JiraIssueClockify';
+import JiraIssueReports from './JiraIssueReports';
+
 
 const JiraIssuePage = ({
   entityName,
@@ -32,10 +29,10 @@ const JiraIssuePage = ({
       component: <JiraIssueDetails id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard}/>,
     },
     {
-      key: 'opLog',
-      label: 'Raportuj',
-      pageKey: 'jiraissue.oplog', // klucz z rejestru stron
-      component: <LogForm initialTasks={[row]} />,
+      key: 'reports',
+      label: 'Raporty',
+      pageKey: 'jiraissue.reports', // klucz z rejestru stron
+      component: <JiraIssueReports id={id} row={row} rwd={rwd}/>,
     },
     {
       key: 'clockify',
@@ -43,37 +40,7 @@ const JiraIssuePage = ({
       pageKey: 'jiraissue.clockify', // klucz z rejestru stron
       component: <JiraIssueClockify sygn={row?.jira_key} rwd={rwd}/>,
     },
-    {
-      key: 'worklog',
-      label: 'Czas pracy',
-      pageKey: 'jiraissue.worklog', // klucz z rejestru stron
-      component: <JiraIssueWorklog id={id} row={row} rwd={rwd}/>,
-    },
-    {
-      key: 'productionTasks',
-      label: 'Zadania produkcyjne',
-      pageKey: 'jiraissue.productiontasks', // klucz z rejestru stron
-      component: <JiraIssueProductionTasks id={id} row={row} rwd={rwd}/>,
-    },
-    {
-      key: 'materials',
-      label: 'Materiały',
-      pageKey: 'jiraissue.materials', // klucz z rejestru stron
-      component: <JiraIssueMaterials id={id} row={row} rwd={rwd}/>,
-    },
- 
-    {
-      key: 'machinesUsage',
-      label: 'Użycie maszyn',
-      pageKey: 'jiraissue.machinesusage', // klucz z rejestru stron
-      component: <JiraIssueMachinesUsage id={id} row={row} rwd={rwd}/>,
-    },
-    {
-      key: 'bilans',
-      label: 'Bilans',
-      pageKey: 'jiraissue.bilans', // klucz z rejestru stron
-      component: <JiraIssueBilans id={id} row={row} rwd={rwd}/>,
-    },
+   
     // itd...
   ];
 

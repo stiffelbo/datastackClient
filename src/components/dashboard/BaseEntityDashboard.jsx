@@ -1,5 +1,5 @@
 // components/dashboard/BaseEntityDashboard.jsx
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 //Mui
@@ -26,8 +26,28 @@ const BaseEntityDashboard = ({
   const dashboard = useDashboard(entityName);
   const { currentId, setCurrentId, tab, setTab } = dashboard;
 
-  const rows = entity?.rows || [];
+  const rows = useMemo(() => entity?.rows || [], [entity?.rows]);
   const schema = entity?.schema || {};
+
+  const [filtered, setFiltered] = useState(rows);
+  const filteredIdsRef = useRef('');
+
+  useEffect(() => {
+    setFiltered(rows);
+    filteredIdsRef.current = rows.map(r => r.id).join(',');
+  }, [rows]);
+
+  const handleFilter = useCallback((nextRows) => {
+    const safeRows = Array.isArray(nextRows) ? nextRows : [];
+    const nextIds = safeRows.map(r => r.id).join(',');
+
+    if (filteredIdsRef.current === nextIds) {
+      return;
+    }
+
+    filteredIdsRef.current = nextIds;
+    setFiltered(safeRows);
+  }, []);
 
   const selectedRow =
     currentId != null ? rows.find((r) => +r.id === +currentId) : null;
@@ -39,6 +59,7 @@ const BaseEntityDashboard = ({
   const navigate = useNavigate();
   const location = useLocation();
   const initializedRef = useRef(false);
+
 
   // 1) Na pierwsze wejście – zaciągamy id/tab z URL do stanu dashboardu
   useEffect(() => {
@@ -53,9 +74,9 @@ const BaseEntityDashboard = ({
     }
   }, [urlId, urlTab, setCurrentId, setTab]);
 
-  useEffect(()=>{
-    if(refreshId){
-      if(typeof entity.getOne === 'function'){
+  useEffect(() => {
+    if (refreshId) {
+      if (typeof entity.getOne === 'function') {
         entity.getOne(currentId);
       }
     }
@@ -92,24 +113,25 @@ const BaseEntityDashboard = ({
       data={rows}
       columnSchema={schema.columns}
       schemaVersion={entity.schemaVersion}
-      
+
       addFormSchema={schema.addForm}
       bulkEditFormSchema={schema.bulkEditForm}
       importSchema={schema.importSchema}
-      
+
       onRefresh={entity.refresh}
       onPost={entity.create}
       onEdit={entity.updateField}
       onUpload={entity.upload}
       onBulkEdit={entity.updateMany}
       onDelete={entity.remove}
-      onBulkDelete={entity.removeMany}      
+      onBulkDelete={entity.removeMany}
 
       error={entity.error}
       clearError={entity.clearError}
 
       selected={renderPage ? currentId : null}
       onSelect={renderPage ? setCurrentId : null}
+      onFilter={handleFilter}
       {...listProps}
     />
   );
@@ -122,10 +144,10 @@ const BaseEntityDashboard = ({
       pageContent = renderPage({
         id: currentId,
         row: selectedRow,
-        rows,
+        rows: filtered,
         schema,
         dashboard,
-        rwd : {width, height},
+        rwd: { width, height },
         onChangeId: setCurrentId,
       });
     } else {

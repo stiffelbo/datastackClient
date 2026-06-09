@@ -50,6 +50,10 @@ export const normalizeField = (field = {}) => {
 
   const type = normalizeFieldType(field.type ?? field.input);
 
+  const normalizedValidation = field.validation || {};
+  
+  normalizedValidation['required'] = Boolean(field.required);
+
   const normalized = {
     ...field,
 
@@ -67,16 +71,16 @@ export const normalizeField = (field = {}) => {
         ? field.defaultValue
         : field.default ?? undefined,
 
-    xl: Number.isFinite(Number(field.xl)) ? Number(field.xl) : 6,
-    md: Number.isFinite(Number(field.md)) ? Number(field.md) : 6,
-    xs: Number.isFinite(Number(field.xs)) ? Number(field.xs) : 12,
+    xl: Number.isFinite(Number(field.xl)) ? Number(field.xl) : Number.isFinite(Number(field?.grid?.xl)) ? Number(field.grid.xl) : 6,
+    md: Number.isFinite(Number(field.md)) ? Number(field.md) : Number.isFinite(Number(field?.grid?.md)) ? Number(field.grid.md) : 6,
+    xs: Number.isFinite(Number(field.xs)) ? Number(field.xs) : Number.isFinite(Number(field?.grid?.xs)) ? Number(field.grid.xs) : 6,
 
     disabled: Boolean(field.disabled),
     required: Boolean(field.required),
 
     selectOptions: normalizeOptions(field.selectOptions || field.options || []),
 
-    validation: Array.isArray(field.validation) ? field.validation : [],
+    validation:  normalizedValidation,
 
     textFieldProps: field.textFieldProps || {},
     inputProps: field.inputProps || {},

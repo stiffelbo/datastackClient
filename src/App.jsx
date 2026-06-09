@@ -107,6 +107,7 @@ const App = () => (
 
         <Route path="jiraissuesingle/:id/:tab" element={<JiraIssueSingle />} />
         <Route path="jiraissuesingle/:id" element={<JiraIssueSingle />} />
+        <Route path="jiraissuesingle" element={<JiraIssueSingle />} />
   
         <Route path="contractor/:id/:tab" element={<Contractor />} />
         <Route path="contractor/:id" element={<Contractor />} />
