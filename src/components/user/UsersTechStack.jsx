@@ -126,7 +126,7 @@ function MachineRow({ item, index }) {
 
 function MaterialRow({ item, index }) {
     const details = item?.details ?? {};
-    const foreignId = item?.material_id;
+    const foreignId = item?.resource_id;
 
     return (
         <TableRow key={`material-${item?.id ?? foreignId ?? index}`} hover>
@@ -294,18 +294,18 @@ function ProcessFlags({ process }) {
 
 function TechItemsTable({ type, items }) {
     const normalizedItems = safeArray(items);
-    const isMaterials = type === 'materials';
+    const isresources = type === 'resources';
 
     return (
         <Box sx={{ mt: 2 }}>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                {isMaterials ? (
+                {isresources ? (
                     <Inventory2Icon fontSize="small" />
                 ) : (
                     <PrecisionManufacturingIcon fontSize="small" />
                 )}
                 <Typography variant="subtitle2">
-                    {isMaterials ? 'Materiały' : 'Maszyny'}
+                    {isresources ? 'Materiały' : 'Maszyny'}
                 </Typography>
                 <Chip
                     size="small"
@@ -324,21 +324,21 @@ function TechItemsTable({ type, items }) {
                         <TableRow>
                             <TableCell sx={{ width: 100 }}>ID relacji</TableCell>
                             <TableCell sx={{ width: 140 }}>
-                                {isMaterials ? 'Material ID' : 'Machine ID'}
+                                {isresources ? 'Material ID' : 'Machine ID'}
                             </TableCell>
                             <TableCell sx={{ width: 260 }}>
-                                {isMaterials ? 'Materiał' : 'Maszyna'}
+                                {isresources ? 'Materiał' : 'Maszyna'}
                             </TableCell>
                             <TableCell>
-                                {isMaterials ? 'Parametry' : 'Status'}
+                                {isresources ? 'Parametry' : 'Status'}
                             </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {normalizedItems.map((item, index) =>
-                            isMaterials ? (
+                            isresources ? (
                                 <MaterialRow
-                                    key={`material-${item?.id ?? item?.material_id ?? index}`}
+                                    key={`material-${item?.id ?? item?.resource_id ?? index}`}
                                     item={item}
                                     index={index}
                                 />
@@ -361,7 +361,7 @@ function ProcessRow({ row, defaultOpen = false }) {
     const [open, setOpen] = useState(defaultOpen);
 
     const process = row?.details ?? {};
-    const materials = safeArray(row?.materials);
+    const resources = safeArray(row?.resources);
     const machines = safeArray(row?.machines);
 
     return (
@@ -413,7 +413,7 @@ function ProcessRow({ row, defaultOpen = false }) {
                         size="small"
                         variant="outlined"
                         icon={<Inventory2Icon />}
-                        label={materials.length}
+                        label={resources.length}
                     />
                 </TableCell>
 
@@ -431,7 +431,7 @@ function ProcessRow({ row, defaultOpen = false }) {
                 <TableCell colSpan={7} sx={{ py: 0, borderBottom: open ? 1 : 0 }}>
                     <Collapse in={open} timeout="auto" unmountOnExit>
                         <Box sx={{ px: 2, py: 2, bgcolor: 'action.hover' }}>
-                            <TechItemsTable type="materials" items={materials} />
+                            <TechItemsTable type="resources" items={resources} />
                             <TechItemsTable type="machines" items={machines} />
                         </Box>
                     </Collapse>
@@ -479,6 +479,8 @@ export default function UsersTechStack() {
     const data = user?.processes ?? [];
     const rows = safeArray(data);
     const defaultExpanded = rows.length <= 3;
+
+    console.log(rows);
 
     const grouped = useMemo(() => {
         const general = [];

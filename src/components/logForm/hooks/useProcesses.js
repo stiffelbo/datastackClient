@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { normalizeTimeValue, isSameTime } from "../utils";
+
+//Maszyny czasy osobne nie działają
 
 function createMaterialReportRow(material) {
     return {
@@ -101,11 +103,17 @@ function getMachineTime(employeeTimeMap = {}) {
     });
 }
 
+function getEmployeeTimeSignature(employeeTimeMap = {}) {
+    return Object.values(employeeTimeMap)
+        .filter((item) => item?.date && item?.start && item?.end)
+        .map((item) => `${item.date}|${item.start}|${item.end}`)
+        .sort()
+        .join(";");
+}
+
 export default function useProcessForm({
     processes = [],
     initialProcessId = "",
-    initialMachineTime = null,
-    setInitialMachineTime = null,
     initialIsRework = false,
     onChange,
     employeeTimeMap = {}
@@ -119,33 +127,34 @@ export default function useProcessForm({
     )
     const [materialsReport, setMaterialsReport] = useState({});
 
-    const selectedProcess = useMemo(() => {
-        return processes.find((item) => String(item.id) === String(processId)) ?? null;
-    }, [processes, processId]);
+    const selectedProcess = processes.find((item) => String(item.id) === String(processId)) ?? null;
 
     const machines = selectedProcess?.machines ?? [];
     const materials = selectedProcess?.materials ?? [];
 
-    const processOptions = useMemo(() => {
-        return processes.map((process) => ({
-            id: process.id,
-            val: process.name,
-            title: process.description,
-        }));
-    }, [processes]);
+    const requiredMachine = machines.find(machine => machine?.required) || null;
+    const requiredMachineId = requiredMachine ? requiredMachine.id : '';
 
-    const machineOptions = useMemo(() => {
-        return machines.map((machine) => ({
-            id: machine.id,
-            val: machine.name,
-            isConstant: machine.isConstant,
-        }));
-    }, [machines]);
+    const employeeTimeSignature =
+        getEmployeeTimeSignature(employeeTimeMap);
+
+    const processOptions = processes.map((process) => ({
+        id: process.id,
+        val: process.name,
+        title: process.description,
+    }));
+
+    const machineOptions = machines.map((machine) => ({
+        id: machine.id,
+        val: machine.name,
+        isConstant: machine.isConstant,
+        required: machine.required
+    }));
 
     useEffect(() => {
-        setMachineId("");
+        setMachineId(requiredMachineId);
         setIsRework(Boolean(initialIsRework));
-        setMachineTime(normalizeTimeValue(initialMachineTime));
+        setMachineTime(getMachineTime(employeeTimeMap));
         setMaterialsReport(createMaterialsReport(materials));
     }, [processId]);
 
@@ -156,7 +165,8 @@ export default function useProcessForm({
             if (isSameTime(prev, nextTime)) return prev;
             return nextTime;
         });
-    }, [employeeTimeMap]);
+    }, [employeeTimeSignature]);
+
 
     useEffect(() => {
         if (typeof onChange !== "function") return;
@@ -222,17 +232,15 @@ export default function useProcessForm({
         setProcessId("");
         setMachineId("");
         setIsRework(Boolean(initialIsRework));
-        setMachineTime(normalizeTimeValue(initialMachineTime));
+        setMachineTime(getMachineTime(employeeTimeMap));
         setMaterialsReport({});
     }
 
-    const selectedMachine = useMemo(() => {
-        return machines.find((item) => String(item.id) === String(machineId)) ?? null;
-    }, [machines, machineId]);
+    const selectedMachine =
+        machines.find((item) => String(item.id) === String(machineId)) ?? null;
 
-    const requiredMaterials = useMemo(() => {
-        return materials.filter((item) => item.required);
-    }, [materials]);
+    const requiredMaterials =
+        materials.filter((item) => item.required);
 
     const hasMachines = machines.length > 0;
     const hasMaterials = materials.length > 0;

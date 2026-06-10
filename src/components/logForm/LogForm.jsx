@@ -43,8 +43,6 @@ const LogForm = ({initialTasks = []}) => {
 
     const processes = useProcesses({
         processes: processesDto(user.processes),
-        initialMachineTime: time,
-        setInitialMachineTime: setTime,
         onChange: null,
         employeeTimeMap: brigade.computed.employeeTimeMap,
     });

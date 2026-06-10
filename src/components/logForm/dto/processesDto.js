@@ -22,7 +22,6 @@ export function processesDto(data) {
         const machines = Array.isArray(item?.machines)
             ? item.machines.map((machine) => {
                   const machineDetails = machine?.details ?? {};
-
                   return {
                       id: machineDetails.id ?? null,
                       name: machineDetails.name ?? null,
