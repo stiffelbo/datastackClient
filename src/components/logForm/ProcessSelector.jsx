@@ -23,7 +23,6 @@ const ProcessSelector = ({
                     value={value}
                     label={label}
                     onChange={onChange}
-
                 />
 
                 <InputSwitch

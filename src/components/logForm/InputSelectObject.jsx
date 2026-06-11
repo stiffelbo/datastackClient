@@ -3,11 +3,13 @@ import {
     FormControl,
     InputLabel,
     MenuItem,
+    Menu,
     Select,
     ListSubheader,
 } from "@mui/material";
 
 const InputSelectObject = ({
+    name,
     label,
     value,
     onChange,
@@ -16,65 +18,67 @@ const InputSelectObject = ({
     size = "small",
     disabled = false,
 }) => {
-    const hasGroups = selectOptions.some((option) => option.group);
+    const sortedOptions = [...selectOptions].sort((a, b) =>
+        String(a.group ?? "").localeCompare(String(b.group ?? ""))
+    );
 
-    console.log(label, selectOptions);
+    const flatOptions = sortedOptions.flatMap((option, index) => {
+        const previousOption = sortedOptions[index - 1];
+        const items = [];
 
-    const groupedOptions = hasGroups
-        ? selectOptions.reduce((acc, option) => {
-            const group = option.group || "Inne";
+        if (option.group && option.group !== previousOption?.group) {
+            items.push({
+                type: "group",
+                key: `group-${option.group}`,
+                label: option.group,
+            });
+        }
 
-            if (!acc[group]) {
-                acc[group] = [];
-            }
+        items.push({
+            type: "option",
+            key: `option-${option.id}`,
+            value: option.id,
+            label: option.val,
+            title: option.title ?? "",
+            disabled: option.disabled ?? false,
+        });
 
-            acc[group].push(option);
-
-            return acc;
-        }, {})
-        : null;
+        return items;
+    });
 
     return (
         <FormControl fullWidth={fullWidth} size={size} disabled={disabled}>
-            <InputLabel>{label}</InputLabel>
+            <InputLabel id={`${name}-label`}>{label}</InputLabel>
 
             <Select
-                value={value ?? ""}
+                labelId={`${name}-label`}
+                name={name}
                 label={label}
-                onChange={(event) => onChange?.(event.target.value)}
+                value={value ?? ""}
+                onChange={(e) => onChange?.(e.target.value)}
             >
                 <MenuItem value="">
-                    <em>—</em>
+                    {`-- ${label || "Wybierz"} --`}
                 </MenuItem>
 
-                {hasGroups
-                    ? Object.entries(groupedOptions).map(([group, options]) => (
-                        <React.Fragment key={group}>
-                            <ListSubheader>{group}</ListSubheader>
-
-                            {options.map((option) => (
-                                <MenuItem
-                                    key={option.id}
-                                    value={option.id}
-                                    title={option.title ?? ""}
-                                >
-                                    {option.val}
-                                </MenuItem>
-                            ))}
-                        </React.Fragment>
-                    ))
-                    : selectOptions.map((option) => (
+                {flatOptions.map((item) =>
+                    item.type === "group" ? (
+                        <ListSubheader key={item.key} disableSticky>
+                            {item.label}
+                        </ListSubheader>
+                    ) : (
                         <MenuItem
-                            key={option.id}
-                            value={option.id}
-                            title={option.title ?? ""}
+                            key={item.key}
+                            value={item.value}
+                            title={item.title}
+                            disabled={item.disabled}
                         >
-                            {option.val}
+                            {item.label}
                         </MenuItem>
-                    ))}
+                    )
+                )}
             </Select>
         </FormControl>
     );
 };
-
 export default InputSelectObject;
