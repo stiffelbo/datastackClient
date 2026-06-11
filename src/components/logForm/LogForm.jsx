@@ -77,9 +77,9 @@ const LogForm = ({initialTasks = []}) => {
 
     const log = useJiraIssueUserLogs();
 
-    const renderSubmit = ({ dataErrors = null, logError = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
+    const renderSubmit = ({ dataErrors = null, logError = null, result = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
 
-        if (!dataErrors.length && !logError) {
+        if (!dataErrors.length && !logError && !result) {
             if (loading) {
                 return <LinearProgress />
             } else {
@@ -102,6 +102,16 @@ const LogForm = ({initialTasks = []}) => {
                 sx={{ ...sx }}
             >
                 Błąd podczas zapisu danych
+            </Button>
+        }
+        if(result){
+            return <Button
+                color='success'
+                onClick={onClear}
+                size="small"
+                sx={{ ...sx }}
+            >
+                Zapisano
             </Button>
         }
 
@@ -208,7 +218,7 @@ const LogForm = ({initialTasks = []}) => {
                 </Button>
             </Grid>
             <Grid item size={12}>
-                {renderSubmit({ dataErrors: draft.meta.errors, logError: log.error, loading: log.loading, onSave: () => log.save(draft.logs), onClear: () => log.clear() })}
+                {renderSubmit({ dataErrors: draft.meta.errors, logError: log.error, result: log.result, loading: log.loading, onSave: () => log.save(draft.logs), onClear: () => log.clear() })}
             </Grid>
         </Grid>
 

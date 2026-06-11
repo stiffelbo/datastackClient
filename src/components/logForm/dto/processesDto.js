@@ -16,8 +16,6 @@ function getMaterialStep(unit) {
 export function processesDto(data) {
     if (!Array.isArray(data)) return [];
 
-    console.log(data);
-
     return data.map((item) => {
         const details = item?.details ?? {};
 
