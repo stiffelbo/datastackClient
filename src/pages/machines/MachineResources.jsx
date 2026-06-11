@@ -2,8 +2,9 @@
 import React, { useCallback } from 'react';
 import { Box } from '@mui/material';
 
-import Mapper from '../../components/mapper/mapper';
 import useEntity from '../../hooks/useEntity';
+
+import PowerTable from '../../components/powerTable/powerTable';
 
 const defaultRwd = {
   width: window.innerWidth,
@@ -11,113 +12,45 @@ const defaultRwd = {
 };
 
 const MachineResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
-  // prawa strona – słownik opcji, w trybie readOnly (odchudzony schema)
-  const optionsEntity = useEntity({
-    endpoint: '/resources/',
-    entityName: 'Resources',
-    readOnly: true,
-  });
-  const options = optionsEntity.rows;
 
-  // lewa strona – pozycje przypisane
-  const assignedEntity = useEntity({
-    endpoint: '/machines_resources/',
-    entityName: 'MachinesResources',
-    query: { machine_id: id },
-  });
+  const entityName = "MachinesResources";
+  const endpoint = "/resources/";
 
+  const entity = useEntity({ entityName, endpoint, query: { machine_id: id} });
 
-  const assigned = assignedEntity.rows;
-
-  // ---- CALLBACK: dodawanie z prawej do lewej ----
-  // mappedItemData – wiersz z prawej (CostItemDict)
-  // prevElementData – aktualnie zaznaczony wiersz po lewej (na przyszłość do sekwencji)
-  const handleAdd = useCallback(
-    async ({ mappedItemData, prevElementData }) => {
-      if (!mappedItemData) return;
-      if (!id) return;
-      if (typeof assignedEntity.create !== 'function') return;
-
-      const today = new Date().toISOString().slice(0, 10);
-
-      // 🔑 payload zgodny ze schematem MachineResourcess
-      const payload = {
-        machine_id: id,
-        resource_id: mappedItemData.id,
-        is_required: true,
-        notes: '',
-      };
-
-      try {
-        await assignedEntity.create(payload);
-        // create w useEntity i tak robi getOne(id) → odświeży cache wierszy
-      } catch (e) {
-        console.error('Error creating MachineResources row', e);
-      }
-    },
-    [id, assignedEntity.create]
-  );
-
-  // ---- CALLBACK: edycja w lewej tabeli (qty, price_net, note, ...) ----
-  // Mapper woła: onEditLeft(newValue, params)
-  // useEntity.updateField oczekuje: ({ id, field, value })
-  const handleEditLeft = (params) => {
-    console.log(params);
-    assignedEntity.updateField(params);
-  }
-
-  // ---- CALLBACK: usuwanie z lewej ----
-  // Mapper woła onDeleteLeft(row) – my chcemy remove(row.id)
-  const handleDeleteLeft = async (row) => {
-    console.log('Delete left');
-    console.log(assignedEntity);
-    if (!row) return;
-    if (!assignedEntity.remove) return;
-
-    try {
-      await assignedEntity.remove(row.id);
-    } catch (e) {
-      console.error('Error removing row', e);
-    }
-  }
+  const effectiveHeight = rwd.height - 166;
 
   return (
-    <Box
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2,
-      }}
-    >
-      <Mapper
-        entityName='MachineResourcesMapper'
-        ownerLabel="Zasoby Maszyny"
-        owner={{ id }}
+    <PowerTable
+      entityName={entityName}
+      width={rwd.width}
+      height={effectiveHeight}
+      rowHeight={45}
+      loading={entity.loading}
+      data={entity.rows}
+      columnSchema={entity.schema.columns}
 
-        leftData={assigned}
-        leftColumns={assignedEntity.schema.columns}
-        leftSearchFields={['pageName', 'pageLabel', 'groupKey', 'groupLabel', 'pageKey']} // albo ['note'] w zależności od joinedFields
-        leftProps={{showSidebar : true, enablePresets: true, }}
+      addFormSchema={null}
+      addFormInitialValues={null}
+      bulkEditFormSchema={null}
+      importSchema={null}
 
-        rightData={options}
-        rightColumnsBase={optionsEntity.schema.columns}
-        rightSearchFields={['userName', 'userLastName']}
+      onRefresh={entity.refresh}
+      onPost={null}
+      onEdit={null}
+      onUpload={null}
+      onBulkEdit={null}
+      onDelete={null}
+      onBulkDelete={null}
 
-        idField="id"
-        orderField="seq" // na razie tylko info tekstowe – w schema tego pola jeszcze nie ma
-        distinct={true}
-        distinctField='resource_id'
+      error={entity.error}
+      clearError={entity.clearError}
 
-        onAdd={handleAdd}
-        onEditLeft={handleEditLeft}
-        onDeleteLeft={handleDeleteLeft}
-
-        height={rwd.height - 190}
-        leftRowHeight={40}
-        rightRowHeight={40}
-      />
-    </Box>
+      selected={null}
+      onSelect={null}
+      selectedItems={null}
+      onSelectItems={null}
+    />
   );
 };
 
