@@ -142,6 +142,7 @@ export default function useProcessForm({
         id: process.id,
         val: process.name,
         title: process.description,
+        group: process.structureName
     }));
 
     const machineOptions = machines.map((machine) => ({

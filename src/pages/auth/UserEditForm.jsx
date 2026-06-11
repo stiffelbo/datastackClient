@@ -15,7 +15,6 @@ import {
 import http from '../../http';
 
 const UserEditForm = ({ data = {}, sx = {} }) => {
-    console.log(data);
   const [form, setForm] = useState({
     email: '',
     first_name: '',

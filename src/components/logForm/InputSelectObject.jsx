@@ -4,6 +4,7 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    ListSubheader,
 } from "@mui/material";
 
 const InputSelectObject = ({
@@ -15,9 +16,28 @@ const InputSelectObject = ({
     size = "small",
     disabled = false,
 }) => {
+    const hasGroups = selectOptions.some((option) => option.group);
+
+    console.log(label, selectOptions);
+
+    const groupedOptions = hasGroups
+        ? selectOptions.reduce((acc, option) => {
+            const group = option.group || "Inne";
+
+            if (!acc[group]) {
+                acc[group] = [];
+            }
+
+            acc[group].push(option);
+
+            return acc;
+        }, {})
+        : null;
+
     return (
         <FormControl fullWidth={fullWidth} size={size} disabled={disabled}>
             <InputLabel>{label}</InputLabel>
+
             <Select
                 value={value ?? ""}
                 label={label}
@@ -27,15 +47,31 @@ const InputSelectObject = ({
                     <em>—</em>
                 </MenuItem>
 
-                {selectOptions.map((option) => (
-                    <MenuItem
-                        key={option.id}
-                        value={option.id}
-                        title={option.title ?? ""}
-                    >
-                        {option.val}
-                    </MenuItem>
-                ))}
+                {hasGroups
+                    ? Object.entries(groupedOptions).map(([group, options]) => (
+                        <React.Fragment key={group}>
+                            <ListSubheader>{group}</ListSubheader>
+
+                            {options.map((option) => (
+                                <MenuItem
+                                    key={option.id}
+                                    value={option.id}
+                                    title={option.title ?? ""}
+                                >
+                                    {option.val}
+                                </MenuItem>
+                            ))}
+                        </React.Fragment>
+                    ))
+                    : selectOptions.map((option) => (
+                        <MenuItem
+                            key={option.id}
+                            value={option.id}
+                            title={option.title ?? ""}
+                        >
+                            {option.val}
+                        </MenuItem>
+                    ))}
             </Select>
         </FormControl>
     );

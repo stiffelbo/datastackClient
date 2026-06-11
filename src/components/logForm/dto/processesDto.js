@@ -16,6 +16,8 @@ function getMaterialStep(unit) {
 export function processesDto(data) {
     if (!Array.isArray(data)) return [];
 
+    console.log(data);
+
     return data.map((item) => {
         const details = item?.details ?? {};
 
@@ -54,6 +56,7 @@ export function processesDto(data) {
         return {
             id: details.id ?? null,
             name: details.name ?? null,
+            structureName : details.structureName ?? null,
             description: details.description ?? null,
             active: toBool(details.is_active),
             is_general: toBool(details.is_general),
