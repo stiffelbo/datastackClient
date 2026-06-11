@@ -14,7 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ login: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,7 +32,7 @@ const Login = () => {
       await login(form);
       navigate('/');
     } catch (err) {
-      setError('Błędny email lub hasło');
+      setError('Błędny login lub hasło');
     } finally {
       setSubmitting(false);
     }
@@ -63,12 +63,12 @@ const Login = () => {
 
           <form onSubmit={handleSubmit}>
             <TextField
-              label="Email"
-              name="email"
-              type="email"
+              label="Login"
+              name="login"
+              type="text"
               fullWidth
               margin="normal"
-              value={form.email}
+              value={form.login}
               onChange={handleChange}
               required
             />

@@ -20,6 +20,8 @@ import {
 import { useRwd } from "../../context/RwdContext";
 import { useAuth } from "../../context/AuthContext";
 
+import UserEditForm from "../../pages/auth/UserEditForm";
+
 const storageUrl = import.meta.env.VITE_STORAGE_URL;
 
 const UserCard = () => {
@@ -120,6 +122,7 @@ const UserCard = () => {
       <Divider />
 
       <CardContent>
+        <Typography mb={2}>Dane Pracownika:</Typography>
         <Grid container spacing={2}>
           <InfoItem
             icon={<EmailOutlined fontSize="small" />}
@@ -148,6 +151,7 @@ const UserCard = () => {
           />
         </Grid>
       </CardContent>
+      <UserEditForm data={user.userData} sx={{marginBottom: 3}}/>
     </Card>
   );
 };
