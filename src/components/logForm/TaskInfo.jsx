@@ -6,9 +6,12 @@ import {
     Stack,
     Box,
     Typography,
+
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 export default function TaskInfo({
     data,
@@ -17,6 +20,11 @@ export default function TaskInfo({
     showDelete = true,
     sx = {},
     children = null,
+    onMoveDown,
+    onMoveUp,
+    disableMoveDown,
+    disableMoveUp,
+    isList = false
 }) {
     if (!data) return null;
 
@@ -41,7 +49,7 @@ export default function TaskInfo({
     };
 
     function renderAction() {
-        if (typeof onAdd === "function") {
+        if (!isList && typeof onAdd === "function") {
             return (
                 <IconButton
                     size="small"
@@ -55,7 +63,7 @@ export default function TaskInfo({
             );
         }
 
-        if (typeof onRemove === "function" && showDelete) {
+        if (isList && typeof onRemove === "function" && showDelete) {
             return (
                 <IconButton
                     size="small"
@@ -77,6 +85,30 @@ export default function TaskInfo({
         return children;
     }
 
+    function renderMoveButtons() {
+        if (isList) {
+            return <Stack direction={'row'}>
+                <IconButton
+                    size="small"
+                    onClick={onMoveUp}
+                    disabled={disableMoveUp}
+                    title="Przesuń wyżej"
+                >
+                    <KeyboardArrowUpIcon fontSize="small" />
+                </IconButton>
+
+                <IconButton
+                    size="small"
+                    onClick={onMoveDown}
+                    disabled={disableMoveDown}
+                    title="Przesuń niżej"
+                >
+                    <KeyboardArrowDownIcon fontSize="small" />
+                </IconButton>
+            </Stack>
+        }
+    }
+
     return (
         <Box
             sx={{
@@ -92,6 +124,7 @@ export default function TaskInfo({
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap">
                     <Stack direction="row" spacing={1} alignItems="center">
                         {renderAction()}
+                        {renderMoveButtons()}
                         <Typography variant="body2" fontWeight={700}>
                             {data.jiraKey || '—'}
                         </Typography>
@@ -120,7 +153,7 @@ export default function TaskInfo({
 
 
 
-                <Stack direction="row" spacing={2} sx={{ marginTop: 1 , marginBottom: 1}}>
+                <Stack direction="row" spacing={2} sx={{ marginTop: 1, marginBottom: 1 }}>
                     {data.jiraParentKey ? (
                         <Typography variant="caption" color="text.secondary">
                             Parent: {data.jiraParentKey}
@@ -146,7 +179,7 @@ export default function TaskInfo({
                 </Stack>
 
 
-                <Box sx={{width: '100%'}}>
+                <Box sx={{ width: '100%' }}>
                     {renderChildren()}
                 </Box>
             </Stack>

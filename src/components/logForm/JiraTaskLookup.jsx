@@ -151,7 +151,7 @@ const JiraTaskLookup = ({
                 </Stack>
             </Box>
 
-            <TaskInfo data={mapJiraTaskResponseToDto(serverData)} onAdd={handleAdd} />
+            <TaskInfo data={mapJiraTaskResponseToDto(serverData)} onAdd={handleAdd} parent="search"/>
         </Stack>
     );
 };

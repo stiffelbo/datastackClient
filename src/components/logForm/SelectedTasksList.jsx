@@ -172,19 +172,25 @@ function renderTaskInputs(task, tasksHook, settings = {}) {
     );
 }
 
-function renderTaskItem(task, tasksHook, showDelete, settings) {
+function renderTaskItem(
+    task,
+    tasksHook,
+    showDelete,
+    settings,
+    index,
+    total
+) {
     return (
-        <Box
-            key={getTaskKey(task)}
-            sx={{
-                borderRadius: 2,
-                overflow: "hidden",
-            }}
-        >
+        <Box key={getTaskKey(task)}>
             <TaskInfo
                 data={task}
                 onRemove={tasksHook.actions.removeTask}
                 showDelete={showDelete}
+                onMoveUp={() => tasksHook.actions.moveTaskUp(task)}
+                onMoveDown={() => tasksHook.actions.moveTaskDown(task)}
+                disableMoveUp={index === 0}
+                disableMoveDown={index === total - 1}
+                isList={true}
             >
                 {renderTaskInputs(task, tasksHook, settings)}
             </TaskInfo>
@@ -195,7 +201,9 @@ function renderTaskItem(task, tasksHook, showDelete, settings) {
 function renderList(taskItems, tasksHook, showDelete, settings) {
     return (
         <Stack spacing={1}>
-            {taskItems.map((task) => renderTaskItem(task, tasksHook, showDelete, settings))}
+            {taskItems.map((task, index) =>
+                renderTaskItem(task, tasksHook, showDelete, settings, index, taskItems.length)
+            )}
         </Stack>
     );
 }

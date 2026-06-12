@@ -27,10 +27,10 @@ function getTaskKey(task) {
 
 function normalizeTask(task) {
     if (!task || typeof task !== 'object') return null;
-    if(Object.prototype.hasOwnProperty(task, 'report')) {
+    if (Object.prototype.hasOwnProperty(task, 'report')) {
         return task;
-    }else {
-        return mapJiraTaskResponseToDto({data:task});
+    } else {
+        return mapJiraTaskResponseToDto({ data: task });
     }
 }
 
@@ -55,6 +55,23 @@ function updateTaskReport(taskOrId, patch) {
                 : task
         )
     );
+}
+
+function moveArrayItem(array, fromIndex, toIndex) {
+    if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= array.length ||
+        toIndex >= array.length
+    ) {
+        return array;
+    }
+
+    const next = [...array];
+    const [item] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, item);
+
+    return next;
 }
 
 export default function useTasks({ onSubmit, initialValues = {}, requiresQuantity = true, requiresRemarks = false, requiresTasks = false }) {
@@ -191,6 +208,38 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         );
     }
 
+    function moveTask(taskOrId, direction) {
+        const identity =
+            typeof taskOrId === "object"
+                ? getTaskIdentity(taskOrId)
+                : taskOrId;
+
+        if (!identity) return;
+
+        setTasks((prev) => {
+            const currentIndex = prev.findIndex(
+                (task) => getTaskIdentity(task) === identity
+            );
+
+            if (currentIndex === -1) return prev;
+
+            const nextIndex =
+                direction === "up"
+                    ? currentIndex - 1
+                    : currentIndex + 1;
+
+            return moveArrayItem(prev, currentIndex, nextIndex);
+        });
+    }
+
+    function moveTaskUp(taskOrId) {
+        moveTask(taskOrId, "up");
+    }
+
+    function moveTaskDown(taskOrId) {
+        moveTask(taskOrId, "down");
+    }
+
     function submit() {
         if (typeof onSubmit !== 'function') return;
 
@@ -243,6 +292,9 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
             setTaskRemarks,
             setTaskRequiresQuantity,
             setTaskRequiresRemarks,
+            moveTask,
+            moveTaskUp,
+            moveTaskDown,
         },
 
         getters: {
