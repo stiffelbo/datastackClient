@@ -4,7 +4,7 @@ import { materialLogDto } from "./materialLogDto";
 import { outputLogDto } from "./outputLogDto";
 
 import { normalizeTimeValue } from "../utils";
-import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate } from "./logDraftVoUtils";
+import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate, splitTimeSequentially } from "./logDraftVoUtils";
 
 
 export function logDraftVo({
@@ -46,7 +46,9 @@ export function logDraftVo({
     const requiresQuantity = Boolean(selectedProcess?.requires_quantity);
     const requiresRemarks = Boolean(selectedProcess?.requires_remarks);
 
-    const allocations = getTaskAllocations(selectedTasks);
+    const allocations = getTaskAllocations(selectedTasks, {
+        requiresQuantity,
+    });
 
     const validation = buildValidation({
         selectedTasks,
@@ -69,29 +71,24 @@ export function logDraftVo({
     const outputWorkDate = getOutputWorkDate(selectedEmployees, machineTime);
 
     // TRYB TASKOWY
-    if (requiresTasks) {
+    if (selectedTasks.length) {
         // 1. OPERATIONS
 
-        allocations.forEach((allocation) => {
-            const employeeQtyAllocations = allocateIntegerAcrossPeople(
-                allocation.quantity,
-                selectedEmployees
+        selectedEmployees.forEach((employee) => {
+            const employeeTime = normalizeTimeValue(employee.time);
+
+            const employeeTaskTimes = splitTimeSequentially(
+                employeeTime,
+                allocations
             );
 
-            employeeQtyAllocations.forEach((employeeAllocation) => {
-                const employee = employeeAllocation;
-                const employeeTime = normalizeTimeValue(employee.time);
-                const employeeDuration = getTimeDuration(employeeTime);
-
-                const taskDuration = splitDurationByRatio(
-                    employeeDuration,
-                    allocation.ratio
+            employeeTaskTimes.forEach(({ allocation, time: taskTime }) => {
+                const employeeQtyAllocations = allocateIntegerAcrossPeople(
+                    allocation.quantity,
+                    [employee]
                 );
 
-                const taskTime = {
-                    ...employeeTime,
-                    duration: taskDuration,
-                };
+                const employeeAllocation = employeeQtyAllocations[0];
 
                 operationLogs.push(
                     operationLogDto({
@@ -104,7 +101,9 @@ export function logDraftVo({
                         productionTaskId,
                         remarks: getTaskRemarks(allocation.task),
                         isRepair: isRework || getTaskIsRework(allocation.task),
-                        qty: requiresQuantity ? employeeAllocation.allocatedInt : 1,
+                        qty: requiresQuantity
+                            ? employeeAllocation?.allocatedInt ?? 0
+                            : 1,
                     })
                 );
             });
@@ -112,17 +111,12 @@ export function logDraftVo({
 
         // 2. MACHINES
         if (selectedMachine) {
-            const machineDuration = getTimeDuration(machineTime);
+            const machineTaskTimes = splitTimeSequentially(
+                machineTime,
+                allocations
+            );
 
-            allocations.forEach((allocation) => {
-                const taskMachineTime = {
-                    ...machineTime,
-                    duration: splitDurationByRatio(
-                        machineDuration,
-                        allocation.ratio
-                    ),
-                };
-
+            machineTaskTimes.forEach(({ allocation, time: taskMachineTime }) => {
                 machineLogs.push(
                     machineLogDto({
                         task: allocation.task,
@@ -296,7 +290,7 @@ export function logDraftVo({
     }
 
     // TRYB OGÓLNY
-    if (!requiresTasks) {
+    if (!selectedTasks.length) {
         selectedEmployees.forEach((employee) => {
             const employeeTime = normalizeTimeValue(employee.time);
 
@@ -311,7 +305,7 @@ export function logDraftVo({
                     productionTaskId: null,
                     remarks: null,
                     isRepair: isRework,
-                    qty: requiresQuantity ? 1 : null,
+                    qty: 1,
                 })
             );
         });

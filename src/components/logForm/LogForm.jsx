@@ -50,15 +50,16 @@ const LogForm = ({initialTasks = []}) => {
     let requiresTasks = true;
     let requiresQuantity = true;
     let requiresRemarks = false;
+    let isProduction = true;
 
     if (processes.data.selectedProcess) {
         requiresTasks = !Boolean(processes.data.selectedProcess.is_general);
         requiresQuantity = processes.data.selectedProcess.requires_quantity;
         requiresRemarks = processes.data.selectedProcess.requires_remarks;
+        isProduction = processes.data.selectedProcess.is_production;
     }
 
     const tasks = useTasks({ requiresQuantity, requiresRemarks, requiresTasks, initialValues: { tasks: initialTasks } });
-
 
     const draft = logDraftVo({
         tasksState: tasks.state.tasks,
@@ -188,6 +189,7 @@ const LogForm = ({initialTasks = []}) => {
                     requiresTasks={requiresTasks}
                     sx={{ mb: 2 }}
                     showDelete={initialTasks.length === 0}
+                    settings={processes.settings.tasks}
                 />
                 <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
                 <ProcessForm processes={processes} />

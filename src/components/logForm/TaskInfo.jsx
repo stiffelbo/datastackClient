@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Alert,
-    Button,
+    IconButton,
     Link,
     Stack,
     Box,
@@ -43,31 +43,29 @@ export default function TaskInfo({
     function renderAction() {
         if (typeof onAdd === "function") {
             return (
-                <Button
+                <IconButton
                     size="small"
-                    variant="outlined"
                     color="success"
-                    startIcon={<AddIcon />}
+                    title='Dodaj do listy'
                     onClick={handleAdd}
                     sx={{ flexShrink: 0 }}
                 >
-                    Dodaj
-                </Button>
+                    <AddIcon />
+                </IconButton>
             );
         }
 
         if (typeof onRemove === "function" && showDelete) {
             return (
-                <Button
+                <IconButton
                     size="small"
-                    variant="outlined"
                     color="error"
-                    startIcon={<DeleteOutlineIcon />}
+                    title='Usuń z listy'
                     onClick={handleRemove}
                     sx={{ flexShrink: 0 }}
                 >
-                    Usuń
-                </Button>
+                    <DeleteOutlineIcon />
+                </IconButton>
             );
         }
 
@@ -93,6 +91,7 @@ export default function TaskInfo({
             <Stack spacing={1}>
                 <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap">
                     <Stack direction="row" spacing={1} alignItems="center">
+                        {renderAction()}
                         <Typography variant="body2" fontWeight={700}>
                             {data.jiraKey || '—'}
                         </Typography>
@@ -117,7 +116,6 @@ export default function TaskInfo({
                     </Stack>
 
 
-                    {renderAction()}
                 </Stack>
 
 

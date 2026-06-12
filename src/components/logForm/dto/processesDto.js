@@ -61,8 +61,10 @@ export function processesDto(data) {
             is_design: toBool(details.is_design),
             is_setup: toBool(details.is_setup),
             is_task: toBool(details.is_task),
+            is_production: toBool(details.is_production),
             requires_quantity: toBool(details.requires_quantity),
             requires_remarks: toBool(details.requires_remarks),
+            finishedProduct: details.process_product_name,
             machines,
             materials,
         };

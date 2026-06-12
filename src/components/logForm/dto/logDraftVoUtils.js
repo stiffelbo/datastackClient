@@ -44,18 +44,26 @@ export function splitAmountByRatio(amount, ratio) {
     return round4(Number(amount || 0) * Number(ratio || 0));
 }
 
-export function getTaskAllocations(tasks = []) {
-
-    //ilosci proporcjonalnie do czasu
-
+export function getTaskAllocations(tasks = [], { requiresQuantity = true } = {}) {
     const normalized = safeArray(tasks)
-        .map((task) => ({
-            task,
-            quantity: getTaskQuantity(task),
-        }))
+        .map((task) => {
+            const rawQuantity = getTaskQuantity(task);
+
+            return {
+                task,
+                quantity: requiresQuantity
+                    ? rawQuantity
+                    : rawQuantity > 0
+                        ? rawQuantity
+                        : 1,
+            };
+        })
         .filter((item) => item.quantity > 0);
 
-    const totalQuantity = normalized.reduce((sum, item) => sum + item.quantity, 0);
+    const totalQuantity = normalized.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
 
     if (!totalQuantity) return [];
 
@@ -65,7 +73,6 @@ export function getTaskAllocations(tasks = []) {
         ratio: item.quantity / totalQuantity,
     }));
 }
-
 export function roundToStepDown(value, step) {
     const normalizedStep = Number(step || 0);
     const normalizedValue = Number(value || 0);
@@ -176,6 +183,56 @@ export function getOutputWorkDate(selectedEmployees = [], machineTime = null) {
     const machineDate = machineTime?.date ?? null;
 
     return firstEmployeeDate || machineDate || null;
+}
+
+export function timeToMinutes(value) {
+    const time = String(value ?? "").padStart(4, "0");
+
+    const hours = Number(time.slice(0, 2));
+    const minutes = Number(time.slice(2, 4));
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+
+    return hours * 60 + minutes;
+}
+
+export function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+
+    return `${String(hours).padStart(2, "0")}${String(mins).padStart(2, "0")}`;
+}
+
+export function splitTimeSequentially(time, allocations = []) {
+    const startMinutes = timeToMinutes(time?.start);
+
+    if (startMinutes === null) return [];
+
+    const totalMinutes = Math.round(Number(time?.duration || 0) * 60);
+    let cursor = startMinutes;
+
+    return allocations.map((allocation, index) => {
+        const isLast = index === allocations.length - 1;
+
+        const minutes = isLast
+            ? startMinutes + totalMinutes - cursor
+            : Math.round(totalMinutes * Number(allocation.ratio || 0));
+
+        const start = cursor;
+        const end = cursor + minutes;
+
+        cursor = end;
+
+        return {
+            allocation,
+            time: {
+                ...time,
+                start: minutesToTime(start),
+                end: minutesToTime(end),
+                duration: round2(minutes / 60),
+            },
+        };
+    });
 }
 
 export function buildPreview({
@@ -322,8 +379,12 @@ export function buildValidation({
         }
     });
 
-    if (requiresTasks && !allocations.length) {
-        errors.push("Brak poprawnej alokacji tasków. Uzupełnij ilości.");
+    if (selectedTasks.length && !allocations.length) {
+        errors.push(
+            requiresQuantity
+                ? "Brak poprawnej alokacji tasków. Uzupełnij ilości."
+                : "Brak poprawnej alokacji tasków."
+        );
     }
 
     return {

@@ -111,6 +111,88 @@ function getEmployeeTimeSignature(employeeTimeMap = {}) {
         .join(";");
 }
 
+function getTasksFormSettings(selectedProcess) {
+    if (!selectedProcess) {
+        return {
+            qty: { show: false, disabled: true, initialValue: "", required: false },
+            qtyGood: { show: false, disabled: true, initialValue: "", required: false },
+            qtyScrap: { show: false, disabled: true, initialValue: "", required: false },
+            remarks: { show: false, disabled: true, initialValue: "", required: false },
+        };
+    }
+
+    const isGeneral = Boolean(selectedProcess.is_general);
+    const isProduction = Boolean(selectedProcess.is_production);
+    const isDesign = Boolean(selectedProcess.is_design);
+    const isSetup = Boolean(selectedProcess.is_setup);
+
+    const requiresQuantity = Boolean(selectedProcess.requires_quantity);
+    const requiresRemarks = Boolean(selectedProcess.requires_remarks);
+
+    const isProductionReporting =
+        isProduction && !isDesign && !isSetup && !isGeneral;
+
+    return {
+        qty: {
+            show: true,
+            disabled: isGeneral,
+            initialValue: isGeneral || !requiresQuantity ? 1 : "",
+            required: requiresQuantity && !isGeneral,
+            label: isGeneral
+                ? `Ilość czynności: ${selectedProcess.name}`
+                : `Ilość wykonanej czynności: ${selectedProcess.name}`,
+            description: isGeneral
+                ? "Proces ogólny jest raportowany jako pojedyncza czynność. Ilość została zablokowana."
+                : "Ilość wykonanej czynności przypisana do taska.",
+        },
+
+        qtyGood: {
+            show: isProductionReporting,
+            disabled: !isProductionReporting,
+            initialValue: "",
+            required: false,
+            label: `Ilość dobrych wyrobów: ${selectedProcess.finishedProduct ?? ""}`,
+            description: isProductionReporting
+                ? "Liczba poprawnie wykonanych wyrobów w ramach procesu produkcyjnego."
+                : "Pole dostępne tylko dla procesów produkcyjnych.",
+        },
+
+        qtyScrap: {
+            show: isProductionReporting,
+            disabled: !isProductionReporting,
+            initialValue: "",
+            required: false,
+            label: `Ilość odpadów: ${selectedProcess.finishedProduct ?? ""}`,
+            description: isProductionReporting
+                ? "Liczba braków lub odpadów powstałych podczas procesu produkcyjnego."
+                : "Pole dostępne tylko dla procesów produkcyjnych.",
+        },
+
+        remarks: {
+            show: true,
+            disabled: false,
+            initialValue: "",
+            required: requiresRemarks,
+            label: "Uwagi dotyczące wykonania",
+            description: requiresRemarks
+                ? "Komentarz jest wymagany dla tego procesu."
+                : "Opcjonalny komentarz do raportowanego wykonania.",
+        },
+
+        meta: {
+            isGeneral,
+            requiresTasks: !isGeneral,
+            isProductionReporting,
+            disableOutputs: !isProductionReporting,
+            reason: isGeneral
+                ? "Proces ogólny — bez rozliczania tasków produkcyjnych i wydań."
+                : !isProductionReporting
+                    ? "Proces nie jest klasycznym procesem produkcyjnym — pola produkcyjne są ukryte lub zablokowane."
+                    : "Proces produkcyjny — dostępne raportowanie ilości dobrej i odpadu.",
+        },
+    };
+}
+
 export default function useProcessForm({
     processes = [],
     initialProcessId = "",
@@ -142,7 +224,24 @@ export default function useProcessForm({
         id: process.id,
         val: process.name,
         title: process.description,
-        group: process.structureName
+        group: process.structureName,
+        taskGroup: process.is_general
+            ? "🌐 Bez wymaganego taska"
+            : "🎯 Wymaga wskazania taska",
+        taskGroupOrder: process.is_general ? 2 : 1,
+        meta: {
+            description: process.description,
+            isGeneral: process.is_general,
+            isDesign: process.is_design,
+            isSetup: process.is_setup,
+            isTask: process.is_task,
+            isProduction: process.is_production,
+            requiresQuantity: process.requires_quantity,
+            requiresRemarks: process.requires_remarks,
+            finishedProduct: process.finishedProduct,
+            machinesCount: process.machines?.length ?? 0,
+            materialsCount: process.materials?.length ?? 0,
+        },
     }));
 
     const machineOptions = machines.map((machine) => ({
@@ -266,6 +365,10 @@ export default function useProcessForm({
         options: {
             processOptions,
             machineOptions,
+        },
+
+        settings: {
+            tasks: getTasksFormSettings(selectedProcess),
         },
 
         actions: {
