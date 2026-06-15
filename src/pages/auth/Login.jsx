@@ -48,7 +48,7 @@ const Login = () => {
       >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
           <Typography variant="h5" mb={3} align="center">
-            Logowanie do Datastack
+            Logowanie do Datastack | Uwaga zmiana loginów z maila na imie.nazwisko
           </Typography>
 
           <Button 
@@ -63,7 +63,7 @@ const Login = () => {
 
           <form onSubmit={handleSubmit}>
             <TextField
-              label="Login"
+              label="Login: imie.nazwisko"
               name="login"
               type="text"
               fullWidth
@@ -71,6 +71,7 @@ const Login = () => {
               value={form.login}
               onChange={handleChange}
               required
+              placeholder='imie.nazwisko | indywidulany jeśli zmieniłeś'
             />
             <TextField
               label="Hasło"

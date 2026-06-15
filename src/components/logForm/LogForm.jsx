@@ -25,7 +25,7 @@ import BrigadeEmployeesForm from "./BrigadeEmployeesForm";
 
 import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
-import SaveResultSummary from "./SaveResultSummary";
+import SubmitLogForm from "./SubmitLogForm";
 
 const LogForm = ({initialTasks = []}) => {
 
@@ -82,40 +82,6 @@ const LogForm = ({initialTasks = []}) => {
 
     const log = useJiraIssueUserLogs(auth);
 
-    const renderSubmit = ({ dataErrors = null, logError = null, result = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
-
-        console.log(result);
-
-        if (!dataErrors.length && !logError && !result) {
-            if (loading) {
-                return <LinearProgress />
-            } else {
-                return <Button
-                    color='primary'
-                    onClick={onSave}
-                    size="small"
-                    sx={{ ...sx }}
-                >
-                    Wprowadź dane
-                </Button>
-            }
-        }
-
-        if (logError) {
-            return <Button
-                color='error'
-                onClick={onClear}
-                size="small"
-                sx={{ ...sx }}
-            >
-                Błąd podczas zapisu danych
-            </Button>
-        }
-        if(result){
-            return <SaveResultSummary result={result} onClear={onClear}/>
-        }
-
-    }
 
     const renderControlTables = (show = true) => {
         if(!show) return;
@@ -219,7 +185,14 @@ const LogForm = ({initialTasks = []}) => {
                 </Button>
             </Grid>
             <Grid item size={12}>
-                {renderSubmit({ dataErrors: draft.meta.errors, logError: log.error, result: log.result, loading: log.loading, onSave: () => log.save(draft.logs), onClear: () => log.clear() })}
+                <SubmitLogForm  
+                    dataErrors={draft.meta.errors} 
+                    logError={log.error} 
+                    result={log.result} 
+                    loading={log.loading} 
+                    onSave ={() => log.save(draft.logs)} 
+                    onClear = {() => log.clear()}
+                />
             </Grid>
         </Grid>
 
