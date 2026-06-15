@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import http from '../../../http';
 
+import { useAuth } from '../../../context/AuthContext';
+
 const baseEndpoint = 'jira_issue_user_logs';
 
-export default function useJiraIssueUserLogs(){
+export default function useJiraIssueUserLogs(auth){
     // UI / network state
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -24,6 +26,7 @@ export default function useJiraIssueUserLogs(){
 
             const res = await http.post(url, data);
             setResult(res);
+            auth.refreshUser();
             setLoading(false);
         }catch (err) {
             console.error('post logs error', err);

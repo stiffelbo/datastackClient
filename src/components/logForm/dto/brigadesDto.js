@@ -1,9 +1,9 @@
-import { defaultTime } from "../utils";
+import { getTimeFromLastEntry } from "../utils";
 
 export function brigadeEmployeesDto(data) {
     if (!Array.isArray(data)) return [];
 
-    const defaultTimeValue = defaultTime();
+    console.log(data);
 
     return data.map((item) => {
         const details = item?.details ?? {};
@@ -18,7 +18,7 @@ export function brigadeEmployeesDto(data) {
             email: details?.email ?? "",
             active: details?.is_active === 1 || details?.is_active === "1" || details?.is_active === true,
             //placeholders for reporting
-            time: defaultTimeValue,
+            time: getTimeFromLastEntry(details?.lastEntryToday),
             isSelected: data.length === 1,
         };
     }).filter((item) => item.id);

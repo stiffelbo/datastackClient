@@ -12,7 +12,6 @@ export function materialLogDto({
 
     workDate = null,
     structureId = null,
-    periodId = null,
     employee= null,
 
     productionTaskId = null,
@@ -25,12 +24,7 @@ export function materialLogDto({
     movementType = "consume_good",
     qty = null,
 
-    unitCost = null,
-    costAmount = null,
-
-    remarks = null,
-    docNr = null,
-    attrs = null,
+    remarks = null
 }) {
     return {
         task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
@@ -49,16 +43,11 @@ export function materialLogDto({
         movement_type: toStringOrNull(movementType) ?? "consume_good",
         qty: toNumberOrNull(qty) ?? 0,
 
-        unit_cost: toNumberOrNull(unitCost),
-        cost_amount: toNumberOrNull(costAmount),
-
         work_date: toStringOrNull(workDate),
         structure_id: toIntOrNull(structureId),
-        period_id: toIntOrNull(periodId),
+
         employee_id: toIntOrNull(employee.id),
 
         remarks: toStringOrNull(remarks),
-        doc_nr: toStringOrNull(docNr),
-        attrs: attrs ? JSON.stringify(attrs) : null,
     };
 }

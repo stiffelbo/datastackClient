@@ -14,18 +14,22 @@ function mapEmployeesWithState(employees = [], initialTime = {}) {
 }
 
 function getEmployeesSignature(employees = []) {
-    if (!Array.isArray(employees)) return '';
+    if (!Array.isArray(employees)) return "";
 
     return employees
         .map((employee) =>
             [
-                employee?.id ?? '',
-                employee?.brigadeId ?? '',
-                employee?.active ?? '',
-                employee?.fullName ?? '',
-            ].join(':')
+                employee?.id ?? "",
+                employee?.brigadeId ?? "",
+                employee?.active ?? "",
+                employee?.fullName ?? "",
+                employee?.time?.date ?? "",
+                employee?.time?.start ?? "",
+                employee?.time?.end ?? "",
+                employee?.time?.duration ?? ""
+            ].join(":")
         )
-        .join('|');
+        .join("|");
 }
 
 export default function useBrigades({
@@ -48,25 +52,22 @@ export default function useBrigades({
 
             return employees.map((employee) => {
                 const existing = prevMap.get(employee.id);
+                const sourceTime = employee?.time
+                    ? normalizeTimeValue(employee.time)
+                    : null;
 
                 if (!existing) {
                     return {
                         ...employee,
                         isSelected: employee?.isSelected ?? false,
-                        time: employee?.time
-                            ? normalizeTimeValue(employee.time)
-                            : normalizedInitialTime,
+                        time: sourceTime ?? normalizedInitialTime,
                     };
                 }
 
                 return {
                     ...employee,
                     isSelected: existing.isSelected ?? false,
-                    time: existing.time
-                        ? normalizeTimeValue(existing.time)
-                        : employee?.time
-                            ? normalizeTimeValue(employee.time)
-                            : normalizedInitialTime,
+                    time: sourceTime ?? existing.time ?? normalizedInitialTime,
                 };
             });
         });
@@ -140,9 +141,9 @@ export default function useBrigades({
             prev.map((employee) =>
                 employee.id === employeeId
                     ? {
-                          ...employee,
-                          time: normalizedNextTime,
-                      }
+                        ...employee,
+                        time: normalizedNextTime,
+                    }
                     : employee
             )
         );

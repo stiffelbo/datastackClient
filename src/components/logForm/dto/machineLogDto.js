@@ -13,10 +13,6 @@ export function machineLogDto({
     isSetup = false,
     isRepair = false,
     remarks = null,
-    usageQty = null,
-    usageUnit = null,
-    unitUsageCost = null,
-    usageCostAmount = null,
 }) {
     const timeFields = buildDateTimeFromTimeValue(time);
 
@@ -37,12 +33,6 @@ export function machineLogDto({
         end_time: timeFields.end_time,
         duration_decimal: timeFields.duration_decimal ?? 0,
 
-        usage_qty: toNumberOrNull(usageQty) ?? 0,
-        usage_unit: toStringOrNull(usageUnit),
-        unit_usage_cost: toNumberOrNull(unitUsageCost),
-        usage_cost_amount: toNumberOrNull(usageCostAmount),
-
-        period_id: toIntOrNull(periodId),
         employee_id: toIntOrNull(employee?.id),
         structure_id: toIntOrNull(structureId),
     };

@@ -45,6 +45,39 @@ export function defaultTime() {
     };
 }
 
+export function getTimeFromLastEntry(lastEntryToday) {
+    const time = defaultTime();
+
+    if (!lastEntryToday) {
+        return time;
+    }
+
+    const startDate = new Date(lastEntryToday.replace(" ", "T"));
+
+    if (Number.isNaN(startDate.getTime())) {
+        return time;
+    }
+
+    const endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + 1);
+
+    return {
+        ...time,
+        date: startDate.toISOString().slice(0, 10),
+        start: formatHHMM(startDate),
+        end: formatHHMM(endDate),
+        duration: 1,
+    };
+}
+
+
+function formatHHMM(date) {
+    const h = String(date.getHours()).padStart(2, "0");
+    const m = String(date.getMinutes()).padStart(2, "0");
+
+    return `${h}${m}`;
+}
+
 export function toNumberOrNull(value) {
     if (value === "" || value === null || value === undefined) return null;
     const n = Number(value);

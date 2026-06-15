@@ -10,26 +10,7 @@ import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTas
 export function logDraftVo({
     tasksState = [],
     brigadesState = [],
-    processesState = {},
-    outputReport = null,
-
-    structureId = null,
-    periodId = null,
-    productionTaskId = null,
-
-    machineUsageKind = "produkcja",
-    machineUsageQty = null,
-    machineUsageUnit = null,
-    machineUnitUsageCost = null,
-    machineUsageCostAmount = null,
-
-    materialIsPlan = false,
-    materialIsActive = true,
-    materialSource = null,
-    materialRemarks = null,
-
-    outputSource = null,
-    outputRemarks = null,
+    processesState = {}
 }) {
     const selectedTasks = safeArray(tasksState);
     const selectedEmployees = safeArray(brigadesState).filter((item) => item.isSelected);
@@ -89,16 +70,14 @@ export function logDraftVo({
                 );
 
                 const employeeAllocation = employeeQtyAllocations[0];
-
                 operationLogs.push(
                     operationLogDto({
                         task: allocation.task,
                         employee,
                         process: selectedProcess,
                         time: taskTime,
-                        structureId,
-                        periodId,
-                        productionTaskId,
+                        structureId : selectedProcess?.structureId || null,
+                        productionTaskId : null,
                         remarks: getTaskRemarks(allocation.task),
                         isRepair: isRework || getTaskIsRework(allocation.task),
                         qty: requiresQuantity
@@ -117,6 +96,7 @@ export function logDraftVo({
             );
 
             machineTaskTimes.forEach(({ allocation, time: taskMachineTime }) => {
+                
                 machineLogs.push(
                     machineLogDto({
                         task: allocation.task,
@@ -124,31 +104,12 @@ export function logDraftVo({
                         process: selectedProcess,
                         machine: selectedMachine,
                         time: taskMachineTime,
-                        structureId,
-                        periodId,
-                        productionTaskId,
-                        usageKind: machineUsageKind,
+                        structureId : selectedProcess?.structureId || null,
+                        productionTaskId : null,
                         isSetup: Boolean(selectedProcess?.is_setup),
                         isRepair: isRework || getTaskIsRework(allocation.task),
                         remarks: getTaskRemarks(allocation.task),
-                        usageQty:
-                            machineUsageQty !== null &&
-                                machineUsageQty !== undefined
-                                ? splitAmountByRatio(
-                                    machineUsageQty,
-                                    allocation.ratio
-                                )
-                                : null,
-                        usageUnit: machineUsageUnit,
-                        unitUsageCost: machineUnitUsageCost,
-                        usageCostAmount:
-                            machineUsageCostAmount !== null &&
-                                machineUsageCostAmount !== undefined
-                                ? splitAmountByRatio(
-                                    machineUsageCostAmount,
-                                    allocation.ratio
-                                )
-                                : null,
+                        usageQty: 0,
                     })
                 );
             });
@@ -163,14 +124,12 @@ export function logDraftVo({
 
             const materialMovements = [
                 {
-                    movementType: "consume_good",
+                    movementType: "produkcja",
                     qty: Number(row.qty || 0),
-                    remarks: materialRemarks,
                 },
                 {
-                    movementType: "consume_defect",
+                    movementType: "odpad",
                     qty: Number(row.wasteQty || 0),
-                    remarks: materialRemarks,
                 },
             ];
 
@@ -205,26 +164,18 @@ export function logDraftVo({
                                     machineTime?.date ??
                                     null,
 
-                                structureId,
-                                periodId,
-                                productionTaskId,
+                                structureId : selectedProcess?.structureId || null,
+                                productionTaskId : null,
 
                                 isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                isPlan: materialIsPlan,
-                                isActive: materialIsActive,
+                                isPlan: false,
+                                isActive: true,
 
                                 movementType: movement.movementType,
                                 qty: employeeAllocation.allocatedAmount,
 
-                                unitCost: null,
-                                costAmount: null,
-
                                 remarks:
-                                    movement.remarks ??
                                     getTaskRemarks(qtyAllocation.task),
-
-                                docNr: null,
-                                attrs: null,
                             })
                         );
                     });
@@ -273,14 +224,13 @@ export function logDraftVo({
                                 machineTime?.date ??
                                 null,
 
-                            structureId,
-                            periodId,
-                            productionTaskId,
+                            structureId: selectedProcess.structureId,
+                            productionTaskId : null,
 
                             movementType: movement.movementType,
                             qty: employeeAllocation.allocatedAmount,
 
-                            remarks: outputRemarks ?? getTaskRemarks(task),
+                            remarks: getTaskRemarks(task),
                             attrs: null,
                         })
                     );
@@ -300,8 +250,7 @@ export function logDraftVo({
                     employee,
                     process: selectedProcess,
                     time: employeeTime,
-                    structureId,
-                    periodId,
+                    structureId : selectedProcess?.structureId || null,
                     productionTaskId: null,
                     remarks: null,
                     isRepair: isRework,

@@ -20,7 +20,6 @@ export function outputLogDto({
     qty = null,
 
     remarks = null,
-    attrs = null,
 }) {
     return {
         task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
@@ -35,9 +34,7 @@ export function outputLogDto({
         work_date: toStringOrNull(workDate),
         employee_id: toIntOrNull(employee?.id),
         structure_id: toIntOrNull(structureId),
-        period_id: toIntOrNull(periodId),
 
         remarks: toStringOrNull(remarks),
-        attrs: attrs ? JSON.stringify(attrs) : null,
     };
 }

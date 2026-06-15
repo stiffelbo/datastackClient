@@ -54,6 +54,7 @@ export function processesDto(data) {
         return {
             id: details.id ?? null,
             name: details.name ?? null,
+            structureId : details.structure_id ?? null,
             structureName : details.structureName ?? null,
             description: details.description ?? null,
             active: toBool(details.is_active),

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, Grid, Box, Typography, LinearProgress, Button } from "@mui/material";
 import { useRwd } from "../../context/RwdContext";
 import {useAuth} from "../../context/AuthContext";
@@ -25,10 +25,16 @@ import BrigadeEmployeesForm from "./BrigadeEmployeesForm";
 
 import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
+import SaveResultSummary from "./SaveResultSummary";
 
 const LogForm = ({initialTasks = []}) => {
 
-    const { user } = useAuth();
+    const auth = useAuth();
+    const { user } = auth;
+
+    useEffect(()=>{
+        auth.refreshUser();
+    }, []);
 
     if (!user) return <Alert severity="error">Brak danych użytkownika. Zaloguj się ponownie.</Alert>;
     if (!user.brigades.length) return <Alert severity="warning">Brak danych o pracownikach powiązanych z użytkownikiem</Alert>
@@ -72,13 +78,13 @@ const LogForm = ({initialTasks = []}) => {
             materials: processes.data.materials,
             isRework: processes.state.isRework,
         },
-        structureId: null,
-        periodId: null,
     });
 
-    const log = useJiraIssueUserLogs();
+    const log = useJiraIssueUserLogs(auth);
 
     const renderSubmit = ({ dataErrors = null, logError = null, result = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
+
+        console.log(result);
 
         if (!dataErrors.length && !logError && !result) {
             if (loading) {
@@ -106,14 +112,7 @@ const LogForm = ({initialTasks = []}) => {
             </Button>
         }
         if(result){
-            return <Button
-                color='success'
-                onClick={onClear}
-                size="small"
-                sx={{ ...sx }}
-            >
-                Zapisano
-            </Button>
+            return <SaveResultSummary result={result} onClear={onClear}/>
         }
 
     }
@@ -191,8 +190,8 @@ const LogForm = ({initialTasks = []}) => {
                     showDelete={initialTasks.length === 0}
                     settings={processes.settings.tasks}
                 />
-                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
                 <ProcessForm processes={processes} />
+                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
 
                 <RenderLogErrors errors={draft.meta.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
 

@@ -29,7 +29,6 @@ export function operationLogDto({
         end_time: timeFields.end_time,
         duration_decimal: timeFields.duration_decimal ?? 0,
 
-        period_id: toIntOrNull(periodId),
         employee_id: toIntOrNull(employee?.id),
         structure_id: toIntOrNull(structureId),
     };
