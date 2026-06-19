@@ -249,7 +249,7 @@ export function buildPreview({
     requiresTasks,
     requiresQuantity,
     requiresRemarks,
-    isRework,
+    isRework
 }) {
     return {
         process: selectedProcess

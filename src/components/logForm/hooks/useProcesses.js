@@ -135,7 +135,7 @@ function getTasksFormSettings(selectedProcess) {
     return {
         qty: {
             show: true,
-            disabled: isGeneral,
+            disabled: false,
             initialValue: isGeneral || !requiresQuantity ? 1 : "",
             required: requiresQuantity && !isGeneral,
             label: isGeneral

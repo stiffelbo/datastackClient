@@ -47,6 +47,7 @@ const LogForm = ({ initialTasks = [] }) => {
     const [time, setTime] = useState(defaultTime());
     const [showControlData, setShowControlData] = useState(false);
     const [reportMode, setReportMode] = useState('process'); // 'process' | 'machine'
+    const [nonTaskRemarks, setNonTaskRemarks] = useState('');
 
     //Hooks
     const { height } = useRwd();
@@ -99,6 +100,7 @@ const LogForm = ({ initialTasks = [] }) => {
             materials: processes.data.materials,
             isRework: processes.state.isRework,
         },
+        nonTaskRemarks : nonTaskRemarks
     });
 
     const log = useJiraIssueUserLogs(auth);
@@ -215,6 +217,8 @@ const LogForm = ({ initialTasks = [] }) => {
                     sx={{ mb: 2 }}
                     showDelete={initialTasks.length === 0}
                     settings={processes.settings.tasks}
+                    nonTaskRemarks={nonTaskRemarks}
+                    setNonTaskRemarks={setNonTaskRemarks}
                 />
                 {renderModeToggle()}
                 {renderForm()}

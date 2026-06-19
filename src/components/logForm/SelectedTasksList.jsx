@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {
     Box,
     Stack,
@@ -6,6 +6,7 @@ import {
     Alert,
     Fade,
     keyframes,
+    TextField,
 } from "@mui/material";
 
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
@@ -32,7 +33,7 @@ const pulseIn = keyframes`
     }
 `;
 
-function renderEmpty(emptyMessage, requiresTasks) {
+function renderEmpty(emptyMessage, requiresTasks, nonTaskRemarks, setNonTaskRemarks) {
     if (requiresTasks) {
         return (
             <Fade in>
@@ -84,7 +85,18 @@ function renderEmpty(emptyMessage, requiresTasks) {
                             Wybrany proces może zostać zaraportowany bez wskazywania zadania.
                         </Typography>
                     </Box>
+
                 </Stack>
+                <Box mt={2}>
+                    <TextField
+                        value={nonTaskRemarks}
+                        onChange={e => setNonTaskRemarks(e.target.value)}
+                        multiline
+                        rows={4}
+                        fullWidth
+                        placeholder="Dodaj uwagi"
+                    />
+                </Box>
             </Box>
         </Fade>
     );
@@ -213,13 +225,21 @@ export default function SelectedTasksList({
     emptyMessage = "Brak dodanych tasków.",
     sx = {},
     showDelete = true,
-    settings = {}
+    settings = {},
+    nonTaskRemarks = '',
+    setNonTaskRemarks = null
 }) {
     const taskItems = tasks?.state?.tasks ?? [];
     const requiresTasks = settings?.meta?.requiresTasks;
 
     const isEmpty = !Array.isArray(taskItems) || taskItems.length === 0;
     const shouldPulse = isEmpty && requiresTasks;
+
+    useEffect(()=>{
+        if(nonTaskRemarks && requiresTasks){
+            setNonTaskRemarks('');
+        }
+    }, [requiresTasks, isEmpty, nonTaskRemarks]);
 
     return (
         <Box
@@ -258,7 +278,7 @@ export default function SelectedTasksList({
             </Stack>
 
             {isEmpty
-                ? renderEmpty(emptyMessage, requiresTasks)
+                ? renderEmpty(emptyMessage, requiresTasks, nonTaskRemarks, setNonTaskRemarks)
                 : renderList(taskItems, tasks, showDelete, settings)}
         </Box>
     );

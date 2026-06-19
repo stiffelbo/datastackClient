@@ -10,7 +10,8 @@ import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTas
 export function logDraftVo({
     tasksState = [],
     brigadesState = [],
-    processesState = {}
+    processesState = {},
+    nonTaskRemarks = 'test'
 }) {
     const selectedTasks = safeArray(tasksState);
     const selectedEmployees = safeArray(brigadesState).filter((item) => item.isSelected);
@@ -253,13 +254,15 @@ export function logDraftVo({
                     time: employeeTime,
                     structureId : selectedProcess?.structureId || null,
                     productionTaskId: null,
-                    remarks: null,
+                    remarks: nonTaskRemarks,
                     isRepair: isRework,
                     qty: 1,
                 })
             );
         });
     }
+
+    console.log(operationLogs);
 
 
     const preview = buildPreview({
@@ -276,7 +279,7 @@ export function logDraftVo({
         requiresTasks,
         requiresQuantity,
         requiresRemarks,
-        isRework,
+        isRework
     });
 
 
