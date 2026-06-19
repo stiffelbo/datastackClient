@@ -41,12 +41,6 @@ const ResourcePage = ({
       pageKey: 'resource_machines', // klucz z rejestru stron
       component: <ResourceMachines id={id} data={row} rwd={rwd} />,
     },
-    {
-      key: 'resources',
-      label: 'Pod Zasoby',
-      pageKey: 'resource_relations', // klucz z rejestru stron
-      component: <ResourceRelations id={id} data={row} rwd={rwd} />,
-    },
   ];
 
   return (

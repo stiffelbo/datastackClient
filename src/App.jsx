@@ -68,7 +68,11 @@ const App = () => (
         <Route path="jiraissuegroups" element={<JiraIssueGroups />} />
         <Route path="jiraissuedirectpurchase" element={<JiraIssueDirectPurchase />} />
         <Route path="jiraissuemachineusagelog" element={<JiraIssueMachineUsageLog />} />
+
+        <Route path="jiraissueresourcesusagelog/:id/:tab" element={<JiraIssueResourceUsageLog />} />
+        <Route path="jiraissueresourcesusagelog/:id" element={<JiraIssueResourceUsageLog />} />
         <Route path="jiraissueresourcesusagelog" element={<JiraIssueResourceUsageLog />} />
+
         <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
         <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />

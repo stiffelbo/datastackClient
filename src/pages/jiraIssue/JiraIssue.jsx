@@ -5,12 +5,17 @@ import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard'
 
 import JiraIssuePage from './JiraIssuePage';
 
+import RenderLink from "./RenderLink";
+
 const entityName = "JiraIssue";
 const basePath = "/jiraissue";
 const endpoint = "/jira_issue/";
 
 const JiraIssue = () => {
     const entity = useEntity({ entityName, endpoint });
+
+    
+
     return (
         <BaseEntityDashboard
             renderPage={(props) => <JiraIssuePage entity={entity} entityName={entityName} {...props} />}

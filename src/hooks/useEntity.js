@@ -34,6 +34,34 @@ const defaultSchema = {
     heightSpan: 85,
 };
 
+function normalizeSelectOptions(options = []) {
+    if (!Array.isArray(options)) return [];
+
+    return options.map((item) => {
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+            const value = item.value ?? item.id ?? "";
+
+            return {
+                value,
+                label: item.label ?? item.val ?? String(value ?? ""),
+                title: item.title ?? null,
+                disabled: Boolean(item.disabled ?? false),
+                group: item.group == null ? "" : String(item.group),
+                description: item.description == null ? "" : String(item.description),
+            };
+        }
+
+        return {
+            value: item,
+            label: String(item ?? ""),
+            title: null,
+            disabled: false,
+            group: "",
+            description: "",
+        };
+    });
+}
+
 function addResolvedColumns(schema) {
     const resolve = schema?.resolve && typeof schema.resolve === "object" ? schema.resolve : null;
     if (!resolve || !Array.isArray(schema.columns)) return schema;
@@ -147,136 +175,155 @@ export function processResolvedFields(schema, rows) {
  * - columns: if input === 'select' AND editable === true, set selectOptions from options[field]
  *            (create selectOptions if it doesn't exist).
  */
+const selectInputs = new Set(['select', 'select-object', 'select-multiple']);
+
 function organizeSchema(input = defaultSchema) {
-    // shallow clone top-level; we’ll map arrays below
+
+    const optionWarnings = [];
+
+    const warnOption = (scope, field, value) => {
+        optionWarnings.push({
+            scope,
+            field,
+            value,
+        });
+    };
+
     const schema = {
         ...defaultSchema,
         ...input,
-        addForm: { ...(input.addForm || defaultSchema.addForm) },
-        editForm: { ...(input.editForm || defaultSchema.addForm) },
-        bulkEditForm: { ...(input.bulkEditForm || defaultSchema.bulkEditForm) },
+        addForm: { ...(defaultSchema.addForm || {}), ...(input.addForm || {}) },
+        editForm: { ...(defaultSchema.editForm || {}), ...(input.editForm || {}) },
+        bulkEditForm: { ...(defaultSchema.bulkEditForm || {}), ...(input.bulkEditForm || {}) },
     };
 
-    const optionsDict = schema.options || {};
+    const rawOptionsDict = schema.options && typeof schema.options === "object"
+        ? schema.options
+        : {};
 
-    //const emptyOption = {value : '', label: '--Brak wartosci--', title: 'pusta wartość', disabled: false};
+    const optionsDict = Object.fromEntries(
+        Object.entries(rawOptionsDict).map(([key, options]) => [
+            key,
+            normalizeSelectOptions(options),
+        ])
+    );
 
-    const getOpts = (key) => {
+    const getDictOptions = (key, scope = 'unknown') => {
         const opts = optionsDict?.[key];
-        const result = Array.isArray(opts) && opts.length > 0 ? opts : null;
-        return result;
+
+        if (opts === undefined) {
+            return null;
+        }
+
+        if (!Array.isArray(opts)) {
+            warnOption(scope, key, opts);
+            return null;
+        }
+        return opts;
     };
 
-    // -------- addForm block --------
-    if (Array.isArray(schema.addForm.schema)) {
-        schema.addForm = {
-            ...schema.addForm,
-            schema: schema.addForm.schema.map((item) => {
-                if (!item || typeof item !== 'object') return item;
-                const { name, type, selectOptions } = item;
-
-                // Rule: type === 'select' AND selectOptions === [] → fill from options[name]
-                if (
-                    type === 'select' &&
-                    Array.isArray(selectOptions) &&
-                    selectOptions.length === 0 &&
-                    name
-                ) {
-                    const opts = getOpts(name);
-                    if (opts) {
-                        return { ...item, selectOptions: opts };
-                    }
-                }
-                return item;
-            }),
-        };
+    function buildOptionsMap(options = []) {
+        return Object.fromEntries(
+            normalizeSelectOptions(options).map((option) => [
+                option.value,
+                option.label,
+            ])
+        );
     }
 
-    // -------- editForm block --------
-    if (Array.isArray(schema.editForm.schema)) {
-        schema.editForm = {
-            ...schema.editForm,
-            schema: schema.editForm.schema.map((item) => {
-                if (!item || typeof item !== 'object') return item;
-                const { name, type, selectOptions } = item;
+    const resolveFieldOptions = (item) => {
+        if (!item || typeof item !== 'object') return item;
 
-                // Rule: type === 'select' AND selectOptions === [] → fill from options[name]
-                if (
-                    type === 'select' &&
-                    Array.isArray(selectOptions) &&
-                    selectOptions.length === 0 &&
-                    name
-                ) {
-                    const opts = getOpts(name);
-                    if (opts) {
-                        return { ...item, selectOptions: opts };
-                    }
-                }
-                return item;
-            }),
-        };
-    }
+        const name = item.name;
+        const input = item.input ?? item.type;
 
-    // -------- bulkEditForm block --------
-    if (Array.isArray(schema.bulkEditForm.schema)) {
-        schema.bulkEditForm = {
-            ...schema.bulkEditForm,
-            schema: schema.bulkEditForm.schema.map((item) => {
-                if (!item || typeof item !== 'object') return item;
-                const { name, type, selectOptions } = item;
+        if (!selectInputs.has(input) || !name) {
+            return item;
+        }
 
-                // Rule: type === 'select' AND selectOptions === [] → fill from options[name]
-                if (
-                    type === 'select' &&
-                    Array.isArray(selectOptions) &&
-                    selectOptions.length === 0 &&
-                    name
-                ) {
-                    const opts = getOpts(name);
-                    if (opts) {
-                        return { ...item, selectOptions: opts };
-                    }
-                }
-                return item;
-            }),
-        };
-    }
+        // priorytet 1: własne selectOptions z pola
+        if (Array.isArray(item.selectOptions) && item.selectOptions.length) {
+            return {...item, selectOptions : normalizeSelectOptions(item.selectOptions)};
+        }
 
-    // -------- columns block --------
-    if (Array.isArray(schema.columns)) {
-        schema.columns = schema.columns.map((col) => {
-            if (!col || typeof col !== 'object') return col;
-            const { field, input } = col;
+        // priorytet 2: własne options z pola
+        if (Array.isArray(item.options)) {
+            return {
+                ...item,
+                selectOptions: normalizeSelectOptions(item.options),
+            };
+        }
 
-            // Rule: input === 'select' AND editable === true → set/create selectOptions from options[field]
-            if (input === 'select' && field) {
-                const opts = getOpts(field);
-                if (opts) {
-                    const optMap = {};
-                    opts.forEach(option => {
-                        if (option.value && option.label) {
-                            optMap[option.value] = option.label;
-                        }
-                    });
-                    const finalColumn = {
-                        ...col,
-                        optionsMap: optMap,
-                        options: Array.isArray(col.options) ? col.options : opts,
-                        // overwrite if empty or missing
-                        ...(Array.isArray(col.options) && col.options.length === 0
-                            ? { options: opts }
-                            : !Array.isArray(col.options)
-                                ? { options: opts }
-                                : {}),
+        // priorytet 3: słownik schema.options[name], ale tylko array
+        const dictOptions = getDictOptions(name);
 
-                    };
-                    return finalColumn;
-                }
-            }
+        if (Array.isArray(dictOptions)) {
+            return {
+                ...item,
+                selectOptions: dictOptions,
+            };
+        }
+
+        return item;
+    };
+
+    const resolveColumnOptions = (col) => {
+        if (!col || typeof col !== 'object') return col;
+
+        const field = col.field;
+        const input = col.input ?? col.type;
+
+        if (!selectInputs.has(input) || !field) {
             return col;
-        });
+        }
+
+        let resolvedOptions = null;
+
+        // priorytet 1: własne options z kolumny
+        if (Array.isArray(col.options) && col.options.length) {
+            resolvedOptions = normalizeSelectOptions(col.options);
+        }
+
+        // priorytet 2: własne selectOptions z kolumny
+        else if (Array.isArray(col.selectOptions)) {
+            resolvedOptions = normalizeSelectOptions(col.selectOptions);
+        }
+
+        // priorytet 3: słownik
+        else {
+            resolvedOptions = getDictOptions(field);
+        }
+
+        if (!Array.isArray(resolvedOptions)) {
+            return col;
+        }
+
+        return {
+            ...col,
+            options: resolvedOptions,
+            optionsMap: buildOptionsMap(resolvedOptions),
+        };
+    };
+
+    const resolveForm = (form) => {
+        if (!Array.isArray(form?.schema)) return form;
+
+        return {
+            ...form,
+            schema: form.schema.map(resolveFieldOptions),
+        };
+    };
+
+    schema.addForm = resolveForm(schema.addForm);
+    schema.editForm = resolveForm(schema.editForm);
+    schema.bulkEditForm = resolveForm(schema.bulkEditForm);
+
+    if (Array.isArray(schema.columns)) {
+        schema.columns = schema.columns.map(resolveColumnOptions);
     }
+
     addResolvedColumns(schema);
+
     return schema;
 }
 
@@ -428,7 +475,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             }
             const activeSchema = schemaOverride || schema;
 
-         
+
             if (activeSchema?.mapper?.itemField && itemId != null) {
                 params[activeSchema.mapper.itemField] = itemId;
             }

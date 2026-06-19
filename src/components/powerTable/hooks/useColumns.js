@@ -168,7 +168,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     restored = restored.map((c, idx) =>
       applyDefaultAlign({ ...c, order: idx })
     );
-
+    
     setColumns(restored);
 
     const initialSort = hasSaved ? extractSortModel(savedCols) : [];

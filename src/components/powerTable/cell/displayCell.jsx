@@ -187,7 +187,7 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
             padding: densityPadding,
             fontSize,
             lineHeight: 1.3,
-            verticalAlign: "top",
+            verticalAlign: "middle",
             textAlign: align,
             whiteSpace: 'nowrap',
             overflow: 'hidden',

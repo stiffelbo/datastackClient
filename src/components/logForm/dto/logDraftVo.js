@@ -26,6 +26,7 @@ export function logDraftVo({
     const requiresTasks = Boolean(selectedProcess?.is_task);
     const requiresQuantity = Boolean(selectedProcess?.requires_quantity);
     const requiresRemarks = Boolean(selectedProcess?.requires_remarks);
+    const requiresMaterial = Boolean(selectedProcess?.requires_material);
 
     const allocations = getTaskAllocations(selectedTasks, {
         requiresQuantity,
@@ -41,7 +42,7 @@ export function logDraftVo({
         requiresTasks,
         requiresQuantity,
         requiresRemarks,
-        allocations,
+        allocations
     });
 
     const operationLogs = [];
@@ -224,7 +225,7 @@ export function logDraftVo({
                                 machineTime?.date ??
                                 null,
 
-                            structureId: selectedProcess.structureId,
+                            structureId: selectedProcess?.structureId,
                             productionTaskId : null,
 
                             movementType: movement.movementType,

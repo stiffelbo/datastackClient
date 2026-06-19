@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Alert, Grid, Box, Typography, LinearProgress, Button } from "@mui/material";
+import { Alert, Grid, Box, Typography, LinearProgress, Button, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { useRwd } from "../../context/RwdContext";
-import {useAuth} from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 //Hooks
 import useTasks from "./hooks/useTasks";
@@ -11,11 +11,13 @@ import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 
 //DTO
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
-import { processesDto } from "./dto/processesDto";
+import { processesDto, buildMachineIndex, hasMachines } from "./dto/processesDto";
 import { logDraftVo } from "./dto/logDraftVo";
 
 //Utils
 import { defaultTime } from "./utils";
+
+import Manual from "../Manual";
 
 import JiraTaskLookup from "./JiraTaskLookup";
 import SelectedTasksList from "./SelectedTasksList";
@@ -26,13 +28,15 @@ import BrigadeEmployeesForm from "./BrigadeEmployeesForm";
 import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
 import SubmitLogForm from "./SubmitLogForm";
+import MachineIndexedForm from "./MachineIndexedForm";
 
-const LogForm = ({initialTasks = []}) => {
+
+const LogForm = ({ initialTasks = [] }) => {
 
     const auth = useAuth();
     const { user } = auth;
 
-    useEffect(()=>{
+    useEffect(() => {
         auth.refreshUser();
     }, []);
 
@@ -42,15 +46,32 @@ const LogForm = ({initialTasks = []}) => {
 
     const [time, setTime] = useState(defaultTime());
     const [showControlData, setShowControlData] = useState(false);
+    const [reportMode, setReportMode] = useState('process'); // 'process' | 'machine'
+
     //Hooks
     const { height } = useRwd();
 
     const brigade = useBrigades({ initialTime: time, employees: brigadeEmployeesDto(user.brigades) });
 
+    const processesAfterDTO = processesDto(user.processes);
+    const canUseMachineMode = hasMachines(processesAfterDTO);
+
+    const machineIndexedProcessesDTO =
+        canUseMachineMode
+            ? buildMachineIndex(processesAfterDTO)
+            : [];
+
+    useEffect(() => {
+        if (!canUseMachineMode && reportMode === "machine") {
+            setReportMode("process");
+        }
+    }, [canUseMachineMode, reportMode]);
+
     const processes = useProcesses({
-        processes: processesDto(user.processes),
+        processes: processesAfterDTO,
         onChange: null,
         employeeTimeMap: brigade.computed.employeeTimeMap,
+        mode: reportMode
     });
 
     let requiresTasks = true;
@@ -82,9 +103,22 @@ const LogForm = ({initialTasks = []}) => {
 
     const log = useJiraIssueUserLogs(auth);
 
+    const renderModeToggle = () => {
+        if (!canUseMachineMode) return;
+        return (<ToggleButtonGroup
+            value={reportMode}
+            exclusive
+            onChange={(e, value) => value && setReportMode(value)}
+            size="small"
+            sx={{ my: 1 }}
+        >
+            <ToggleButton value="process">Tryb proces</ToggleButton>
+            <ToggleButton value="machine">Tryb maszyna</ToggleButton>
+        </ToggleButtonGroup>);
+    }
 
     const renderControlTables = (show = true) => {
-        if(!show) return;
+        if (!show) return;
         return (
             <Grid container>
                 <Grid item size={12}>
@@ -143,12 +177,38 @@ const LogForm = ({initialTasks = []}) => {
         )
     }
 
+    const renderForm = () => {
+        // 'process' | 'machine'
+        if (reportMode === 'process') {
+            return <ProcessForm processes={processes} disabled={log.loading} />
+        }
+        if (reportMode === 'machine') {
+            return <MachineIndexedForm processes={processes} settings={machineIndexedProcessesDTO} disabled={log.loading} />
+        }
+    }
+
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
+
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
             <Grid item size={6}>
-                {initialTasks.length === 0 && (
-                    <JiraTaskLookup onAdd={tasks.actions.addTask} sx={{ mb: 2 }} />
-                )}
+                <Grid container spacing={1} alignItems="center" sx={{ mb: 2 }}>
+                    <Grid item sx={{ flexShrink: 0 }}>
+                        <Manual
+                            name="LogFormDoc"
+                            iconOnly
+                        />
+                    </Grid>
+
+                    <Grid item zeroMinWidth sx={{flexGrow: 1}}>
+                        {initialTasks.length === 0 && (
+                            <JiraTaskLookup
+                                onAdd={tasks.actions.addTask}
+                                sx={{ width: "100%" }}
+                            />
+                        )}
+                    </Grid>
+                </Grid>
+
                 <SelectedTasksList
                     tasks={tasks}
                     requiresTasks={requiresTasks}
@@ -156,7 +216,8 @@ const LogForm = ({initialTasks = []}) => {
                     showDelete={initialTasks.length === 0}
                     settings={processes.settings.tasks}
                 />
-                <ProcessForm processes={processes} />
+                {renderModeToggle()}
+                {renderForm()}
                 <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
 
                 <RenderLogErrors errors={draft.meta.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
@@ -175,23 +236,23 @@ const LogForm = ({initialTasks = []}) => {
                     onEmployeeTimeChange={brigade.actions.setEmployeeTime}
                 />
                 <Button
-                    onClick={()=>setShowControlData(!showControlData)}
+                    onClick={() => setShowControlData(!showControlData)}
                     color={showControlData ? 'warning' : 'primary'}
                     size="small"
-                    sx={{width: '100%'}}
+                    sx={{ width: '100%' }}
                     variant="outlined"
                 >
                     {showControlData ? 'Ukryj dane kontrolne' : 'Pokaż dane kontrolne'}
                 </Button>
             </Grid>
             <Grid item size={12}>
-                <SubmitLogForm  
-                    dataErrors={draft.meta.errors} 
-                    logError={log.error} 
-                    result={log.result} 
-                    loading={log.loading} 
-                    onSave ={() => log.save(draft.logs)} 
-                    onClear = {() => log.clear()}
+                <SubmitLogForm
+                    dataErrors={draft.meta.errors}
+                    logError={log.error}
+                    result={log.result}
+                    loading={log.loading}
+                    onSave={() => log.save(draft.logs)}
+                    onClear={() => log.clear()}
                 />
             </Grid>
         </Grid>

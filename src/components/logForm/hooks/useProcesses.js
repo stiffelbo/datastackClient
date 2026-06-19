@@ -198,7 +198,8 @@ export default function useProcessForm({
     initialProcessId = "",
     initialIsRework = false,
     onChange,
-    employeeTimeMap = {}
+    employeeTimeMap = {},
+    mode = "process"
 }) {
 
     const [processId, setProcessId] = useState(initialProcessId);
@@ -252,11 +253,18 @@ export default function useProcessForm({
     }));
 
     useEffect(() => {
-        setMachineId(requiredMachineId);
+        if (mode === "process") {
+            setMachineId(requiredMachineId);
+        }
+
         setIsRework(Boolean(initialIsRework));
         setMachineTime(getMachineTime(employeeTimeMap));
         setMaterialsReport(createMaterialsReport(materials));
-    }, [processId]);
+    }, [
+        processId,
+        mode,
+        requiredMachineId,
+    ]);
 
     useEffect(() => {
         const nextTime = getMachineTime(employeeTimeMap);

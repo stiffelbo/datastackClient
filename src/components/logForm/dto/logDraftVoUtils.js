@@ -328,7 +328,7 @@ export function buildValidation({
     requiresTasks,
     requiresQuantity,
     requiresRemarks,
-    allocations,
+    allocations
 }) {
     const errors = [];
 
@@ -378,6 +378,16 @@ export function buildValidation({
             errors.push(`Materiał wymagany bez ilości: ${material.name}.`);
         }
     });
+
+    if(selectedProcess?.requires_material){
+        const sumQty = Object.keys(materialsReport).reduce((acc, key)=>{
+            return acc += +materialsReport[key]?.qty || 0;
+        }, 0);
+
+        if (sumQty === 0){
+            errors.push("Proces wymaga minimum jednej wypełnionej Ilosci materiału");
+        }
+    }
 
     if (selectedTasks.length && !allocations.length) {
         errors.push(

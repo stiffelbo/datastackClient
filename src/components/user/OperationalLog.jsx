@@ -6,13 +6,15 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import PowerTable from '../powerTable/powerTable';
 
-const OperationLog = ({entityName, endpoint, height = null, issue = {}}) => {
+const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = ""}) => {
 
     const entity = useEntity({ entityName, endpoint, query: {issue_id : issue.id}, schemaQuery : {issue_id : issue.id}});
 
+    const issueId = issue?.id;
+
     useEffect(() => {
         entity.refresh();
-    }, [entityName, endpoint]);
+    }, [entityName, endpoint, issueId]);
 
     const effectiveHeight = height ? height : window.innerHeight - 166;
 

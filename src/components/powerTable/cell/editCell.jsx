@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { TextField, Select, MenuItem, TableCell, Box, Typography } from "@mui/material";
+
+import {normalizeCellOptions} from './utils';
+
+import { TextField, Select, MenuItem, TableCell, Box, Typography,ListSubheader } from "@mui/material";
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
@@ -13,6 +16,42 @@ function toDatetimeLocalValue(value) {
   }
 
   return "";
+}
+
+function renderGroupedMenuItems(options = []) {
+  const groupedOptions = normalizeCellOptions(options).reduce((acc, opt) => {
+    const groupName = opt.group || "";
+    if (!acc[groupName]) acc[groupName] = [];
+    acc[groupName].push(opt);
+    return acc;
+  }, {});
+
+  return Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
+    const items = [];
+
+    if (groupName) {
+      items.push(
+        <ListSubheader key={`group-${groupName}`} disableSticky>
+          {groupName}
+        </ListSubheader>
+      );
+    }
+
+    groupItems.forEach((opt, idx) => {
+      items.push(
+        <MenuItem
+          key={`opt-${String(opt.value)}_${idx}`}
+          value={opt.value}
+          disabled={opt.disabled}
+          title={opt.title || ""}
+        >
+          {opt.label}
+        </MenuItem>
+      );
+    });
+
+    return items;
+  });
 }
 
 const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange, column = {}, params = {} }) => {
@@ -186,13 +225,17 @@ const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange,
       />
     );
   }
-  else if (inputType === "select") {
-    const opts = Array.isArray(column?.options) ? column.options : [];
+  else if (inputType === "select" || inputType === "select-object") {
+    const opts = Array.isArray(column?.options)
+      ? column.options
+      : Array.isArray(column?.selectOptions)
+        ? column.selectOptions
+        : [];
 
     const handleChangeSelect = async (e) => {
       const v = e.target.value;
       handleLocalChange(v);
-      await handleCommit(v); // commit od razu przy zmianie
+      await handleCommit(v);
     };
 
     inputElement = (
@@ -205,19 +248,17 @@ const EditCell = ({ value: initialValue, settings, onCommit, onCancel, onChange,
         fullWidth
         error={!!error}
         title={error || undefined}
+        displayEmpty
       >
-        {opts.map((opt, idx) => {
-          const val = (opt && typeof opt === "object") ? opt.value : opt;
-          const lab = (opt && typeof opt === "object") ? (opt.label ?? String(val)) : String(opt);
-          return (
-            <MenuItem key={`${String(val)}_${idx}`} value={val}>
-              {lab}
-            </MenuItem>
-          );
-        })}
+        <MenuItem value="">
+          {`-- ${column?.label || column?.headerName || "Wybierz"} --`}
+        </MenuItem>
+
+        {renderGroupedMenuItems(opts)}
       </Select>
     );
-  } else if (inputType === "bool" || inputType === "boolean") {
+  }
+  else if (inputType === "bool" || inputType === "boolean") {
     const normalizeIncoming = (v) => {
       if (v === null || v === undefined || v === "") return null;
       if (typeof v === "boolean") return v;

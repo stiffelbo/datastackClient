@@ -5,6 +5,7 @@ import JiraIssueDetails from './JiraIssueDetails';
 import LogForm from '../../components/logForm/LogForm';
 import JiraIssueClockify from './JiraIssueClockify';
 import JiraIssueReports from './JiraIssueReports';
+import Bilans from './Bilans';
 
 
 const JiraIssuePage = ({
@@ -39,6 +40,12 @@ const JiraIssuePage = ({
       label: 'Clockify',
       pageKey: 'jiraissue.clockify', // klucz z rejestru stron
       component: <JiraIssueClockify sygn={row?.jira_key} rwd={rwd}/>,
+    },
+    {
+      key: 'bilans',
+      label: 'Bilans',
+      pageKey: 'jiraissue.bilans', // klucz z rejestru stron
+      component: <Bilans data={row} rwd={rwd}/>,
     },
    
     // itd...

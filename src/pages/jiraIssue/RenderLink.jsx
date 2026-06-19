@@ -4,7 +4,7 @@ import React from "react";
 import { Box, Typography, Chip } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, icon = null}){
+export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, icon = null, sx={}}){
     if(!id && !baseUrl) return;
     
     let url = `${baseUrl}${id}`;
@@ -28,5 +28,6 @@ export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datasta
                 variant="outlined"
                 size="small"
                 color="primary"
+                sx={{...sx}}
             />);
 }

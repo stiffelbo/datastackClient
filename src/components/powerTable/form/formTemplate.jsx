@@ -20,7 +20,9 @@ import {
   FormControlLabel,
   FormHelperText,
   Switch,
-  ListSubheader
+  ListSubheader,
+  Tooltip,
+  Fade
 } from '@mui/material';
 
 // MUI imports needed for buildForm
@@ -30,6 +32,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 import validatorDefault from './validator'; // ./validator.js
 import { Row, Col } from '../grid/flexGrid'; // Twój flex grid
@@ -39,6 +42,73 @@ import BulkPreview from './bulkPreview';
 import { bulkFormState, createInitialStateFromSchema, createInitialBulkStateFromSchema, applyCompute, normalizeOptions, prepareFormData, normalizeDateTimeLocalInputValue, normalizeDateInputValue } from './utils';
 import { useForm } from './useForm';
 import { normalizeSchema, emptyColor } from './schemaUtils';
+
+//helper component
+function renderDescription(description) {
+    if (!description) return null;
+
+    const paragraphs = String(description)
+        .replace(/\.\s+/g, ".\n")
+        .split("\n")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+    return (
+        <Box sx={{ maxWidth: 420 }}>
+            {paragraphs.map((paragraph, index) => (
+                <Typography
+                    key={index}
+                    variant="body2"
+                    sx={{
+                        lineHeight: 1.5,
+                        mb: index < paragraphs.length - 1 ? 1 : 0,
+                    }}
+                >
+                    {paragraph}
+                </Typography>
+            ))}
+        </Box>
+    );
+}
+
+function withFieldTooltip(field, children) {
+  if (!field?.description) return children;
+
+  return (
+    <Tooltip
+      title={renderDescription(field.description)}
+      placement="top-start"
+      arrow
+      enterDelay={600}
+      enterNextDelay={300}
+      leaveDelay={80}
+      TransitionComponent={Fade}
+      slotProps={{
+        tooltip: {
+          sx: {
+            bgcolor: "grey.900",
+            color: "common.white",
+            fontSize: 12,
+            lineHeight: 1.45,
+            borderRadius: 1.5,
+            px: 1.25,
+            py: 1,
+            boxShadow: 4,
+          },
+        },
+        arrow: {
+          sx: {
+            color: "grey.900",
+          },
+        },
+      }}
+    >
+      <Box sx={{ width: "100%" }}>
+        {children}
+      </Box>
+    </Tooltip>
+  );
+}
 
 // --- component ---
 const FormTemplate = ({
@@ -60,7 +130,7 @@ const FormTemplate = ({
   mode = "add",
   addons = {},
 }) => {
-  
+
   const normalizedSchema = normalizeSchema(schema);
 
   const {
@@ -133,56 +203,62 @@ const FormTemplate = ({
         case 'email':
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                value={value}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                placeholder={field.placeholder}
-                variant={field.variant || 'outlined'}
-                InputLabelProps={{ shrink: true }}
-                {...(field.textFieldProps || {})}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  label={field.label}
+                  value={value}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  size={field.size || "small"}
+                  disabled={field.disabled}
+                  required={field.required}
+                  placeholder={field.placeholder}
+                  variant={field.variant || "outlined"}
+                  InputLabelProps={{ shrink: true }}
+                  {...(field.textFieldProps || {})}
+                />
+              )}
             </Col>
           );
 
         case 'number':
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                type="number"
-                value={value === null || typeof value === 'undefined' ? '' : value}
-                onChange={(e) => {
-                  const raw = e.target.value;
-                  const normalized = typeof raw === 'string' ? raw.replace(',', '.') : raw;
-                  setField(field.name, normalized === '' ? '' : Number(normalized), { runValidate: true, raw: true });
-                }}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                placeholder={field.placeholder || ''}
-                variant={field.variant || 'outlined'}
-                InputLabelProps={{ shrink: true }}
-                inputProps={{
-                  step: field.step ?? 1,
-                  min: field.min,
-                  max: field.max,
-                  title: field.title || '',
-                  ...(field.inputProps || {}),
-                }}
-                {...(field.textFieldProps || {})}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  label={field.label}
+                  type="number"
+                  value={value === null || typeof value === 'undefined' ? '' : value}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    const normalized = typeof raw === 'string' ? raw.replace(',', '.') : raw;
+                    setField(field.name, normalized === '' ? '' : Number(normalized), { runValidate: true, raw: true });
+                  }}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  size={field.size || 'small'}
+                  disabled={field.disabled}
+                  required={field.required}
+                  placeholder={field.placeholder || ''}
+                  variant={field.variant || 'outlined'}
+                  InputLabelProps={{ shrink: true }}
+                  inputProps={{
+                    step: field.step ?? 1,
+                    min: field.min,
+                    max: field.max,
+                    title: field.title || '',
+                    ...(field.inputProps || {}),
+                  }}
+                  {...(field.textFieldProps || {})}
+                />
+              )}
             </Col>
           );
 
@@ -203,23 +279,26 @@ const FormTemplate = ({
 
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                type={inputType}
-                value={inputValue}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                InputLabelProps={{ shrink: true }}
-                size={field.size || "small"}
-                disabled={field.disabled}
-                required={field.required}
-                placeholder={field.placeholder || ""}
-                {...(field.textFieldProps || {})}
-                inputProps={{ ...(field.inputProps || {}) }}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  label={field.label}
+                  type={inputType}
+                  value={inputValue}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  InputLabelProps={{ shrink: true }}
+                  size={field.size || "small"}
+                  disabled={field.disabled}
+                  required={field.required}
+                  placeholder={field.placeholder || ""}
+                  {...(field.textFieldProps || {})}
+                  inputProps={{ ...(field.inputProps || {}) }}
+                />
+              )}
             </Col>
           );
         }
@@ -227,67 +306,76 @@ const FormTemplate = ({
         case 'textarea':
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                value={value}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                placeholder={field.placeholder}
-                variant={field.variant || 'outlined'}
-                multiline
-                rows={field.rows || 4}
-                {...(field.textFieldProps || {})}
-                inputProps={{ ...(field.inputProps || {}) }}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  label={field.label}
+                  value={value}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  size={field.size || 'small'}
+                  disabled={field.disabled}
+                  required={field.required}
+                  placeholder={field.placeholder}
+                  variant={field.variant || 'outlined'}
+                  multiline
+                  rows={field.rows || 4}
+                  {...(field.textFieldProps || {})}
+                  inputProps={{ ...(field.inputProps || {}) }}
+                />
+              )}
             </Col>
           );
 
         case 'password':
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                type="password"
-                name={field.name}
-                label={field.label}
-                value={value || ''}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                {...(field.textFieldProps || {})}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  type="password"
+                  name={field.name}
+                  label={field.label}
+                  value={value || ''}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  size={field.size || 'small'}
+                  disabled={field.disabled}
+                  required={field.required}
+                  {...(field.textFieldProps || {})}
+                />
+              )}
             </Col>
           );
 
         case 'switch':
           return (
             <Col key={field.name} {...colProps}>
-              <FormControl error={!!errorsText} component="fieldset" disabled={field.disabled}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={!!value}
-                      onChange={(e) => setField(field.name, e.target.checked)}
-                      name={field.name}
-                      color={field.color || 'primary'}
-                      size={field.size || 'small'}
-                      {...(field.inputProps || {})}
-                    />
-                  }
-                  label={field.label}
-                  labelPlacement={field.labelPlacement || 'end'}
-                />
-                {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : field.helperText ? <FormHelperText>{field.helperText}</FormHelperText> : null}
-              </FormControl>
+              {withFieldTooltip(
+                field,
+                <FormControl error={!!errorsText} component="fieldset" disabled={field.disabled}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={!!value}
+                        onChange={(e) => setField(field.name, e.target.checked)}
+                        name={field.name}
+                        color={field.color || 'primary'}
+                        size={field.size || 'small'}
+                        {...(field.inputProps || {})}
+                      />
+                    }
+                    label={field.label}
+                    labelPlacement={field.labelPlacement || 'end'}
+                  />
+                  {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : field.helperText ? <FormHelperText>{field.helperText}</FormHelperText> : null}
+                </FormControl>
+              )}
             </Col>
           );
 
@@ -306,62 +394,67 @@ const FormTemplate = ({
 
           return (
             <Col key={field.name} {...colProps}>
-              <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
-                <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
+              {withFieldTooltip(
+                field,
+                <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
+                  <InputLabel id={`${field.name}-label`}>
+                    {field.label}
+                  </InputLabel>
 
-                <Select
-                  labelId={`${field.name}-label`}
-                  name={field.name}
-                  label={field.label}
-                  value={
-                    typeof value === 'undefined' || value === null
-                      ? (isMultiple ? [] : '')
-                      : value
-                  }
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setField(field.name, val);
-                  }}
-                  multiple={isMultiple}
-                  size={field.size || 'small'}
-                  {...(field.selectProps || {})}
-                >
-                  {!isMultiple && (
-                    <MenuItem value="">
-                      {`-- ${field.label || 'Wybierz'} --`}
-                    </MenuItem>
-                  )}
-
-                  {Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
-                    const items = [];
-
-                    if (groupName) {
-                      items.push(
-                        <ListSubheader key={`group-${groupName}`} disableSticky>
-                          {groupName}
-                        </ListSubheader>
-                      );
+                  <Select
+                    labelId={`${field.name}-label`}
+                    name={field.name}
+                    label={field.label}
+                    value={
+                      typeof value === 'undefined' || value === null
+                        ? (isMultiple ? [] : '')
+                        : value
                     }
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setField(field.name, val);
+                    }}
+                    multiple={isMultiple}
+                    size={field.size || 'small'}
+                    {...(field.selectProps || {})}
+                  >
+                    {!isMultiple && (
+                      <MenuItem value="">
+                        {`-- ${field.label || 'Wybierz'} --`}
+                      </MenuItem>
+                    )}
 
-                    groupItems.forEach((opt) => {
-                      items.push(
-                        <MenuItem
-                          key={`opt-${opt.value}`}
-                          value={opt.value}
-                          disabled={opt.disabled}
-                          title={opt.title || ''}
-                        >
-                          {opt.label}
-                        </MenuItem>
-                      );
-                    });
+                    {Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
+                      const items = [];
 
-                    return items;
-                  })}
-                </Select>
+                      if (groupName) {
+                        items.push(
+                          <ListSubheader key={`group-${groupName}`} disableSticky>
+                            {groupName}
+                          </ListSubheader>
+                        );
+                      }
 
-                {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : null}
-              </FormControl>
+                      groupItems.forEach((opt) => {
+                        items.push(
+                          <MenuItem
+                            key={`opt-${opt.value}`}
+                            value={opt.value}
+                            disabled={opt.disabled}
+                            title={opt.title || ''}
+                          >
+                            {opt.label}
+                          </MenuItem>
+                        );
+                      });
+
+                      return items;
+                    })}
+                  </Select>
+
+                  {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : null}
+                </FormControl>
+              )}
             </Col>
           );
         }
@@ -482,37 +575,40 @@ const FormTemplate = ({
 
           return (
             <Col key={field.name} {...colProps}>
-              <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
-                <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
-                <Select
-                  value={toSelectValue(normalized)}
-                  onChange={handleChange}
-                  size="small"
-                  variant="outlined"
-                  fullWidth
-                  error={!!errorsText}
-                  title={errorsText || undefined}
-                >
-                  <MenuItem value="">
-                    <Box sx={itemStyle}>
-                      <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} />
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>— Brak —</Typography>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="true">
-                    <Box sx={itemStyle}>
-                      <CheckIcon fontSize="small" sx={{ color: 'success.main' }} />
-                      <Typography variant="body2">Tak</Typography>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="false">
-                    <Box sx={itemStyle}>
-                      <CloseIcon fontSize="small" sx={{ color: 'error.main' }} />
-                      <Typography variant="body2">Nie</Typography>
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
+              {withFieldTooltip(
+                field,
+                <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
+                  <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
+                  <Select
+                    value={toSelectValue(normalized)}
+                    onChange={handleChange}
+                    size="small"
+                    variant="outlined"
+                    fullWidth
+                    error={!!errorsText}
+                    title={errorsText || undefined}
+                  >
+                    <MenuItem value="">
+                      <Box sx={itemStyle}>
+                        <RemoveIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>— Brak —</Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="true">
+                      <Box sx={itemStyle}>
+                        <CheckIcon fontSize="small" sx={{ color: 'success.main' }} />
+                        <Typography variant="body2">Tak</Typography>
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="false">
+                      <Box sx={itemStyle}>
+                        <CloseIcon fontSize="small" sx={{ color: 'error.main' }} />
+                        <Typography variant="body2">Nie</Typography>
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              )}
               {errorsText && <div style={{ color: '#c00', marginTop: 6 }}>{errorsText}</div>}
             </Col>
           );
@@ -538,19 +634,22 @@ const FormTemplate = ({
           // fallback: generic text input
           return (
             <Col key={field.name} {...colProps}>
-              <TextField
-                fullWidth
-                name={field.name}
-                label={field.label}
-                value={value || ''}
-                onChange={(e) => setField(field.name, e.target.value)}
-                error={!!errorsText}
-                helperText={errorsText || field.helperText}
-                size={field.size || 'small'}
-                disabled={field.disabled}
-                required={field.required}
-                {...(field.textFieldProps || {})}
-              />
+              {withFieldTooltip(
+                field,
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  label={field.label}
+                  value={value || ''}
+                  onChange={(e) => setField(field.name, e.target.value)}
+                  error={!!errorsText}
+                  helperText={errorsText || field.helperText}
+                  size={field.size || 'small'}
+                  disabled={field.disabled}
+                  required={field.required}
+                  {...(field.textFieldProps || {})}
+                />
+              )}
             </Col>
           );
       }
@@ -606,6 +705,7 @@ FormTemplate.propTypes = {
     PropTypes.shape({
       name: PropTypes.string.isRequired,
       label: PropTypes.string,
+      description: PropTypes.string,
       helperText: PropTypes.string,
       placeholder: PropTypes.string,
       type: PropTypes.oneOf([

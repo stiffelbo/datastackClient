@@ -4,57 +4,41 @@ import React, { useEffect } from 'react';
 import useEntity from '../../hooks/useEntity';
 
 // Comp
-import PowerTable from '../../components/powerTable/powerTable';
+import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
+import RenderLink from '../jiraIssue/RenderLink';
 
 const entityName = 'JiraIssueMachineUsageLog';
 const endpoint = '/jira_issue_machine_usage_log/';
+const basePath = "/jiraissuemachineusagelog/";
 
-const selected = null;
-const onSelected = (val) => {
-    console.log(val)
-}
+const Dashboard = () => {
+    
+    const entity = useEntity({ entityName, endpoint });
 
-const selectedItems = [];
-const onSelectItems = (val) => {
-    console.log(val);
-}
+    const columns = entity.schema.columns.map(c => {
+        if(c?.field === "issue_id") {
+            return {...c, renderCell : params => <RenderLink id={params.value} title="otwórz w nowym oknie" />}
+        }else{
+            return c;
+        }
+    });
 
-const JiraIssueMachineUsageLog = () => {
+    entity.schema.columns = columns;
+    
+    const listProps = {};
 
-    const entity = useEntity({ entityName: entityName, endpoint: endpoint });
-    useEffect(() => {
-        entity.refresh();
-    }, []);
     return (
-        <PowerTable
+        <BaseEntityDashboard
+            renderPage={(props) => <ProcessPage entity={entity} entityName={entityName} {...props} />}
+            entity={entity}
             entityName={entityName}
-            width={window.innerWidth}
-            height={window.innerHeight - 90}
-            loading={entity.loading}
-            data={entity.rows}
-            columnSchema={entity.schema.columns}
-
-            addFormSchema={null}
-            bulkEditFormSchema={entity.schema.bulkEditForm}
-            importSchema={null}
-
-            onRefresh={entity.refresh}
-            onPost={null}
-            onEdit={entity.updateField}
-            onUpload={null}
-            onBulkEdit={entity.updateMany}
-            onDelete={entity.remove}
-            onBulkDelete={entity.removeMany}
-
-            error={entity.error}
-            clearError={entity.clearError}
-
-            selected={selected}
-            onSelect={onSelected}
-            selectedItems={selectedItems}
-            onSelectItems={onSelectItems}
+            basePath={basePath}
+            listProps={
+                listProps
+            }
         />
     );
 };
 
-export default JiraIssueMachineUsageLog;
+export default Dashboard;
+

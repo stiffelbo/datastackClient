@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
     Box,
     Stack,
@@ -8,9 +8,25 @@ import {
     TableHead,
     TableRow,
     Typography,
+    TextField,
+    Chip,
 } from "@mui/material";
 
+import { keyframes } from "@mui/system";
+
 import InputNumber from "./InputNumber";
+
+const pulseDown = keyframes`
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(0.92);
+    }
+    100% {
+        transform: scale(1);
+    }
+`;
 
 const MaterialsUsageTable = ({
     materials = [],
@@ -19,6 +35,82 @@ const MaterialsUsageTable = ({
     disabled = false,
     title = "Materiały",
 }) => {
+
+    const [searchPhrase, setSearchPhrase] = useState("");
+
+    const filteredMaterials = useMemo(() => {
+        const phrase = searchPhrase.trim().toLowerCase();
+
+        return materials
+            .filter((material) => {
+                if (!phrase) {
+                    return true;
+                }
+
+                return String(material.name ?? "")
+                    .toLowerCase()
+                    .includes(phrase);
+            })
+            .sort((a, b) => {
+                const requiredDiff = Number(b.required) - Number(a.required);
+
+                if (requiredDiff !== 0) {
+                    return requiredDiff;
+                }
+
+                return String(a.name ?? "").localeCompare(
+                    String(b.name ?? ""),
+                    "pl",
+                    { sensitivity: "base" }
+                );
+            });
+    }, [materials, searchPhrase]);
+
+    const filledMaterialsCount = useMemo(() => {
+        return materials.filter((material) => {
+            const row = value?.[material.id] ?? {};
+            return row.qty !== undefined && row.qty !== null && row.qty !== "";
+        }).length;
+    }, [materials, value]);
+
+    const hasRequiredWithoutAnyValue = useMemo(() => {
+        const hasRequired = materials.some((material) => material.required);
+        return hasRequired && filledMaterialsCount === 0;
+    }, [materials, filledMaterialsCount]);
+
+    function renderFilter() {
+        return (
+            <TextField
+                size="small"
+                label="Szukaj materiału"
+                value={searchPhrase}
+                onChange={(event) => setSearchPhrase(event.target.value)}
+                disabled={disabled}
+                fullWidth
+            />
+        );
+    }
+
+    function renderBadge() {
+        return (
+            <Chip
+                size="small"
+                label={`${filledMaterialsCount}/${materials.length}`}
+                onClick={() => setSearchPhrase("")}
+                title="Kliknij, aby wyczyścić filtr"
+                color={hasRequiredWithoutAnyValue ? "warning" : "default"}
+                variant={hasRequiredWithoutAnyValue ? "filled" : "outlined"}
+                sx={{
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    animation: hasRequiredWithoutAnyValue
+                        ? `${pulseDown} 1.2s ease-in-out infinite`
+                        : "none",
+                }}
+            />
+        );
+    }
+
     function renderEmpty() {
         return null;
     }
@@ -113,9 +205,15 @@ const MaterialsUsageTable = ({
                         borderColor: "divider",
                     }}
                 >
-                    <Typography variant="subtitle2" fontWeight={600}>
-                        {title}
-                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>
+                            {title}
+                        </Typography>
+
+                        {renderFilter()}
+
+                        {renderBadge()}
+                    </Stack>
                 </Box>
 
                 <Table size="small">
@@ -127,7 +225,7 @@ const MaterialsUsageTable = ({
                             <TableCell>Odpad</TableCell>
                         </TableRow>
                     </TableHead>
-                    <TableBody>{sortedMaterials.map(renderRow)}</TableBody>
+                    <TableBody>{filteredMaterials.map(renderRow)}</TableBody>
                 </Table>
             </Box>
         );

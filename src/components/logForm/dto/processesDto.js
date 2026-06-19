@@ -65,9 +65,35 @@ export function processesDto(data) {
             is_production: toBool(details.is_production),
             requires_quantity: toBool(details.requires_quantity),
             requires_remarks: toBool(details.requires_remarks),
+            requires_material: (+details.requires_material + +materials.length) > 1,
             finishedProduct: details.process_product_name,
             machines,
             materials,
         };
     });
+}
+
+export function buildMachineIndex(processes) {
+  const map = new Map();
+
+  processes.forEach(process => {
+    process.machines?.forEach(machine => {
+      if (!map.has(machine.id)) {
+        map.set(machine.id, {
+          ...machine,
+          processes: []
+        });
+      }
+
+      map.get(machine.id).processes.push(process);
+    });
+  });
+
+  return Array.from(map.values());
+}
+
+export function hasMachines(processes = []) {
+    return processes.some(
+        (process) => Array.isArray(process.machines) && process.machines.length > 0
+    );
 }

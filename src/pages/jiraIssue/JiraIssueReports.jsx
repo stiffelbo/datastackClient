@@ -27,56 +27,91 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import LogForm from '../../components/logForm/LogForm';
 import OperationLog from "../../components/user/OperationalLog";
 
+const NAV_ITEMS = [
+    {
+        key: "logForm",
+        label: "Raportuj",
+        icon: <AlarmAddIcon fontSize="small" color="success" />,
+    },
+    {
+        key: "operationLog",
+        label: "Czasy Pracy",
+        icon: <AccessTimeIcon fontSize="small" color="primary" />,
+    },
+    {
+        key: "machineUsageLog",
+        label: "Czasy Maszyn",
+        icon: <PrecisionManufacturingIcon fontSize="small" color="primary" />,
+    },
+    {
+        key: "resourceUsageLog",
+        label: "Użycie zasobów",
+        icon: <InventoryIcon fontSize="small" color="primary" />,
+    },
+    {
+        key: "productionOutputLog",
+        label: "Wydania produkcyjne",
+        icon: <AssignmentTurnedInIcon fontSize="small" color="primary" />,
+    },
+    {
+        key: "directPurchaseLog",
+        label: "Zakupy bezpośrednie",
+        icon: <ShoppingCartIcon fontSize="small" color="primary" />,
+    }
+];
+
 const JiraIssueReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const height = rwd.height - 190;
 
-    const NAV_ITEMS = [
-        {
-            key: "logForm",
-            label: "Raportuj",
-            icon: <AlarmAddIcon fontSize="small" color="success" />,
-            component: <LogForm initialTasks={[row]}/>,
-        },
-        {
-            key: "operationLog",
-            label: "Czasy Pracy",
-            icon: <AccessTimeIcon fontSize="small" color="primary" />,
-            component: <OperationLog entityName={'IssueOperationLog'} endpoint={'/jira_issue_operation_log/'} height={height} issue={row}/>,
-        },        
-        {
-            key: "machineUsageLog",
-            label: "Czasy Maszyn",
-            icon: <PrecisionManufacturingIcon fontSize="small" color="primary" />,
-            component: <OperationLog entityName={'IssueMachineUsageLog'} endpoint={'/jira_issue_machine_usage_log/'} height={height} issue={row}/>,
-        },
-        {
-            key: "resourceUsageLog",
-            label: "Użycie zasobów",
-            icon: <InventoryIcon fontSize="small" color="primary" />,
-            component: <OperationLog entityName={'IssueResourceUsageLog'} endpoint={'/jira_issue_resource_usage_log/'} height={height} issue={row}/>,
-        },
-        {
-            key: "productionOutputLog",
-            label: "Wydania produkcyjne",
-            icon: <AssignmentTurnedInIcon fontSize="small" color="primary" />,
-            component: <OperationLog entityName={'IssueProductionOutputLog'} endpoint={'/jira_issue_production_output_log/'} height={height} issue={row}/>,
-        },
-        {
-            key: "directPurchaseLog",
-            label: "Zakupy bezpośrednie",
-            icon: <ShoppingCartIcon fontSize="small" color="primary" />,
-            component: <OperationLog entityName={'IssueDirectPurchaseLog'} endpoint={'/jira_issue_direct_purchase/'} height={height} issue={row}/>,
-        }
-    ];
-
     const [activeView, setActiveView] = useState("operationLog");
 
-    const activeItem = useMemo(() => {
-        return NAV_ITEMS.find((item) => item.key === activeView) ?? NAV_ITEMS[0];
-    }, [activeView]);
+    const renderComponent = () => {
+        if (activeView === 'logForm')
+            return <LogForm initialTasks={[row]} />
+        if (activeView === 'operationLog')
+            return <OperationLog
+                entityName={'IssueOperationLog'}
+                endpoint={'/jira_issue_operation_log/'}
+                height={height}
+                issue={row}
+                label="Czasy Pracy"
+            />
+        if (activeView === 'machineUsageLog')
+            return <OperationLog
+                entityName={'IssueMachineUsageLog'}
+                endpoint={'/jira_issue_machine_usage_log/'}
+                height={height}
+                issue={row}
+                label="Czasy Maszyn"
+            />
+        if (activeView === 'resourceUsageLog')
+            return <OperationLog
+                entityName={'IssueResourceUsageLog'}
+                endpoint={'/jira_issue_resource_usage_log/'}
+                height={height}
+                issue={row}
+                label="Użycie zasobów"
+            />
+        if (activeView === 'productionOutputLog')
+            return <OperationLog
+                entityName={'IssueProductionOutputLog'}
+                endpoint={'/jira_issue_production_output_log/'}
+                height={height}
+                issue={row}
+                label="Wydania produkcyjne"
+            />
+        if (activeView === 'directPurchaseLog')
+            return <OperationLog
+                entityName={'IssueDirectPurchaseLog'}
+                endpoint={'/jira_issue_direct_purchase/'}
+                height={height}
+                issue={row}
+                label="Zakupy bezpośrednie"
+            />
+    }
 
     return (
         <Box sx={{ height }}>
@@ -180,7 +215,7 @@ const JiraIssueReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
                     }}
                 >
                     <Box sx={{ p: 2 }}>
-                        {activeItem.component}
+                        {renderComponent()}
                     </Box>
                 </Paper>
             </Box>

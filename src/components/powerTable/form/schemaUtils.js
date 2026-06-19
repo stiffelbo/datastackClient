@@ -61,6 +61,7 @@ export const normalizeField = (field = {}) => {
     field: field.field ?? name,
 
     label: field.label ?? name,
+    description: field.description ?? '',
     placeholder: field.placeholder ?? field.label ?? name,
 
     type,

@@ -1,16 +1,10 @@
-
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
-import ContractorDetails from './ContractorDetails';
 
-const BlankComponent = (props) => {
-    return <div>
-        <p>Blank Komponent</p>
-        <pre>{JSON.stringify(props)}</pre>
-    </div>
-}
+//Comp
+import JiraIssueResourceUsageDetails from './JiraIssueResourceUsageDetails';
 
-const ContractorPage = ({
+const Page = ({
   entityName,
   entity,
   dashboard,
@@ -22,19 +16,17 @@ const ContractorPage = ({
   onChangeId,
 }) => {
   const { tab, setTab } = dashboard;
-
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
       key: 'details',
       label: 'Edytuj',
-      pageKey: 'contractor.details', // klucz z rejestru stron
-      component: <ContractorDetails id={id} row={row} entity={entity}/>,
-    },
-    // itd...
+      pageKey: 'jiraissue.details', // klucz z rejestru stron
+      component: <JiraIssueResourceUsageDetails id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard}/>,
+    },  
   ];
 
-  return (
+    return (
     <BaseEntityPage
       entityName={entityName}
       id={id}
@@ -43,12 +35,12 @@ const ContractorPage = ({
       onChangeId={onChangeId}
       tabs={tabs}
       tab={tab}
-      rwd={rwd}
       setTab={setTab}
+      rwd={rwd}
       heightSpan={entity.heightSpan}
-      headerFields={['label', 'country']}
+      headerFields={['jira_key', 'name']}
     />
   );
 };
 
-export default ContractorPage;
+export default Page;

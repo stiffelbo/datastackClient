@@ -3,8 +3,6 @@ import { getTimeFromLastEntry } from "../utils";
 export function brigadeEmployeesDto(data) {
     if (!Array.isArray(data)) return [];
 
-    console.log(data);
-
     return data.map((item) => {
         const details = item?.details ?? {};
 
