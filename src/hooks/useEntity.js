@@ -34,7 +34,7 @@ const defaultSchema = {
     heightSpan: 85,
 };
 
-function normalizeSelectOptions(options = []) {
+export function normalizeSelectOptions(options = []) {
     if (!Array.isArray(options)) return [];
 
     return options.map((item) => {

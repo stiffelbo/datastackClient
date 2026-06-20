@@ -13,6 +13,7 @@ import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
 import { processesDto, buildMachineIndex, hasMachines } from "./dto/processesDto";
 import { logDraftVo } from "./dto/logDraftVo";
+import { makeControlTablesSchemas } from "./dto/makeControlTablesSchemas";
 
 //Utils
 import { defaultTime } from "./utils";
@@ -113,6 +114,7 @@ const LogForm = ({ initialTasks = [] }) => {
             onChange={(e, value) => value && setReportMode(value)}
             size="small"
             sx={{ my: 1 }}
+            color="success"
         >
             <ToggleButton value="process">Tryb proces</ToggleButton>
             <ToggleButton value="machine">Tryb maszyna</ToggleButton>
@@ -120,58 +122,68 @@ const LogForm = ({ initialTasks = [] }) => {
     }
 
     const renderControlTables = (show = true) => {
-        if (!show) return;
+        const tableSchemas = makeControlTablesSchemas({
+            employees: brigade.state.brigades,
+            selectedProcess : processes.data.selectedProcess
+        });
+        
+        if (!show || !tableSchemas) return;
+
         return (
             <Grid container>
                 <Grid item size={12}>
-                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                        <Typography variant="h6" gutterBottom>
+                    <Box mt={2}>
+                        <Typography variant="h6" gutterBottom align="center">
                             Czasy Pracownika
                         </Typography>
                         <PowerTable
                             entityName="LogPreview_Operation"
                             data={draft.logs.operationLogs}
-                            height={350}
                             rowHeight={60}
+                            columnSchema={tableSchemas.operationLog}
+                            height={300}
                         />
                     </Box>
                 </Grid>
                 <Grid item size={12}>
-                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                        <Typography variant="h6" gutterBottom>
+                    <Box mt={2}>
+                        <Typography variant="h6" gutterBottom align="center">
                             Ilosci Produkcyjne
                         </Typography>
                         <PowerTable
                             entityName="LogPreview_OutputsLogs"
                             data={draft.logs.outputLogs}
-                            height={350}
                             rowHeight={60}
+                            columnSchema={tableSchemas.outputLog}
+                            height={300}
                         />
                     </Box>
                 </Grid>
                 <Grid item size={12}>
-                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                        <Typography variant="h6" gutterBottom>
+                    <Box mt={2}>
+                        <Typography variant="h6" gutterBottom align="center">
                             Czasy Maszyn
                         </Typography>
                         <PowerTable
                             entityName="LogPreview_MachineLogs"
                             data={draft.logs.machineLogs}
-                            height={350}
                             rowHeight={60}
+                            columnSchema={tableSchemas.machineLog}
+                            height={300}
                         />
                     </Box>
                 </Grid>
                 <Grid item size={12}>
-                    <Box mt={2} sx={{ height: '400px', overflowY: 'auto' }}>
-                        <Typography variant="h6" gutterBottom>
+                    <Box mt={2}>
+                        <Typography variant="h6" gutterBottom align="center">
                             Materiały
                         </Typography>
                         <PowerTable
                             entityName="LogPreview_MaterialsLogs"
                             data={draft.logs.materialLogs}
-                            height={350}
                             rowHeight={60}
+                            columnSchema={tableSchemas.materialLog}
+                            height={300}
                         />
                     </Box>
                 </Grid>

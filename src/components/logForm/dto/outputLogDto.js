@@ -22,19 +22,20 @@ export function outputLogDto({
     remarks = null,
 }) {
     return {
+        work_date: toStringOrNull(workDate),
         task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
+       
+        employee_id: toIntOrNull(employee?.id),
+        process_id: toIntOrNull(process?.id),
+        structure_id: toIntOrNull(structureId),
+
+        qty: toNumberOrNull(qty) ?? 0,
+        movement_type: toStringOrNull(movementType) ?? "produce_good",
+        remarks: toStringOrNull(remarks),
+
+
         issue_id: toIntOrNull(task?.id ?? task?.issue_id),
         production_task_id: toIntOrNull(productionTaskId),
         from_production_task_id: toIntOrNull(fromProductionTaskId),
-        process_id: toIntOrNull(process?.id),
-
-        movement_type: toStringOrNull(movementType) ?? "produce_good",
-        qty: toNumberOrNull(qty) ?? 0,
-
-        work_date: toStringOrNull(workDate),
-        employee_id: toIntOrNull(employee?.id),
-        structure_id: toIntOrNull(structureId),
-
-        remarks: toStringOrNull(remarks),
     };
 }

@@ -261,10 +261,7 @@ export function logDraftVo({
             );
         });
     }
-
-    console.log(operationLogs);
-
-
+    
     const preview = buildPreview({
         selectedProcess,
         selectedMachine,

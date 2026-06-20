@@ -11,7 +11,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 const RenderLogErrors = ({ errors = [], sx = {} }) => {
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(true);
 
     const normalizedErrors = useMemo(() => {
         if (!Array.isArray(errors)) return [];

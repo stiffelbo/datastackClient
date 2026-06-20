@@ -27,27 +27,20 @@ export function materialLogDto({
     remarks = null
 }) {
     return {
+        work_date: toStringOrNull(workDate),
         task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
+        employee_id: toIntOrNull(employee.id),
+        resource_id: toIntOrNull(material?.id ?? material?.resource_id),
+        process_id: toIntOrNull(process?.id),
+        structure_id: toIntOrNull(structureId),
+        qty: toNumberOrNull(qty) ?? 0,
+        movement_type: toStringOrNull(movementType) ?? "consume_good",
+        is_repair: toBool01(isRepair),
+        remarks: toStringOrNull(remarks),        
+        is_active: toBool01(isActive),
+        is_plan: toBool01(isPlan),
         issue_id: toIntOrNull(task?.id ?? task?.issue_id),
         production_task_id: toIntOrNull(productionTaskId),
-
-        process_id: toIntOrNull(process?.id),
-
-        is_repair: toBool01(isRepair),
-        is_plan: toBool01(isPlan),
-        is_active: toBool01(isActive),
-
-        resource_id: toIntOrNull(material?.id ?? material?.resource_id),
         from_production_task_id: toIntOrNull(fromProductionTaskId),
-
-        movement_type: toStringOrNull(movementType) ?? "consume_good",
-        qty: toNumberOrNull(qty) ?? 0,
-
-        work_date: toStringOrNull(workDate),
-        structure_id: toIntOrNull(structureId),
-
-        employee_id: toIntOrNull(employee.id),
-
-        remarks: toStringOrNull(remarks),
     };
 }

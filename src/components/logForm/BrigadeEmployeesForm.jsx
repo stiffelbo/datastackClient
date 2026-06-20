@@ -147,8 +147,6 @@ const BrigadeEmployeesForm = ({
         return renderList();
     }
 
-    console.log(employees);
-
     return (
         <Box
             sx={{
