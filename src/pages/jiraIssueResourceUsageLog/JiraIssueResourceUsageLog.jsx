@@ -14,7 +14,6 @@ const endpoint = '/jira_issue_resource_usage_log/';
 const basePath = "/jiraissueresourcesusagelog/";
 
 
-
 const Dashboard = () => {
     
     const entity = useEntity({ entityName, endpoint });

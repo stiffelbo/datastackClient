@@ -26,6 +26,7 @@ import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
+import JiraIssueHistory from './pages/jiraIssue/JiraIssueHistory';
 import JiraIssueGroups from './pages/jiraIssueGroups/JiraIssueGroups';
 import JiraIssueDirectPurchase from './pages/jiraIssueDirectPurchase/JiraIssueDirectPurchase';
 import JiraIssueMachineUsageLog from './pages/jiraIssueMachineUsageLog/JiraIssueMachineUsageLog';
@@ -104,6 +105,10 @@ const App = () => (
         <Route path="employees/:id/:tab" element={<Employees />} />
         <Route path="employees/:id" element={<Employees />} />
         <Route path="employees" element={<Employees />} />
+
+        <Route path="jiraissuehistory/:id/:tab" element={<JiraIssueHistory />} />
+        <Route path="jiraissuehistory/:id" element={<JiraIssueHistory />} />
+        <Route path="jiraissuehistory" element={<JiraIssueHistory />} />    
 
         <Route path="jiraissue/:id/:tab" element={<JiraIssue />} />
         <Route path="jiraissue/:id" element={<JiraIssue />} />

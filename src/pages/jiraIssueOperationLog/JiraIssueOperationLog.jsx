@@ -9,7 +9,7 @@ import RenderLink from '../jiraIssue/RenderLink';
 
 const entityName = 'JiraIssueOperationLog';
 const endpoint = '/jira_issue_operation_log/';
-const basePath = "/jiraissuemachineusagelog/";
+const basePath = "/jiraissueoperationlog/";
 
 const Dashboard = () => {
     

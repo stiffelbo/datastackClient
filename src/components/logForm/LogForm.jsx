@@ -101,7 +101,7 @@ const LogForm = ({ initialTasks = [] }) => {
             materials: processes.data.materials,
             isRework: processes.state.isRework,
         },
-        nonTaskRemarks : nonTaskRemarks
+        nonTaskRemarks: nonTaskRemarks
     });
 
     const log = useJiraIssueUserLogs(auth);
@@ -122,74 +122,77 @@ const LogForm = ({ initialTasks = [] }) => {
     }
 
     const renderControlTables = (show = true) => {
+        if (!show) return null;
+
         const tableSchemas = makeControlTablesSchemas({
             employees: brigade.state.brigades,
-            selectedProcess : processes.data.selectedProcess
+            selectedProcess: processes.data.selectedProcess
         });
-        
-        if (!show || !tableSchemas) return;
+
+        if (!tableSchemas) return null;
+
+        const tables = [
+            {
+                title: 'Czasy Pracownika',
+                emptyText: 'Brak danych w kategorii: Czasy Pracownika',
+                entityName: 'LogPreview_Operation',
+                data: draft.logs.operationLogs,
+                columnSchema: tableSchemas.operationLog
+            },
+            {
+                title: 'Ilosci Produkcyjne',
+                emptyText: 'Brak danych w kategorii: Ilości Produkcyjne',
+                entityName: 'LogPreview_OutputsLogs',
+                data: draft.logs.outputLogs,
+                columnSchema: tableSchemas.outputLog
+            },
+            {
+                title: 'Czasy Maszyn',
+                emptyText: 'Brak danych w kategorii: Czasy Maszyn',
+                entityName: 'LogPreview_MachineLogs',
+                data: draft.logs.machineLogs,
+                columnSchema: tableSchemas.machineLog
+            },
+            {
+                title: 'Materiały',
+                emptyText: 'Brak danych w kategorii: Materiały',
+                entityName: 'LogPreview_MaterialsLogs',
+                data: draft.logs.materialLogs,
+                columnSchema: tableSchemas.materialLog
+            }
+        ];
 
         return (
             <Grid container>
-                <Grid item size={12}>
-                    <Box mt={2}>
-                        <Typography variant="h6" gutterBottom align="center">
-                            Czasy Pracownika
-                        </Typography>
-                        <PowerTable
-                            entityName="LogPreview_Operation"
-                            data={draft.logs.operationLogs}
-                            rowHeight={60}
-                            columnSchema={tableSchemas.operationLog}
-                            height={300}
-                        />
-                    </Box>
-                </Grid>
-                <Grid item size={12}>
-                    <Box mt={2}>
-                        <Typography variant="h6" gutterBottom align="center">
-                            Ilosci Produkcyjne
-                        </Typography>
-                        <PowerTable
-                            entityName="LogPreview_OutputsLogs"
-                            data={draft.logs.outputLogs}
-                            rowHeight={60}
-                            columnSchema={tableSchemas.outputLog}
-                            height={300}
-                        />
-                    </Box>
-                </Grid>
-                <Grid item size={12}>
-                    <Box mt={2}>
-                        <Typography variant="h6" gutterBottom align="center">
-                            Czasy Maszyn
-                        </Typography>
-                        <PowerTable
-                            entityName="LogPreview_MachineLogs"
-                            data={draft.logs.machineLogs}
-                            rowHeight={60}
-                            columnSchema={tableSchemas.machineLog}
-                            height={300}
-                        />
-                    </Box>
-                </Grid>
-                <Grid item size={12}>
-                    <Box mt={2}>
-                        <Typography variant="h6" gutterBottom align="center">
-                            Materiały
-                        </Typography>
-                        <PowerTable
-                            entityName="LogPreview_MaterialsLogs"
-                            data={draft.logs.materialLogs}
-                            rowHeight={60}
-                            columnSchema={tableSchemas.materialLog}
-                            height={300}
-                        />
-                    </Box>
-                </Grid>
+                {tables.map(({ title, emptyText, entityName, data, columnSchema }) => {
+                    const hasContent = Array.isArray(data) && data.length > 0;
+
+                    return (
+                        <Grid item size={12} key={entityName}>
+                            <Box mt={2}>
+                                {hasContent && <Typography variant="h6" gutterBottom>
+                                    {title}
+                                </Typography> }
+
+                                {hasContent ? (
+                                    <PowerTable
+                                        entityName={entityName}
+                                        data={data}
+                                        rowHeight={60}
+                                        columnSchema={columnSchema}
+                                    />
+                                ) : (
+                                    <Alert severity="info">
+                                        {emptyText}
+                                    </Alert>
+                                )}
+                            </Box>
+                        </Grid>
+                    );
+                })}
             </Grid>
-        )
-    }
+        );
+    };
 
     const renderForm = () => {
         // 'process' | 'machine'
@@ -213,7 +216,7 @@ const LogForm = ({ initialTasks = [] }) => {
                         />
                     </Grid>
 
-                    <Grid item zeroMinWidth sx={{flexGrow: 1}}>
+                    <Grid item zeroMinWidth sx={{ flexGrow: 1 }}>
                         {initialTasks.length === 0 && (
                             <JiraTaskLookup
                                 onAdd={tasks.actions.addTask}

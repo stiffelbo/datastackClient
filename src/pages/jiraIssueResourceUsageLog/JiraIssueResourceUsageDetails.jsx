@@ -12,7 +12,9 @@ const JiraIssueResourceUsageDetails = ({id, row, entity, rwd, dashboard}) => {
     }
     
     return <Box sx={{width: '100%', maxWidth: '100%', height: '100%', maxHeight: '100%'}}>
-
+        <pre>
+            {JSON.stringify(row)}
+        </pre>
     </Box>
 }
 
