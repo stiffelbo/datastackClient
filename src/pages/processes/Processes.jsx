@@ -24,6 +24,7 @@ const Dashboard = () => {
             listProps={
                 listProps
             }
+            manual={{name: 'ProcessesDoc'}}
         />
     );
 };

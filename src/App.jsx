@@ -16,6 +16,8 @@ import Structures from './pages/structures/Structures';
 import Clockify from './pages/clockify/Clockify';
 import Salaries from './pages/salaries/Salaries';
 import Costs from './pages/costs/Costs';
+import DepartmentsCostsRaw from './pages/departmentsCostsRaw/DepartmentsCostsRaw';
+import DepartmentsCosts from './pages/departmentsCosts/DepartmentsCosts';
 import Periods from './pages/periods/Periods';
 import Contractor from './pages/contractor/Contractor';
 import Processes from './pages/processes/Processes';
@@ -79,6 +81,8 @@ const App = () => (
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
         <Route path="jiraissuerawlogs" element={<JiraIssueRawLogs />} />
         <Route path="deptcosts" element={<Costs />} />
+        <Route path="departmentscostsraw" element={<DepartmentsCostsRaw />} />
+        <Route path="departmentscosts" element={<DepartmentsCosts />} />
 
         <Route path="migrations" element={<Migrations />} />
 

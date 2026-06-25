@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 
+import Manual from '../Manual';
+
 /**
  * DashboardLayout
  *
@@ -23,6 +25,7 @@ const DashboardLayout = ({
   maxLeftRatio = 0.8,
   onResizeEnd,
   mode = 'dashboard',
+  manual = null
 }) => {
   const containerRef = useRef(null);
   const [leftRatio, setLeftRatio] = useState(initialLeftRatio);
@@ -88,6 +91,41 @@ const DashboardLayout = ({
         ? 1
         : 0;
 
+  const renderManual = () => {
+    if (!manual || typeof manual !== 'object') return null;
+
+    const {
+      name = '',
+      label = 'Pomoc',
+      endpoint = '/documentation/get.php',
+      buttonVariant = 'outlined',
+      buttonSize = 'small',
+      iconOnly = true,
+      sx = {},
+    } = manual;
+
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          left: 16,
+          bottom: 16,
+          zIndex: 20,
+          ...sx,
+        }}
+      >
+        <Manual
+          name={name}
+          label={label}
+          endpoint={endpoint}
+          buttonVariant={buttonVariant}
+          buttonSize={buttonSize}
+          iconOnly={iconOnly}
+          sx={sx}
+        />
+      </Box>
+    );
+  };
   return (
     <Box
       ref={containerRef}
@@ -149,6 +187,7 @@ const DashboardLayout = ({
           {right}
         </Box>
       )}
+      {renderManual()}
     </Box>
   );
 };

@@ -72,8 +72,6 @@ const PowerTable = ({
   showSidebar = true,
 }) => {
 
-  console.log(columnSchema);
-
   const devColumnsLookup = {};
   if (Array.isArray(columnSchema)) {
     columnSchema.forEach(col => devColumnsLookup[col.field] = col);

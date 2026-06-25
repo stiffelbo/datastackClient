@@ -29,7 +29,7 @@ const Manual = ({
     endpoint = "/documentation/get.php",
     buttonVariant = "outlined",
     buttonSize = "small",
-    iconOnly = false,
+    iconOnly = true,
     sx={}
 }) => {
     const [data, setData] = useState(null);
@@ -99,6 +99,7 @@ const Manual = ({
                         size={buttonSize}
                         onClick={handleOpen}
                         disabled={loading}
+                        color={"warning"}
                     >
                         <HelpOutlineIcon fontSize="small" />
                     </IconButton>
