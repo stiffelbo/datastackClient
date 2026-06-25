@@ -40,6 +40,7 @@ import JiraIssueRawLogs from './pages/jiraIssueRawLogs/JiraIssueRawLogs';
 import ItAssetsTypes from './pages/itAssetsTypes/ItAssetsTypes';
 import ItAssets from './pages/itAssets/ItAssets';
 import ItAssetsShifts from './pages/itAssetsShifts/ItAssetsShifts';
+import RCPEmployees from './pages/rcpEmployees/RCPEmployees';
 
 import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
@@ -67,10 +68,16 @@ const App = () => (
                 
         <Route path="clockify" element={<Clockify />} />
         <Route path="salaries" element={<Salaries />} />
+
+
         
         <Route path="jiraissuegroups" element={<JiraIssueGroups />} />
         <Route path="jiraissuedirectpurchase" element={<JiraIssueDirectPurchase />} />
         <Route path="jiraissuemachineusagelog" element={<JiraIssueMachineUsageLog />} />
+
+        <Route path="rcpemployees/:id/:tab" element={<RCPEmployees />} />
+        <Route path="rcpemployees/:id" element={<RCPEmployees />} />
+        <Route path="rcpemployees" element={<RCPEmployees />} />
 
         <Route path="jiraissueresourcesusagelog/:id/:tab" element={<JiraIssueResourceUsageLog />} />
         <Route path="jiraissueresourcesusagelog/:id" element={<JiraIssueResourceUsageLog />} />
