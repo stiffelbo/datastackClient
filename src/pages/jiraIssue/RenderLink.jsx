@@ -4,12 +4,17 @@ import React from "react";
 import { Box, Typography, Chip } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, icon = null, sx={}}){
+export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, nullTitle = '', icon = null, sx={}}){
     if(!id && !baseUrl) return;
     
     let url = `${baseUrl}${id}`;
     if(!id){
-        url = `${baseUrl}`;
+        return <Chip 
+            color="warning"
+            label={nullTitle ? nullTitle : 'Brak ID'}
+            variant="outlined"
+            sx={{...sx, width: '100%'}}
+        />
     }
 
     const handleClick = () => {
@@ -25,9 +30,8 @@ export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datasta
                 title={title ? title : 'Link'}
                 icon={icon ? icon : <OpenInNewIcon />}
                 clickable
-                variant="outlined"
-                size="small"
+                variant="contained"
                 color="primary"
-                sx={{...sx}}
+                sx={{...sx, width: '100%'}}
             />);
 }
