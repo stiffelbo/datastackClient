@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 //Mui
-import { Box, Typography } from '@mui/material';
+import { Alert, Box, Typography } from '@mui/material';
 
 import { useRwd } from '../../context/RwdContext';
 import { useDashboard } from '../../context/DashboardContext';
@@ -103,6 +103,10 @@ const BaseEntityDashboard = ({
       navigate(newPath, { replace: true });
     }
   }, [basePath, entityName, currentId, tab, location.pathname, navigate]);
+
+  if(!entity.allowed){
+    return <Alert severity='error'>Brak Dostępu</Alert>
+  }
 
   // --- LISTA ---
   const listNode = (

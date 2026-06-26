@@ -380,6 +380,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
     const [error, setError] = useState(null);
 
     // schema (merged UI from backend + defaults)
+    const [allowed, setAllowed] = useState(false);
     const [schema, setSchema] = useState(defaultSchema);
     const [schemaVersion, setSchemaVersion] = useState(0);
 
@@ -440,13 +441,17 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
             setSchema(processedSchema);
             setSchemaVersion(v => v + 1);
+            setAllowed(true);
             setError(null);
 
             return processedSchema;
-        } catch (err) {
-            console.error('fetchSchema error', err);
-            toast.error('Błąd pobierania schematu encji');
+        } catch (err) {            
             setError(err);
+            if(err.status === 403){
+                setAllowed(false);
+                return null;
+            }
+            toast.error('Błąd pobierania schematu encji');
             return null;
         } finally {
             setLoading(false);
@@ -978,6 +983,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         error,
         clearError: () => setError(null),
         rows,
+        allowed,
         schema,
         schemaVersion,
 

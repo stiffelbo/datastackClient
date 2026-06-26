@@ -100,7 +100,7 @@ const BrigadeEmployeesForm = ({
         );
     }
 
-    function renderRCP(employee, status){
+    function renderRCP(status, employee){
         if(!employee.rcpConn) return;
         return (
             <Alert severity={status.severity} variant="outlined" sx={{ py: 0.25 }}>
@@ -118,7 +118,6 @@ const BrigadeEmployeesForm = ({
     function renderEmployee(employee) {
         const checked = selectedIds.includes(employee.id);
         const status = getRcpStatus(employee);
-
         return (
             <Box
                 key={employee.id}

@@ -70,7 +70,6 @@ export function brigadeEmployeesDto(data) {
 
     return data.map((item) => {
         const details = item?.details ?? {};
-
         return {
             id: details.id ?? item?.employee_id ?? null,
             brigadeId: item?.brigade_id ?? null,
@@ -85,7 +84,7 @@ export function brigadeEmployeesDto(data) {
             isSelected: data.length === 1,
             rcpStart: getRcpStart(details.rcp),
             rcpEnd: getRcpEnd(details.rcp),
-            rcpConn: getRcpEnd(details.rcpConn),
+            rcpConn: details.rcpConn,
             fteEnd: getFTEEnd(details.rcp, details.fte),
         };
     }).filter((item) => item.id);
