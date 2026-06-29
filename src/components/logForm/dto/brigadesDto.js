@@ -70,6 +70,7 @@ export function brigadeEmployeesDto(data) {
 
     return data.map((item) => {
         const details = item?.details ?? {};
+        console.log(details, details.rcpConn);
         return {
             id: details.id ?? item?.employee_id ?? null,
             brigadeId: item?.brigade_id ?? null,

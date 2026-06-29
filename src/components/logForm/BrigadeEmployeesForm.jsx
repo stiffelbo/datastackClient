@@ -101,6 +101,7 @@ const BrigadeEmployeesForm = ({
     }
 
     function renderRCP(status, employee){
+        console.log(employee, employee.rcpConn);
         if(!employee.rcpConn) return;
         return (
             <Alert severity={status.severity} variant="outlined" sx={{ py: 0.25 }}>
