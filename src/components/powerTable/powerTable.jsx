@@ -5,7 +5,6 @@ import useAutoColumns from './hooks/useAutoColumns';
 import { useRowAction } from './hooks/useRowAction';
 import usePresets from './hooks/usePresets';
 import useColumns from './hooks/useColumns';
-import useTableSettings from './hooks/useTableSettings';
 import useTableEditing from './hooks/useTableEditing';
 
 import { sortData } from './utils';
@@ -17,7 +16,6 @@ import FlatTable from './flatTable';
 import GroupedTableV from './groupedTableV';
 import TreeTableV from './treeTableV';
 
-import SettingsModal from './settingsModal';
 import PresetsModal from './presetsModal';
 import BulkFormModal from './bulkFormModal';
 import UploadModal from './uploadModal';
@@ -26,9 +24,11 @@ import AddFormModal from './addFormModal';
 const V_N_COUNT = 6000;
 
 const defaultTree = {
+  enabled: false,
+  canDisable: true,
   parentField: 'parent_id',
   idField: 'id',
-  rootValue: null,          // węzły root (parent_id === null)
+  rootValue: null, //jak jest null w parrent_id to znaczy ze wiersz jest rootem
 };
 
 const PowerTable = ({
@@ -43,7 +43,7 @@ const PowerTable = ({
   columnSchema = [],
   strictSchema = false,
   schemaVersion = 0,
-  treeConfig = null,
+  treeConfig = defaultTree,
   //Form Schemas
   addFormSchema = { label: '', schema: [] },
   addFormInitialValues = {},
@@ -77,14 +77,19 @@ const PowerTable = ({
     columnSchema.forEach(col => devColumnsLookup[col.field] = col);
   }
 
-  const presets = usePresets({ entityName, enablePresets });
+  const defaultTableConfig = {
+    rowHeight,
+    width,
+    height,
+    fontSize: '13px'
+  };
+
+  const presets = usePresets({ entityName, enablePresets, treeConfig, tableConfig : defaultTableConfig});
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({ data, dev: devColumnsLookup, enableEdit: !!onEdit, strictSchema: strictSchema });
 
   const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
   const editing = useTableEditing(onEdit);
-
-  const { settings, updateSettings } = useTableSettings(entityName);
 
   const [modalState, setModalState] = useState({ open: false, view: null });
 
@@ -93,15 +98,6 @@ const PowerTable = ({
 
   const renderModalContent = () => {
     switch (modalState.view) {
-      case 'settings':
-        return (
-          <SettingsModal
-            open={modalState.open}
-            onClose={closeModal}
-            settings={settings}
-            onSave={updateSettings}
-          />
-        );
       case 'presets':
         return (
           <PresetsModal
@@ -191,15 +187,14 @@ const PowerTable = ({
   const handleExport = () => {
     exportToXLSWithSchema(filteredData, columnsSchema.columns, `${entityName}.xlsx`);
   };
-  const isTree = !!treeConfig && !isGrouped; // jeśli chcesz, żeby grupowanie miało priorytet
+  const isTree = !!treeConfig.enabled && !isGrouped; // jeśli chcesz, żeby grupowanie miało priorytet
 
   const settingsWithTree = {
-    ...settings,
     isTree,
-    treeColumnWidth: settings?.treeColumnWidth ?? 140,
-    treeIndentStep: settings?.treeIndentStep ?? 2,
+    treeColumnWidth: 140,
+    treeIndentStep: 2,
     height,
-    rowHeight : settings?.rowHeight ?? rowHeight,
+    rowHeight : rowHeight,
     isVirtualized
   };
 
@@ -282,11 +277,7 @@ const PowerTable = ({
           maxWidth: '100%',
           overflow: 'hidden',
           bgcolor:
-            settings.background === 'light'
-              ? '#f9f9f9'
-              : settings.background === 'dark'
-                ? '#1e1e1e'
-                : 'transparent',
+            '#f9f9f9'
         }}
       >
         {/* Sidebar (opcjonalnie) */}

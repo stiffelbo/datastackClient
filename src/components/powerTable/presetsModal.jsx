@@ -10,7 +10,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
 // 👇 zamiast swoich funkcji, importujesz z usePresets.js
-import { normalizeOverrides, equalOverrides, importPresetFromFile, exportPresetToFile } from './hooks/usePresets';
+import { normalizeOverrides, equalOverrides, importPresetFromFile, exportPresetToFile } from './hooks/presetUtils';
 import PresetsList from './presetsUI/presetsList';
 import PresetForm from './presetsUI/presetForm';
 import PresetGroups from './presetsUI/presetGroups';
