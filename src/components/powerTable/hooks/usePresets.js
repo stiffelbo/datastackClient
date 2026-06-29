@@ -10,7 +10,9 @@ import {
   normalizeOverrides,
   equalOverrides,
   diffOverrides,
-} from './presetUtils.js';
+  createViewConfig,
+  normalizeViewConfig,
+} from './presetUtils';
 
 
 /** @typedef {{ field:string, visible?:boolean, width?:number, order?:number, groupBy?:boolean, aggregationFn?:any, sort?:{field:string,direction:'asc'|'desc'}|null }} ColumnOverride */
@@ -20,23 +22,31 @@ import {
 const KEY = (ns, entity) => `${ns || 'powerTable'}__columns__${entity}`;
 const nowISO = () => new Date().toISOString();
 
-const createEnvelope = (active = 'default') => ({
+const createEnvelope = (active = 'default', defaults = {}) => ({
   version: 1,
   updatedAt: nowISO(),
   activePreset: active,
+  viewConfig: createViewConfig(defaults),
   presets: { [active]: { columns: [] } },
 });
 
-const loadEnvelope = (ns, entity) => {
+const loadEnvelope = (ns, entity, defaults = {}) => {
   try {
     const raw = localStorage.getItem(KEY(ns, entity));
     if (!raw) return null;
+
     const env = JSON.parse(raw);
+
     if (!env.version) env.version = 1;
     if (!env.activePreset) env.activePreset = 'default';
     if (!env.presets) env.presets = { [env.activePreset]: { columns: [] } };
+
+    env.viewConfig = normalizeViewConfig(env.viewConfig, defaults);
+
     return env;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 };
 
 const saveEnvelope = (ns, entity, env) => {
@@ -44,14 +54,30 @@ const saveEnvelope = (ns, entity, env) => {
   localStorage.setItem(KEY(ns, entity), JSON.stringify(toSave));
 };
 
-function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true }) {
+function usePresets({
+  entityName,
+  storageNS = 'powerTable',
+  enablePresets = true,
+  treeConfig = {},
+  tableConfig = {},
+}) {
+
+  const defaults = useMemo(
+    () => ({ treeConfig, tableConfig }),
+    [treeConfig, tableConfig]
+  );
+
   const [env, setEnv] = useState(() => {
-    // 🔹 gdy presety wyłączone – nie dotykamy localStorage
     if (!enablePresets) {
-      return createEnvelope('default');
+      return createEnvelope('default', defaults);
     }
-    return loadEnvelope(storageNS, entityName) || createEnvelope('default');
+
+    return (
+      loadEnvelope(storageNS, entityName, defaults) ||
+      createEnvelope('default', defaults)
+    );
   });
+
   const [staged, setStaged] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [diff, setDiff] = useState(null);
@@ -59,6 +85,8 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
   const activeName = env.activePreset;
   const persistedActive = env.presets[activeName] || { columns: [] };
   const effective = staged ?? persistedActive;
+
+  const viewConfig = normalizeViewConfig(env.viewConfig, defaults);
 
   // 🚀 stage – bez useCallback, zawsze bierze aktualne dane
   const stage = (nextOverrides) => {
@@ -141,7 +169,9 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
       const fallback = prev.activePreset === name ? (Object.keys(rest)[0] || 'default') : prev.activePreset;
       const next = {
         ...prev,
-        presets: Object.keys(rest).length ? rest : createEnvelope('default').presets,
+        presets: Object.keys(rest).length
+          ? rest
+          : createEnvelope('default', defaults).presets,
         activePreset: fallback,
       };
       if (enablePresets) {
@@ -170,7 +200,7 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
   };
 
   const reset = () => {
-    const fresh = createEnvelope('default');
+    const fresh = createEnvelope('default', defaults);
     setEnv(fresh);
     if (enablePresets) {
       saveEnvelope(storageNS, entityName, fresh);
@@ -194,6 +224,8 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
         default: { columns: [] },
       };
 
+      next.viewConfig = createViewConfig(defaults);
+
       // jeśli aktualny preset był "default", też go aktywuj od nowa
       if (prev.activePreset === 'default') {
         next.activePreset = 'default';
@@ -209,11 +241,39 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
     setDiff(null);
   }, [entityName, storageNS]);
 
+  //Table Config
+
+  const setViewConfig = (nextViewConfig) => {
+    setEnv(prev => {
+      const next = {
+        ...prev,
+        viewConfig: normalizeViewConfig(nextViewConfig, defaults),
+      };
+
+      if (enablePresets) {
+        saveEnvelope(storageNS, entityName, next);
+      }
+
+      return next;
+    });
+  };
+
+  const setDefaultViewConfig = () => {
+    setViewConfig(createViewConfig(defaults));
+  };
+
   return {
     env,
     activeName,
     effective,
     persistedActive,
+
+    viewConfig,
+    tableConfig: viewConfig.table,
+    treeConfig: viewConfig.tree,
+    setViewConfig,
+    setDefaultViewConfig,
+
     list,
     dirty,
     diff,
@@ -226,7 +286,7 @@ function usePresets({ entityName, storageNS = 'powerTable', enablePresets = true
     rename,
     reset,
     getEnv,
-    reinitialize
+    reinitialize,
   };
 }
 

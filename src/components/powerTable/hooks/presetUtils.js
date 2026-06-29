@@ -1,3 +1,8 @@
+export {
+  createViewConfig,
+  normalizeViewConfig,
+} from './viewConfigUtils';
+
 // ======================================================
 // 🔁 Eksport i import presetów do/z pliku JSON
 // ======================================================

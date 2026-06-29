@@ -16,7 +16,7 @@ import FlatTable from './flatTable';
 import GroupedTableV from './groupedTableV';
 import TreeTableV from './treeTableV';
 
-import PresetsModal from './presetsModal';
+import SettingsModal from './settingsModal';
 import BulkFormModal from './bulkFormModal';
 import UploadModal from './uploadModal';
 import AddFormModal from './addFormModal';
@@ -79,12 +79,14 @@ const PowerTable = ({
 
   const defaultTableConfig = {
     rowHeight,
-    width,
-    height,
     fontSize: '13px'
   };
 
-  const presets = usePresets({ entityName, enablePresets, treeConfig, tableConfig : defaultTableConfig});
+  const presets = usePresets({ entityName, enablePresets, treeConfig, tableConfig: defaultTableConfig });
+  const viewConfig = presets.viewConfig;
+  const tableView = viewConfig.table;
+  const treeView = viewConfig.tree;
+
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({ data, dev: devColumnsLookup, enableEdit: !!onEdit, strictSchema: strictSchema });
 
@@ -100,7 +102,7 @@ const PowerTable = ({
     switch (modalState.view) {
       case 'presets':
         return (
-          <PresetsModal
+          <SettingsModal
             open={modalState.open}
             onClose={closeModal}
             presets={presets}
@@ -187,15 +189,21 @@ const PowerTable = ({
   const handleExport = () => {
     exportToXLSWithSchema(filteredData, columnsSchema.columns, `${entityName}.xlsx`);
   };
-  const isTree = !!treeConfig.enabled && !isGrouped; // jeśli chcesz, żeby grupowanie miało priorytet
 
-  const settingsWithTree = {
+  const isTree = !!treeView.enabled && !isGrouped;
+
+  const tableSettings = {
     isTree,
     treeColumnWidth: 140,
     treeIndentStep: 2,
     height,
-    rowHeight : rowHeight,
-    isVirtualized
+    rowHeight: tableView.rowHeight,
+    fontSize: tableView.fontSize,
+    backgroundColor: tableView.backgroundColor,
+    textColor: tableView.textColor,
+    px: tableView.px,
+    py: tableView.py,
+    isVirtualized,
   };
 
   const tableKey = `${entityName}:${schemaVersion}:${isGrouped ? 'g' : 'n'}:${isTree ? 't' : 'n'}`;
@@ -208,7 +216,7 @@ const PowerTable = ({
         data={filteredData}
         columnsSchema={columnsSchema}
         height={height}
-        settings={settingsWithTree}
+        settings={tableSettings}
         editing={editing}
         actionsApi={actionsApi}
       />
@@ -219,8 +227,8 @@ const PowerTable = ({
         data={sortedData}
         columnsSchema={columnsSchema}
         height={height}
-        settings={settingsWithTree}
-        treeConfig={treeConfig}
+        settings={tableSettings}
+        treeConfig={treeView}
         editing={editing}
         actionsApi={actionsApi}
       />
@@ -232,7 +240,7 @@ const PowerTable = ({
         columnsSchema={columnsSchema}
         isVirtualized={isVirtualized}
         height={height}
-        settings={settingsWithTree}
+        settings={tableSettings}
         editing={editing}
         actionsApi={actionsApi}
       />

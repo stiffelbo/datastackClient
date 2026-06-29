@@ -5,7 +5,7 @@ import {
   ListItemText,
 } from "@mui/material";
 
-const TYPES = [
+export const TYPES = [
   { key: "fk", label: "Klucz 🔗" },
   { key: "string", label: "Tekstowy 🅰️" },
   { key: "number", label: "Liczbowy 🔢" },

@@ -36,27 +36,25 @@ const renderBool = (v, fontSize) => {
         {nv ? "✓" : "✕"}
       </Typography>
       {/* optional textual hint */}
-      <Typography component="span" sx={{ color: "text.secondary", fontSize: "0.8em" }}>
+      <Typography component="span" sx={{ color: "text.secondary", fontSize: fontSize }}>
         {nv ? "Tak" : "Nie"}
       </Typography>
     </Box>
   );
 };
 
-const renderLink = (v) => {
-  return <a href={v}>{v}</a>
-}
-
 const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, onDoubleClick, editing }) => {
   const {
     sx = {},
-    densityPadding = "6px 10px",
     fontSize = "0.7rem",
+    rowHeight,
+    px = "6px",
+    py = "6px",
     ellipsis = false,
     align = column.align || "left",
   } = settings || {};
 
-  const isVirtual = settings.isVirtualized && settings.rowHeight;
+  const isVirtual = settings.isVirtualized && rowHeight;
 
   const virtualizedClampSx = isVirtual
     ? {
@@ -66,29 +64,35 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
     }
     : {};
 
+  const baseCellSx = {
+    height: rowHeight,
+    maxHeight: rowHeight,
+    fontSize,
+    lineHeight: 1.3,
+    verticalAlign: "middle",
+    textAlign: align,
+    overflow: "hidden",
+    ...sx,
+  };
+
+  const baseInnerSx = {
+    width: column.width,
+    minWidth: column.minWidth,
+    maxWidth: column.maxWidth,
+    px,
+    py,
+    fontSize,
+    lineHeight: 1.3,
+    textAlign: align,
+    overflowWrap: "break-word",
+    wordBreak: "break-word",
+    ...virtualizedClampSx,
+  };
+
   const formatter =
     column.formatterKey && valueFormatters[column.formatterKey]
       ? valueFormatters[column.formatterKey]
       : null;
-
-  const conditionalSx = useMemo(() => {
-    if (Array.isArray(column.displayRules)) {
-      for (const rule of column.displayRules) {
-        if (typeof rule.condition === "function" && rule.condition(value, params.row)) {
-          return rule.sx || {};
-        }
-      }
-    }
-    if (typeof column.styleFn === "function") {
-      try {
-        return column.styleFn(value, params) || {};
-      } catch (e) {
-        console.warn("styleFn error:", e);
-        return {};
-      }
-    }
-    return {};
-  }, [column, value, params]);
 
   // single click: if some other cell is editing -> stopEdit() to abort it
   const handleClick = (e) => {
@@ -129,31 +133,9 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         title={title}
         onClick={handleClick}
         onDoubleClick={onDoubleClick}
-        sx={{
-              height: settings.rowHeight,
-              maxHeight: settings.rowHeight,
-              paddingTop: 0,
-              paddingBottom: 0,
-              // opcjonalnie:
-              overflow: 'hidden',
-            }}
+        sx={baseCellSx}
       >
-        <Box sx={{
-          width: column.width,
-          minWidth: column.minWidth,
-          maxWidth: column.maxWidth,
-          padding: densityPadding,
-          fontSize,
-          lineHeight: 1.3,
-          textAlign: align,
-          overflowWrap: "break-word",
-          wordBreak: "break-word",
-          ...sx,
-          ...conditionalSx,
-          ...virtualizedClampSx,
-          height: settings.rowHeight,
-          maxHeight: settings.rowHeight,
-        }}>
+        <Box sx={baseInnerSx}>
           {String(displayValue)}
         </Box>
       </TableCell>
@@ -178,28 +160,21 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
 
       return (
         <TableCell
-          sx={{
-            height: settings.rowHeight,
-            maxHeight: settings.rowHeight,
-            width: column.width,
-            minWidth: column.minWidth,
-            maxWidth: column.maxWidth,
-            padding: densityPadding,
-            fontSize,
-            lineHeight: 1.3,
-            verticalAlign: "middle",
-            textAlign: align,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            ...sx,
-            ...conditionalSx,
-          }}
+          sx={baseCellSx}
           title={ellipsis && typeof rc === "string" ? rc : undefined}
           onClick={handleClick}
           onDoubleClick={onDoubleClick}
         >
-          {rc}
+          <Box
+            sx={{
+              ...baseInnerSx,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {rc}
+          </Box>
         </TableCell>
       );
     } catch (e) {
@@ -228,28 +203,14 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
     // render boolean stylized
     return (
       <TableCell
-        sx={{
-          height: settings.rowHeight,
-          maxHeight: settings.rowHeight,
-          width: column.width,
-          minWidth: column.minWidth,
-          maxWidth: column.maxWidth,
-          padding: densityPadding,
-          fontSize,
-          lineHeight: 1.3,
-          verticalAlign: "top",
-          textAlign: align,
-          whiteSpace: "normal", // <-- NAJWAŻNIEJSZE!
-          overflowWrap: "break-word", // <-- DLA PEWNOŚCI (albo wordBreak)
-          wordBreak: "break-word", // <-- DLA PEWNOŚCI
-          ...sx,
-          ...conditionalSx,
-        }}
+        sx={baseCellSx}
         title={typeof value === "string" && ellipsis ? String(value) : undefined}
         onClick={handleClick}
         onDoubleClick={onDoubleClick}
       >
-        {renderBool(value, fontSize)}
+        <Box sx={baseInnerSx}>
+          {renderBool(value, fontSize)}
+        </Box>
       </TableCell>
     );
   }
@@ -267,8 +228,8 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
   if (displayValue == null) displayValue = "";
 
   //Value as jsx
-  if(column.formatterKey === 'link'){
-    displayValue = <a href={displayValue} target="_blank">{displayValue}</a>
+  if (column.formatterKey === 'link') {
+    displayValue = <a href={displayValue} target="_blank" rel="noreferrer">{displayValue}</a>
   }
 
   title =
@@ -278,29 +239,16 @@ const DisplayCell = ({ value, column = {}, settings = {}, parent, params = {}, o
         ? String(displayValue)
         : undefined;
 
-  
+
 
   return (
     <TableCell
       title={title}
       onClick={handleClick}
       onDoubleClick={onDoubleClick}
+      sx={baseCellSx}
     >
-      <Box sx={{
-        width: column.width,
-        minWidth: column.minWidth,
-        maxWidth: column.maxWidth,
-        padding: densityPadding,
-        fontSize,
-        lineHeight: 1.3,
-        verticalAlign: "top",
-        textAlign: align,
-        overflowWrap: "break-word",
-        wordBreak: "break-word",
-        ...sx,
-        ...conditionalSx,
-        ...virtualizedClampSx
-      }}>
+      <Box sx={baseInnerSx}>
         {displayValue}
       </Box>
     </TableCell>

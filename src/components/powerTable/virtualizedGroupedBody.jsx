@@ -70,7 +70,7 @@ const VirtualizedGroupedBody = ({
           <td colSpan={visibleColumns.length} />
         </tr>
       )}
-
+      {/**** Group Row ****/}
       {visibleRows.map((item, idx) => {
         if (item.type === 'group') {
           const open = !groupCollapseState[item.path];
