@@ -25,17 +25,17 @@ export const createViewConfig = ({
     tableConfig = {},
 } = {}) => ({
     table: {
-        rowHeight: tableConfig.rowHeight ?? 45,
-        fontSize: tableConfig.fontSize ?? '13px',
-        pageSize: tableConfig.pageSize ?? 200,
+        rowHeight: tableConfig?.rowHeight ?? 45,
+        fontSize: tableConfig?.fontSize ?? '13px',
+        pageSize: tableConfig?.pageSize ?? 200,
     },
 
     tree: {
-        enabled: treeConfig.enabled ?? false,
-        canDisable: treeConfig.canDisable ?? true,
-        parentField: treeConfig.parentField ?? 'parent_id',
-        idField: treeConfig.idField ?? 'id',
-        rootValue: treeConfig.rootValue ?? null,
+        enabled: treeConfig?.enabled ?? false,
+        canDisable: treeConfig?.canDisable ?? true,
+        parentField: treeConfig?.parentField ?? 'parent_id',
+        idField: treeConfig?.idField ?? 'id',
+        rootValue: treeConfig?.rootValue ?? null,
     },
 });
 
