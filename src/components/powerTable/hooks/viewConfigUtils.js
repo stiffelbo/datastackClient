@@ -27,8 +27,6 @@ export const createViewConfig = ({
     table: {
         rowHeight: tableConfig.rowHeight ?? 45,
         fontSize: tableConfig.fontSize ?? '13px',
-        px: tableConfig.px ?? '6px',
-        py: tableConfig.py ?? '6px',
         pageSize: tableConfig.pageSize ?? 200,
     },
 
@@ -48,8 +46,6 @@ export const normalizeViewConfig = (value = {}, defaults = {}) => {
         table: {
             rowHeight: toNum(value.table?.rowHeight) ?? base.table.rowHeight,
             fontSize: toTrimmed(value.table?.fontSize) ?? base.table.fontSize,
-            px: toTrimmed(value.table?.px) ?? base.table.px,
-            py: toTrimmed(value.table?.py) ?? base.table.py,
             pageSize: toPageSize(value.table?.pageSize, base.table.pageSize),
         },
 

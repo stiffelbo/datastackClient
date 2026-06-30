@@ -443,6 +443,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setSchemaVersion(v => v + 1);
             setAllowed(true);
             setError(null);
+            setLoading(false);
 
             return processedSchema;
         } catch (err) {            

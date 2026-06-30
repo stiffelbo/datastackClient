@@ -8,6 +8,7 @@ import AppVersion from "./AppVersion";
 import LogForm from "../logForm/LogForm";
 
 import OperationLog from "./OperationalLog";
+import UsersPagesStack from "./UsersPagesStack";
 
 import {
     Box,
@@ -31,6 +32,7 @@ import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturi
 import InventoryIcon from '@mui/icons-material/Inventory';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import PersonIcon from '@mui/icons-material/Person';
+import WebIcon from '@mui/icons-material/Web';
 
 import { useRwd } from "../../context/RwdContext";
 
@@ -76,6 +78,12 @@ const NAV_ITEMS = [
         label: "Procesy użytkownika",
         icon: <AccountTreeIcon fontSize="small" color="secondary"/>,
         component: <UsersTechStack />,
+    },
+    {
+        key: "pages",
+        label: "Strony Użytkownika",
+        icon: <WebIcon fontSize="small" color="secondary"/>,
+        component: <UsersPagesStack />,
     },
     {
         key: "usage",
