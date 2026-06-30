@@ -76,7 +76,7 @@ const InputSelectObject = ({
             type: "option",
             key: `option-${option.id}`,
             value: option.id,
-            label: option.val,
+            label: option.val || option.label,
             title: option.title ?? "",
             disabled: option.disabled ?? false,
             meta: option.meta ?? {},

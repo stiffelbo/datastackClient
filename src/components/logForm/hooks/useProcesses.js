@@ -117,6 +117,7 @@ function getTasksFormSettings(selectedProcess) {
             qty: { show: false, disabled: true, initialValue: "", required: false },
             qtyGood: { show: false, disabled: true, initialValue: "", required: false },
             qtyScrap: { show: false, disabled: true, initialValue: "", required: false },
+            structures: { show: false, disabled: true, initialValue: "", required: true },
             remarks: { show: false, disabled: true, initialValue: "", required: false },
         };
     }
@@ -179,6 +180,15 @@ function getTasksFormSettings(selectedProcess) {
                 : "Opcjonalny komentarz do raportowanego wykonania.",
         },
 
+        structures: {
+            show: !isProduction,
+            disabled: false,
+            initialValue: selectedProcess.structureId,
+            required: true,
+            label: "Dział dla którego wykonywana praca",
+            description: "",
+        },
+
         meta: {
             isGeneral,
             requiresTasks: !isGeneral,
@@ -202,6 +212,7 @@ export default function useProcessForm({
     mode = "process"
 }) {
 
+    const [structureId, setStructureId] = useState(null);
     const [processId, setProcessId] = useState(initialProcessId);
     const [machineId, setMachineId] = useState("");
     const [isRework, setIsRework] = useState(Boolean(initialIsRework));
@@ -260,6 +271,11 @@ export default function useProcessForm({
         setIsRework(Boolean(initialIsRework));
         setMachineTime(getMachineTime(employeeTimeMap));
         setMaterialsReport(createMaterialsReport(materials));
+
+        if(selectedProcess){
+            console.log(selectedProcess);
+            setStructureId(selectedProcess.structureId);
+        }
     }, [
         processId,
         mode,
@@ -287,6 +303,9 @@ export default function useProcessForm({
             machineTime,
             materialsReport,
         });
+
+        
+
     }, [
         processId,
         selectedProcess,
@@ -299,6 +318,10 @@ export default function useProcessForm({
 
     function handleProcessChange(nextProcessId) {
         setProcessId(nextProcessId);
+    }
+
+    function handleStructureChange(nextStructureId) {
+        setStructureId(nextStructureId);
     }
 
     function handleMachineChange(nextMachineId) {
@@ -337,6 +360,7 @@ export default function useProcessForm({
     }
 
     function resetProcesses() {
+        setStructureId(null);
         setProcessId("");
         setMachineId("");
         setIsRework(Boolean(initialIsRework));
@@ -355,6 +379,7 @@ export default function useProcessForm({
 
     return {
         state: {
+            structureId,
             processId,
             machineId,
             isRework,
@@ -380,6 +405,7 @@ export default function useProcessForm({
         },
 
         actions: {
+            handleStructureChange,
             handleProcessChange,
             handleMachineChange,
             handleReworkChange,

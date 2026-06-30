@@ -461,7 +461,8 @@ const outputLogSchema = [
 
 export const makeControlTablesSchemas = ({
     employees,
-    selectedProcess
+    selectedProcess,
+    structures
 }) => {
 
     if (!selectedProcess) return null;
@@ -512,11 +513,8 @@ export const makeControlTablesSchemas = ({
             r => r.name ?? r.materialName ?? r.resourceName ?? r.label
         ),
 
-        structure_id: normalizeOptions(
-            [selectedProcess],
-            p => details.structureId,
-            p => details.structureName ?? ""
-        )
+        structure_id: normalizeOptions(structures, r => r.id, r => r.label)
+
     };
 
     const fillSchemaOptions = (schema = []) =>

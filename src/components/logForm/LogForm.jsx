@@ -11,6 +11,7 @@ import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 
 //DTO
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
+import {structuresDto} from "./dto/structuresDto";
 import { processesDto, buildMachineIndex, hasMachines } from "./dto/processesDto";
 import { logDraftVo } from "./dto/logDraftVo";
 import { makeControlTablesSchemas } from "./dto/makeControlTablesSchemas";
@@ -30,7 +31,6 @@ import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
 import SubmitLogForm from "./SubmitLogForm";
 import MachineIndexedForm from "./MachineIndexedForm";
-
 
 const LogForm = ({ initialTasks = [] }) => {
 
@@ -56,6 +56,7 @@ const LogForm = ({ initialTasks = [] }) => {
     const brigade = useBrigades({ initialTime: time, employees: brigadeEmployeesDto(user.brigades) });
 
     const processesAfterDTO = processesDto(user.processes);
+    const structures = structuresDto(user.structures);
     const canUseMachineMode = hasMachines(processesAfterDTO);
 
     const machineIndexedProcessesDTO =
@@ -100,6 +101,7 @@ const LogForm = ({ initialTasks = [] }) => {
             materialsReport: processes.state.materialsReport,
             materials: processes.data.materials,
             isRework: processes.state.isRework,
+            structureId: processes.state.structureId,
         },
         nonTaskRemarks: nonTaskRemarks
     });
@@ -126,7 +128,8 @@ const LogForm = ({ initialTasks = [] }) => {
 
         const tableSchemas = makeControlTablesSchemas({
             employees: brigade.state.brigades,
-            selectedProcess: processes.data.selectedProcess
+            selectedProcess: processes.data.selectedProcess,
+            structures
         });
 
         if (!tableSchemas) return null;
@@ -197,7 +200,7 @@ const LogForm = ({ initialTasks = [] }) => {
     const renderForm = () => {
         // 'process' | 'machine'
         if (reportMode === 'process') {
-            return <ProcessForm processes={processes} disabled={log.loading} />
+            return <ProcessForm processes={processes} disabled={log.loading} structures={structures}/>
         }
         if (reportMode === 'machine') {
             return <MachineIndexedForm processes={processes} settings={machineIndexedProcessesDTO} disabled={log.loading} />

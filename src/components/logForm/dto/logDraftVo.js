@@ -78,7 +78,7 @@ export function logDraftVo({
                         employee,
                         process: selectedProcess,
                         time: taskTime,
-                        structureId : selectedProcess?.structureId || null,
+                        structureId : processesState.structureId,
                         productionTaskId : null,
                         remarks: getTaskRemarks(allocation.task),
                         isRepair: isRework || getTaskIsRework(allocation.task),
@@ -106,7 +106,7 @@ export function logDraftVo({
                         process: selectedProcess,
                         machine: selectedMachine,
                         time: taskMachineTime,
-                        structureId : selectedProcess?.structureId || null,
+                        structureId : processesState.structureId,
                         productionTaskId : null,
                         isSetup: Boolean(selectedProcess?.is_setup),
                         isRepair: isRework || getTaskIsRework(allocation.task),
@@ -166,7 +166,7 @@ export function logDraftVo({
                                     machineTime?.date ??
                                     null,
 
-                                structureId : selectedProcess?.structureId || null,
+                                structureId : processesState.structureId,
                                 productionTaskId : null,
 
                                 isRepair: isRework || getTaskIsRework(qtyAllocation.task),
@@ -226,7 +226,7 @@ export function logDraftVo({
                                 machineTime?.date ??
                                 null,
 
-                            structureId: selectedProcess?.structureId,
+                            structureId: processesState.structureId,
                             productionTaskId : null,
 
                             movementType: movement.movementType,
@@ -252,7 +252,7 @@ export function logDraftVo({
                     employee,
                     process: selectedProcess,
                     time: employeeTime,
-                    structureId : selectedProcess?.structureId || null,
+                    structureId : processesState.structureId,
                     productionTaskId: null,
                     remarks: nonTaskRemarks,
                     isRepair: isRework,

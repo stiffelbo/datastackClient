@@ -4,10 +4,12 @@ import { Box, Stack } from "@mui/material";
 import ProcessSelector from "./ProcessSelector";
 import MachineUsageForm from "./MachineUsageForm";
 import MaterialsUsageTable from "./MaterialsUsageTable";
+import InputSelectObject from "./InputSelectObject";
 
 const ProcessForm = ({
     processes,
     disabled = false,
+    structures = []
 }) => {
     function renderMachineSection() {
         if (!processes?.computed?.hasMachines) return null;
@@ -37,6 +39,19 @@ const ProcessForm = ({
         );
     }
 
+    function renderStructureSelection(){
+        if(!processes.state.processId) return;
+        if(!processes.data.selectedProcess.is_production){
+            return <InputSelectObject 
+                name="Dział"
+                label="Dział dla którego była wykonana praca"
+                value={processes.state.structureId}
+                onChange={processes.actions.handleStructureChange}
+                selectOptions={structures}      
+            />;
+        }
+    }
+
     return (
         <Box
             sx={{
@@ -54,6 +69,7 @@ const ProcessForm = ({
                     isRework={processes.state.isRework}
                     onReworkChange={processes.actions.handleReworkChange}
                 />
+                {renderStructureSelection()}
 
                 {renderMachineSection()}
                 {renderMaterialsSection()}
