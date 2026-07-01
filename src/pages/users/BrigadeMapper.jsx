@@ -21,7 +21,7 @@ const BrigadeMapper = ({ id = null, data = {}, rwd }) => {
     const optionsEntity = useEntity({
         endpoint: '/employees/',
         entityName: 'BrygadaPracownicy',
-        query: { is_active: 'true' },
+        query: { 'for_brigades': 'true' },
         readOnly: true,
     });
     const options = optionsEntity.rows;
