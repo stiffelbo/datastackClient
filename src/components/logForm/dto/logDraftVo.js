@@ -24,7 +24,7 @@ export function logDraftVo({
     const materials = safeArray(processesState?.materials);
     const isRework = Boolean(processesState?.isRework);
 
-    const requiresTasks = Boolean(selectedProcess?.is_task);
+    const requiresTasks = !Boolean(selectedProcess?.is_general);
     const requiresQuantity = Boolean(selectedProcess?.requires_quantity);
     const requiresRemarks = Boolean(selectedProcess?.requires_remarks);
     const requiresMaterial = Boolean(selectedProcess?.requires_material);

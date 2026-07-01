@@ -4,6 +4,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
 import EmployeeDetails from './EmployeeDetails';
+import EmployeeRCP from './EmployeeRcp';
 
 const EmployeePage = ({
   entityName,
@@ -23,8 +24,14 @@ const EmployeePage = ({
     {
       key: 'employee_details',
       label: 'Szczegóły',
-      pageKey: 'employee_details', // klucz z rejestru stron
+      pageKey: 'employee_details',
       component: <EmployeeDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard}/>,
+    },
+    {
+      key: 'employee_rcp',
+      label: 'RCP',
+      pageKey: 'employee_rcp',
+      component: <EmployeeRCP id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard}/>,
     },
   ];
 
