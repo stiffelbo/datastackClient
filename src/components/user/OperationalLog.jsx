@@ -5,6 +5,7 @@ import useEntity from '../../hooks/useEntity';
 
 // Comp
 import PowerTable from '../powerTable/powerTable';
+import RenderLink from '../../pages/jiraIssue/RenderLink';
 
 const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = ""}) => {
 
@@ -17,6 +18,16 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = 
     }, [entityName, endpoint, issueId]);
 
     const effectiveHeight = height ? height : window.innerHeight - 166;
+
+    const columns = entity.schema.columns.map(c => {
+            if(c?.field === "issue_id") {
+                return {...c, renderCell : params => <RenderLink id={params.value} title="otwórz w nowym oknie" />}
+            }else{
+                return c;
+            }
+        });
+    
+    entity.schema.columns = columns;
 
     return (
         <PowerTable
