@@ -44,7 +44,7 @@ const ProcessResources = ({ id = null, data = {}, rwd = defaultRwd }) => {
         resource_id: mappedItemData.id,
         quantity_per_unit: 1,
         unit: 'szt',
-        is_required: true,
+        is_required: false,
         can_waste: false,
         notes: '',
       };

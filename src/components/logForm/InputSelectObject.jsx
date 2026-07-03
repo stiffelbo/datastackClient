@@ -30,6 +30,7 @@ const InputSelectObject = ({
     fullWidth = true,
     size = "small",
     disabled = false,
+    tooltipContent = ProcessTooltipContent,
 }) => {
     const sortedOptions = [...selectOptions].sort((a, b) => {
         const taskGroupCompare =
@@ -144,6 +145,16 @@ const InputSelectObject = ({
                         );
                     }
 
+                    const optionContent = (
+                        <Box sx={{ width: "100%" }}>
+                            <Typography variant="body2">
+                                {item.label}
+                            </Typography>
+                        </Box>
+                    );
+
+                    const TooltipContent = tooltipContent;
+
                     return (
                         <MenuItem
                             key={item.key}
@@ -151,18 +162,18 @@ const InputSelectObject = ({
                             disabled={item.disabled}
                             sx={{ pl: 4 }}
                         >
-                            <Tooltip
-                                title={<ProcessTooltipContent option={item} />}
-                                placement="right"
-                                arrow
-                                enterDelay={400}
-                            >
-                                <Box sx={{ width: "100%" }}>
-                                    <Typography variant="body2">
-                                        {item.label}
-                                    </Typography>
-                                </Box>
-                            </Tooltip>
+                            {TooltipContent ? (
+                                <Tooltip
+                                    title={<TooltipContent option={item} />}
+                                    placement="right"
+                                    arrow
+                                    enterDelay={400}
+                                >
+                                    {optionContent}
+                                </Tooltip>
+                            ) : (
+                                optionContent
+                            )}
                         </MenuItem>
                     );
                 })}

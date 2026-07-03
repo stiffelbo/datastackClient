@@ -32,7 +32,7 @@ import RenderLogErrors from "./RenderLogErrors";
 import SubmitLogForm from "./SubmitLogForm";
 import MachineIndexedForm from "./MachineIndexedForm";
 
-const LogForm = ({ initialTasks = [] }) => {
+const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
 
     const auth = useAuth();
     const { user } = auth;
@@ -240,13 +240,11 @@ const LogForm = ({ initialTasks = [] }) => {
                 />
                 {renderModeToggle()}
                 {renderForm()}
-                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
-
                 <RenderLogErrors errors={draft.meta.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
-
             </Grid>
 
             <Grid item size={6}>
+                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
                     selectedIds={brigade.computed.selectedIds}
