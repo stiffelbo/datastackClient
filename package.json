@@ -1,7 +1,7 @@
 {
   "name": "datastackclient",
   "private": true,
-  "version": "2.6.5",
+  "version": "2.6.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "@mui/x-data-grid": "^8.5.3",
     "@tinymce/tinymce-react": "^6.3.0",
     "axios": "^1.10.0",
+    "dayjs": "^1.11.21",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.2",
