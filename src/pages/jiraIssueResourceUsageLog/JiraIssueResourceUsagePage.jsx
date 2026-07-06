@@ -2,7 +2,7 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Comp
-import JiraIssueResourceUsageDetails from './JiraIssueResourceUsageDetails';
+import JiraIssueResourceUsageSplit from './JiraIssueResourceUsageSplit';
 
 const Page = ({
   entityName,
@@ -19,10 +19,10 @@ const Page = ({
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
     {
-      key: 'details',
-      label: 'Edytuj',
-      pageKey: 'jiraissue.details', // klucz z rejestru stron
-      component: <JiraIssueResourceUsageDetails id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard}/>,
+      key: 'split',
+      label: 'Podziel',
+      pageKey: 'jiraissue.split', // klucz z rejestru stron
+      component: <JiraIssueResourceUsageSplit id={id} row={row} rwd={rwd} entity={entity} dashboard={dashboard}/>,
     },  
   ];
 
