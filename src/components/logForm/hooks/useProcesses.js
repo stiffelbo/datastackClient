@@ -117,6 +117,7 @@ function getTasksFormSettings(selectedProcess) {
             qty: { show: false, disabled: true, initialValue: "", required: false },
             qtyGood: { show: false, disabled: true, initialValue: "", required: false },
             qtyScrap: { show: false, disabled: true, initialValue: "", required: false },
+            dividerFactor: { show: false, disabled: true, initialValue: "", required: false },
             structures: { show: false, disabled: true, initialValue: "", required: true },
             remarks: { show: false, disabled: true, initialValue: "", required: false },
         };
@@ -166,6 +167,17 @@ function getTasksFormSettings(selectedProcess) {
             label: `Ilość odpadów: ${selectedProcess.finishedProduct ?? ""}`,
             description: isProductionReporting
                 ? "Liczba braków lub odpadów powstałych podczas procesu produkcyjnego."
+                : "Pole dostępne tylko dla procesów produkcyjnych.",
+        },
+
+        dividerFactor: {
+            show: isProductionReporting,
+            disabled: !isProductionReporting,
+            initialValue: "",
+            required: false,
+            label: `Waga dla podziału materiałów i czasu pracy`,
+            description: isProductionReporting
+                ? "Waga dla podziału materiałów i czasu pracy"
                 : "Pole dostępne tylko dla procesów produkcyjnych.",
         },
 

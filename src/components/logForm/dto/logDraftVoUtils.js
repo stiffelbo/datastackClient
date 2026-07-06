@@ -44,35 +44,58 @@ export function splitAmountByRatio(amount, ratio) {
     return round4(Number(amount || 0) * Number(ratio || 0));
 }
 
-export function getTaskAllocations(tasks = [], { requiresQuantity = true } = {}) {
+export function getTaskDividerFactor(task) {
+    return Number(task?.report?.dividerFactor || 0);
+}
+
+export function getTaskAllocations(
+    tasks = [],
+    {
+        requiresQuantity = true,
+        useDividerFactor = false,
+    } = {}
+) {
     const normalized = safeArray(tasks)
         .map((task) => {
             const rawQuantity = getTaskQuantity(task);
+            const rawDividerFactor = getTaskDividerFactor(task);
+
+            const quantity = requiresQuantity
+                ? rawQuantity
+                : rawQuantity > 0
+                    ? rawQuantity
+                    : 1;
+
+            const allocationBase = useDividerFactor
+                ? rawDividerFactor
+                : quantity;
 
             return {
                 task,
-                quantity: requiresQuantity
-                    ? rawQuantity
-                    : rawQuantity > 0
-                        ? rawQuantity
-                        : 1,
+                quantity,
+                dividerFactor: rawDividerFactor,
+                allocationBase,
             };
         })
-        .filter((item) => item.quantity > 0);
+        .filter((item) => item.allocationBase > 0);
 
-    const totalQuantity = normalized.reduce(
-        (sum, item) => sum + item.quantity,
+    const totalAllocationBase = normalized.reduce(
+        (sum, item) => sum + item.allocationBase,
         0
     );
 
-    if (!totalQuantity) return [];
+    if (!totalAllocationBase) return [];
 
     return normalized.map((item) => ({
         task: item.task,
         quantity: item.quantity,
-        ratio: item.quantity / totalQuantity,
+        dividerFactor: item.dividerFactor,
+        ratio: item.allocationBase / totalAllocationBase,
     }));
 }
+
+
+
 export function roundToStepDown(value, step) {
     const normalizedStep = Number(step || 0);
     const normalizedValue = Number(value || 0);
@@ -379,13 +402,49 @@ export function buildValidation({
         }
     });
 
-    if(selectedProcess?.requires_material){
-        const sumQty = Object.keys(materialsReport).reduce((acc, key)=>{
+    if (selectedProcess?.requires_material) {
+        const sumQty = Object.keys(materialsReport).reduce((acc, key) => {
             return acc += +materialsReport[key]?.qty || 0;
         }, 0);
 
-        if (sumQty === 0){
+        if (sumQty === 0) {
             errors.push("Proces wymaga minimum jednej wypełnionej Ilosci materiału");
+        }
+    }
+
+    const isProduction = Boolean(selectedProcess?.is_production);
+
+    const hasMaterialQty = Object.keys(materialsReport).some((key) => {
+        const row = materialsReport[key];
+
+        return (
+            Number(row?.qty || 0) > 0 ||
+            Number(row?.wasteQty || 0) > 0
+        );
+    });
+
+    if (isProduction && hasMaterialQty && selectedTasks.length) {
+        const missingGoodOrScrapQty = selectedTasks.some((task) => {
+            const quantityGood = Number(task?.report?.quantityGood || 0);
+            const quantityScrap = Number(task?.report?.quantityScrap || 0);
+
+            return quantityGood + quantityScrap <= 0;
+        });
+
+        if (missingGoodOrScrapQty) {
+            errors.push(
+                "Dla produkcji z materiałem każdy task musi mieć uzupełnioną ilość dobrą lub brak."
+            );
+        }
+    }
+
+    if (isProduction && selectedTasks.length) {
+        const missingDividerFactor = selectedTasks.some(
+            (task) => Number(task?.report?.dividerFactor || 0) <= 0
+        );
+
+        if (missingDividerFactor) {
+            errors.push("Dla produkcji każdy task musi mieć uzupełniony współczynnik podziału.");
         }
     }
 

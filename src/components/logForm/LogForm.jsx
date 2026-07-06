@@ -10,6 +10,7 @@ import useProcesses from "./hooks/useProcesses";
 import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 
 //DTO
+import {makeUid} from './dto/jiraTaskDto';
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
 import {structuresDto} from "./dto/structuresDto";
 import { processesDto, buildMachineIndex, hasMachines } from "./dto/processesDto";

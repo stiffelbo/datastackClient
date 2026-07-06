@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import {
     Box,
     Stack,
@@ -104,6 +104,7 @@ function renderEmpty(emptyMessage, requiresTasks, nonTaskRemarks, setNonTaskRema
 
 function getTaskKey(task) {
     return (
+        task?.genId ??
         task?.id ??
         task?.jiraId ??
         task?.jira_id ??
@@ -118,6 +119,7 @@ function renderTaskInputs(task, tasksHook, settings = {}) {
     const quantity = task?.report?.quantity ?? settings.qty?.initialValue ?? "";
     const quantityGood = task?.report?.quantityGood ?? settings.qtyGood?.initialValue ?? "";
     const quantityScrap = task?.report?.quantityScrap ?? settings.qtyScrap?.initialValue ?? "";
+    const dividerFactor = task?.report?.dividerFactor ?? settings.dividerFactor?.initialValue ?? "";
     const remarks = task?.report?.remarks ?? settings.remarks?.initialValue ?? "";
 
     return (
@@ -161,6 +163,19 @@ function renderTaskInputs(task, tasksHook, settings = {}) {
                         step={1}
                         onChange={(value) =>
                             tasksHook.actions.setTaskQuantityScrap(task, value)
+                        }
+                    />
+                )}
+                {settings.dividerFactor?.show && (
+                    <InputNumber
+                        label={settings.dividerFactor.label}
+                        value={dividerFactor}
+                        required={settings.dividerFactor.required}
+                        disabled={settings.dividerFactor.disabled}
+                        min={0}
+                        step={0.01}
+                        onChange={(value) =>
+                            tasksHook.actions.setTaskDividerFactor(task, value)
                         }
                     />
                 )}
@@ -235,8 +250,8 @@ export default function SelectedTasksList({
     const isEmpty = !Array.isArray(taskItems) || taskItems.length === 0;
     const shouldPulse = isEmpty && requiresTasks;
 
-    useEffect(()=>{
-        if(nonTaskRemarks && requiresTasks){
+    useEffect(() => {
+        if (nonTaskRemarks && requiresTasks) {
             setNonTaskRemarks('');
         }
     }, [requiresTasks, isEmpty, nonTaskRemarks]);

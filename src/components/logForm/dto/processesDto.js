@@ -38,6 +38,9 @@ export function processesDto(data) {
             ? item.resources.map((material) => {
                   const materialDetails = material?.details ?? {};
                   const unit = materialDetails.unit ?? null;
+                  const step = materialDetails.unit_step ?? null;
+
+                  console.log(materialDetails);
 
                   return {
                       id: materialDetails.id ?? null,
@@ -45,7 +48,7 @@ export function processesDto(data) {
                       active: toBool(materialDetails.is_active),
                       required: toBool(material?.is_required),
                       unit,
-                      step: getMaterialStep(unit),
+                      step: step ?? getMaterialStep(unit),
                       canWaste: toBool(material?.can_waste)
                   };
               })

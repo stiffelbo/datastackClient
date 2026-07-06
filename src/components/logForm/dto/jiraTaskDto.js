@@ -1,3 +1,11 @@
+export const makeUid = (len = 8) => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from(
+    { length: len },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
+};
+
 /**
  * @typedef {Object} JiraTaskDto
  * @property {number|null} id
@@ -16,34 +24,35 @@
  * @returns {JiraTaskDto|null}
  */
 export function mapJiraTaskResponseToDto(response) {
-    if (!response || typeof response !== 'object') return null;
+  if (!response || typeof response !== 'object') return null;
 
-    const raw = { ...response.existing, ...response.data };
-    
-    if (!raw) return null;
+  const raw = { ...(response.existing ?? {}), ...(response.data ?? {}) };
 
-    return {
-        id: response.id ?? raw.id ?? null,
-        jiraId: raw.jira_id ?? null,
-        jiraKey: raw.jira_key ?? null,
-        jiraParentKey: raw.jira_parent_key ?? null,
-        jiraUrl: raw.jira_url ?? null,
-        jiraProjectLabel: raw.jira_project_label ?? null,
-        name: raw.name ?? null,
-        status: raw.status ?? null,
-        productGroup: raw.product_group ?? null,
-        qtyToDo: raw.qty_to_do ?? null,
-        //placeholder for reports
-        report : {
-            quantity: null, //ilosc procesów wykonanych
-            quantityGood: null, //ilosc wyrobów dobrych
-            quantityScrap: null, //ilosc odpadów wyprodukowanych
-            is_rework: false,
-            remarks: '',
-            requiresQuantity: true,
-            requiresRemarks: false,
-        },
-    };
+  return {
+    genId: raw.genId ?? response.genId ?? makeUid(),
+
+    id: response.id ?? raw.id ?? null,
+    jiraId: raw.jira_id ?? raw.jiraId ?? null,
+    jiraKey: raw.jira_key ?? raw.jiraKey ?? null,
+    jiraParentKey: raw.jira_parent_key ?? raw.jiraParentKey ?? null,
+    jiraUrl: raw.jira_url ?? raw.jiraUrl ?? null,
+    jiraProjectLabel: raw.jira_project_label ?? raw.jiraProjectLabel ?? null,
+    name: raw.name ?? null,
+    status: raw.status ?? null,
+    productGroup: raw.product_group ?? raw.productGroup ?? null,
+    qtyToDo: raw.qty_to_do ?? raw.qtyToDo ?? null,
+
+    report: raw.report ?? {
+      quantity: null,
+      quantityGood: null,
+      quantityScrap: null,
+      dividerFactor : null,
+      is_rework: false,
+      remarks: '',
+      requiresQuantity: true,
+      requiresRemarks: false,
+    },
+  };
 }
 
 /**

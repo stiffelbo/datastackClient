@@ -5,7 +5,7 @@ import { outputLogDto } from "./outputLogDto";
 
 import { normalizeTimeValue } from "../utils";
 import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate, splitTimeSequentially } from "./logDraftVoUtils";
-
+import { splitProductionTimeSequentially, getProductionTaskAllocations, getGoodScrapRatios } from './productionAlocations';
 
 export function logDraftVo({
     tasksState = [],
@@ -24,14 +24,17 @@ export function logDraftVo({
     const materials = safeArray(processesState?.materials);
     const isRework = Boolean(processesState?.isRework);
 
+    const isProduction = Boolean(selectedProcess?.is_production);
     const requiresTasks = !Boolean(selectedProcess?.is_general);
     const requiresQuantity = Boolean(selectedProcess?.requires_quantity);
     const requiresRemarks = Boolean(selectedProcess?.requires_remarks);
     const requiresMaterial = Boolean(selectedProcess?.requires_material);
 
-    const allocations = getTaskAllocations(selectedTasks, {
-        requiresQuantity,
-    });
+    const allocations = isProduction
+        ? getProductionTaskAllocations(selectedTasks)
+        : getTaskAllocations(selectedTasks, { requiresQuantity });
+
+    console.log(allocations, isProduction, selectedTasks);
 
     const validation = buildValidation({
         selectedTasks,
@@ -60,10 +63,9 @@ export function logDraftVo({
         selectedEmployees.forEach((employee) => {
             const employeeTime = normalizeTimeValue(employee.time);
 
-            const employeeTaskTimes = splitTimeSequentially(
-                employeeTime,
-                allocations
-            );
+            const employeeTaskTimes = isProduction
+                ? splitProductionTimeSequentially(employeeTime, allocations)
+                : splitTimeSequentially(employeeTime, allocations);
 
             employeeTaskTimes.forEach(({ allocation, time: taskTime }) => {
                 const employeeQtyAllocations = allocateIntegerAcrossPeople(
@@ -78,8 +80,8 @@ export function logDraftVo({
                         employee,
                         process: selectedProcess,
                         time: taskTime,
-                        structureId : processesState.structureId,
-                        productionTaskId : null,
+                        structureId: processesState.structureId,
+                        productionTaskId: null,
                         remarks: getTaskRemarks(allocation.task),
                         isRepair: isRework || getTaskIsRework(allocation.task),
                         qty: requiresQuantity
@@ -92,13 +94,12 @@ export function logDraftVo({
 
         // 2. MACHINES
         if (selectedMachine) {
-            const machineTaskTimes = splitTimeSequentially(
-                machineTime,
-                allocations
-            );
+            const machineTaskTimes = isProduction
+                ? splitProductionTimeSequentially(machineTime, allocations)
+                : splitTimeSequentially(machineTime, allocations);
 
             machineTaskTimes.forEach(({ allocation, time: taskMachineTime }) => {
-                
+
                 machineLogs.push(
                     machineLogDto({
                         task: allocation.task,
@@ -106,8 +107,8 @@ export function logDraftVo({
                         process: selectedProcess,
                         machine: selectedMachine,
                         time: taskMachineTime,
-                        structureId : processesState.structureId,
-                        productionTaskId : null,
+                        structureId: processesState.structureId,
+                        productionTaskId: null,
                         isSetup: Boolean(selectedProcess?.is_setup),
                         isRepair: isRework || getTaskIsRework(allocation.task),
                         remarks: getTaskRemarks(allocation.task),
@@ -124,65 +125,182 @@ export function logDraftVo({
 
             const materialStep = Number(material.step || row.step || 0.01);
 
-            const materialMovements = [
-                {
-                    movementType: "produkcja",
-                    qty: Number(row.qty || 0),
-                },
-                {
-                    movementType: "odpad",
-                    qty: Number(row.wasteQty || 0),
-                },
-            ];
+            if (isProduction) {
+                // 3A. PRODUKCJA: row.qty dzielone po taskach, potem na dobre/braki
+                const productionQty = Number(row.qty || 0);
 
-            materialMovements.forEach((movement) => {
-                if (!movement.qty) return;
-
-                const qtyAllocations = allocateAmountByRatioWithStep(
-                    movement.qty,
-                    allocations,
-                    materialStep
-                );
-
-                qtyAllocations.forEach((qtyAllocation) => {
-                    const employeeAllocations = allocateAmountAcrossPeopleWithStep(
-                        qtyAllocation.allocatedAmount,
-                        selectedEmployees,
+                if (productionQty) {
+                    const taskQtyAllocations = allocateAmountByRatioWithStep(
+                        productionQty,
+                        allocations,
                         materialStep
                     );
 
-                    employeeAllocations.forEach((employeeAllocation) => {
-                        if (!employeeAllocation.allocatedAmount) return;
+                    taskQtyAllocations.forEach((qtyAllocation) => {
+                        const { goodRatio, scrapRatio } = getGoodScrapRatios(qtyAllocation.task);
 
-                        materialLogs.push(
-                            materialLogDto({
-                                task: qtyAllocation.task,
-                                employee: employeeAllocation.employee,
-                                process: selectedProcess,
-                                material,
+                        const internalMovements = [
+                            {
+                                movementType: "produkcja",
+                                qty: qtyAllocation.allocatedAmount * goodRatio,
+                            },
+                            {
+                                movementType: "brak",
+                                qty: qtyAllocation.allocatedAmount * scrapRatio,
+                            },
+                        ];
 
-                                workDate:
-                                    employeeAllocation.employee?.time?.date ??
-                                    machineTime?.date ??
-                                    null,
+                        internalMovements.forEach((movement) => {
+                            if (!movement.qty) return;
 
-                                structureId : processesState.structureId,
-                                productionTaskId : null,
+                            const employeeAllocations = allocateAmountAcrossPeopleWithStep(
+                                movement.qty,
+                                selectedEmployees,
+                                materialStep
+                            );
 
-                                isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                isPlan: false,
-                                isActive: true,
+                            employeeAllocations.forEach((employeeAllocation) => {
+                                if (!employeeAllocation.allocatedAmount) return;
 
-                                movementType: movement.movementType,
-                                qty: employeeAllocation.allocatedAmount,
+                                materialLogs.push(
+                                    materialLogDto({
+                                        task: qtyAllocation.task,
+                                        employee: employeeAllocation.employee,
+                                        process: selectedProcess,
+                                        material,
 
-                                remarks:
-                                    getTaskRemarks(qtyAllocation.task),
-                            })
+                                        workDate:
+                                            employeeAllocation.employee?.time?.date ??
+                                            machineTime?.date ??
+                                            null,
+
+                                        structureId: processesState.structureId,
+                                        productionTaskId: null,
+
+                                        isRepair: isRework || getTaskIsRework(qtyAllocation.task),
+                                        isPlan: false,
+                                        isActive: true,
+
+                                        movementType: movement.movementType,
+                                        qty: employeeAllocation.allocatedAmount,
+
+                                        remarks: getTaskRemarks(qtyAllocation.task),
+                                    })
+                                );
+                            });
+                        });
+                    });
+                }
+
+                // 3B. ODPAD MATERIAŁOWY: row.wasteQty dzielone tylko po factorze
+                const wasteQty = Number(row.wasteQty || 0);
+
+                if (wasteQty) {
+                    const wasteAllocations = allocateAmountByRatioWithStep(
+                        wasteQty,
+                        allocations,
+                        materialStep
+                    );
+
+                    wasteAllocations.forEach((qtyAllocation) => {
+                        const employeeAllocations = allocateAmountAcrossPeopleWithStep(
+                            qtyAllocation.allocatedAmount,
+                            selectedEmployees,
+                            materialStep
                         );
+
+                        employeeAllocations.forEach((employeeAllocation) => {
+                            if (!employeeAllocation.allocatedAmount) return;
+
+                            materialLogs.push(
+                                materialLogDto({
+                                    task: qtyAllocation.task,
+                                    employee: employeeAllocation.employee,
+                                    process: selectedProcess,
+                                    material,
+
+                                    workDate:
+                                        employeeAllocation.employee?.time?.date ??
+                                        machineTime?.date ??
+                                        null,
+
+                                    structureId: processesState.structureId,
+                                    productionTaskId: null,
+
+                                    isRepair: isRework || getTaskIsRework(qtyAllocation.task),
+                                    isPlan: false,
+                                    isActive: true,
+
+                                    movementType: "odpad",
+                                    qty: employeeAllocation.allocatedAmount,
+
+                                    remarks: getTaskRemarks(qtyAllocation.task),
+                                })
+                            );
+                        });
+                    });
+                }
+            } else {
+                const materialMovements = [
+                    {
+                        movementType: "produkcja",
+                        qty: Number(row.qty || 0),
+                    },
+                    {
+                        movementType: "odpad",
+                        qty: Number(row.wasteQty || 0),
+                    },
+                ];
+
+                materialMovements.forEach((movement) => {
+                    if (!movement.qty) return;
+
+                    const qtyAllocations = allocateAmountByRatioWithStep(
+                        movement.qty,
+                        allocations,
+                        materialStep
+                    );
+
+                    qtyAllocations.forEach((qtyAllocation) => {
+                        const employeeAllocations = allocateAmountAcrossPeopleWithStep(
+                            qtyAllocation.allocatedAmount,
+                            selectedEmployees,
+                            materialStep
+                        );
+
+                        employeeAllocations.forEach((employeeAllocation) => {
+                            if (!employeeAllocation.allocatedAmount) return;
+
+                            materialLogs.push(
+                                materialLogDto({
+                                    task: qtyAllocation.task,
+                                    employee: employeeAllocation.employee,
+                                    process: selectedProcess,
+                                    material,
+
+                                    workDate:
+                                        employeeAllocation.employee?.time?.date ??
+                                        machineTime?.date ??
+                                        null,
+
+                                    structureId: processesState.structureId,
+                                    productionTaskId: null,
+
+                                    isRepair: isRework || getTaskIsRework(qtyAllocation.task),
+                                    isPlan: false,
+                                    isActive: true,
+
+                                    movementType: movement.movementType,
+                                    qty: employeeAllocation.allocatedAmount,
+
+                                    remarks:
+                                        getTaskRemarks(qtyAllocation.task),
+                                })
+                            );
+                        });
                     });
                 });
-            });
+            }
         });
 
         // 4. OUTPUTS
@@ -227,7 +345,7 @@ export function logDraftVo({
                                 null,
 
                             structureId: processesState.structureId,
-                            productionTaskId : null,
+                            productionTaskId: null,
 
                             movementType: movement.movementType,
                             qty: employeeAllocation.allocatedAmount,
@@ -252,7 +370,7 @@ export function logDraftVo({
                     employee,
                     process: selectedProcess,
                     time: employeeTime,
-                    structureId : processesState.structureId,
+                    structureId: processesState.structureId,
                     productionTaskId: null,
                     remarks: nonTaskRemarks,
                     isRepair: isRework,
@@ -261,7 +379,7 @@ export function logDraftVo({
             );
         });
     }
-    
+
     const preview = buildPreview({
         selectedProcess,
         selectedMachine,

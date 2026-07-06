@@ -1,17 +1,12 @@
 import { useState, useEffect } from 'react';
-import { mapJiraTaskResponseToDto } from '../dto/jiraTaskDto';
+import { mapJiraTaskResponseToDto, makeUid } from '../dto/jiraTaskDto';
 
-function getTaskIdentity(task) {
-    if (!task || typeof task !== 'object') return null;
+export function getTaskIdentity(task) {
+    return task?.genId ?? null;
+}
 
-    return (
-        task.jira_id ??
-        task.id ??
-        task.jira_key ??
-        task.key ??
-        task.task ??
-        null
-    );
+export function getTaskSourceIdentity(task) {
+    return task?.jiraId ?? task?.id ?? task?.jiraKey ?? null;
 }
 
 function getTaskKey(task) {
@@ -27,11 +22,15 @@ function getTaskKey(task) {
 
 function normalizeTask(task) {
     if (!task || typeof task !== 'object') return null;
-    if (Object.prototype.hasOwnProperty(task, 'report')) {
-        return task;
-    } else {
-        return mapJiraTaskResponseToDto({ data: task });
+
+    if (Object.prototype.hasOwnProperty.call(task, 'report')) {
+        return {
+            ...task,
+            genId: task.genId ?? makeUid(),
+        };
     }
+
+    return mapJiraTaskResponseToDto({ data: task });
 }
 
 function updateTaskReport(taskOrId, patch) {
@@ -104,6 +103,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         return tasks.some((task) => getTaskIdentity(task) === identity);
     }
 
+
     function getTaskById(taskOrId) {
         const identity =
             typeof taskOrId === 'object'
@@ -118,18 +118,16 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
     function addTask(task) {
         if (!task || typeof task !== "object") return;
 
-        const identity = getTaskIdentity(task);
-        if (!identity) return;
+        const normalized = normalizeTask(task);
+        if (!normalized) return;
 
-        setTasks((prev) => {
-            const exists = prev.some(
-                (item) => getTaskIdentity(item) === identity
-            );
-
-            if (exists) return prev;
-
-            return [...prev, task];
-        });
+        setTasks((prev) => [
+            ...prev,
+            {
+                ...normalized,
+                genId: makeUid(),
+            },
+        ]);
     }
 
     function removeTask(taskOrId) {
@@ -194,6 +192,10 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
 
     function setTaskRequiresRemarks(taskOrId, requiresRemarks) {
         updateTaskReport(taskOrId, { requiresRemarks });
+    }
+
+    function setTaskDividerFactor(taskOrId, dividerFactor) {
+        updateTaskReport(taskOrId, { dividerFactor });
     }
 
     function clearTasks() {
@@ -273,6 +275,11 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
         0
     );
 
+    const totalDividerFactor = tasks.reduce(
+        (sum, task) => sum + Number(task?.report?.dividerFactor || 0),
+        0
+    );
+
     return {
         state: {
             tasks,
@@ -292,6 +299,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
             setTaskRemarks,
             setTaskRequiresQuantity,
             setTaskRequiresRemarks,
+            setTaskDividerFactor,
             moveTask,
             moveTaskUp,
             moveTaskDown,
@@ -310,6 +318,7 @@ export default function useTasks({ onSubmit, initialValues = {}, requiresQuantit
             totalQuantity,
             totalQuantityGood,
             totalQuantityScrap,
+            totalDividerFactor
         },
     };
 }

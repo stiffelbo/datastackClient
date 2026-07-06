@@ -29,7 +29,7 @@ const Dashboard = () => {
 
     return (
         <BaseEntityDashboard
-            renderPage={(props) => <ProcessPage entity={entity} entityName={entityName} {...props} />}
+            renderPage={null}
             entity={entity}
             entityName={entityName}
             basePath={basePath}
