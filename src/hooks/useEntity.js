@@ -982,13 +982,13 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         // state
         loading,
         error,
-        clearError: () => setError(null),
         rows,
         allowed,
         schema,
         schemaVersion,
-
+        
         // handlers (return null for handlers that are disabled)
+        clearError: () => setError(null),
         create: resolveEndpoint('create') ? create : null,
         updateField: resolveEndpoint('updateField') ? updateField : null,
         update: resolveEndpoint('update') ? update : null,

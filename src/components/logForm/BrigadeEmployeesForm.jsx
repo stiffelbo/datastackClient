@@ -3,6 +3,7 @@ import React from "react";
 import { Alert, Box, Checkbox, Chip, FormControlLabel, Stack, Typography } from "@mui/material";
 
 import TimeForm from "./TimeForm";
+import LogsTodayProgress from "./LogsTodayProgress";
 
 import { normalizeTimeValue } from "./utils";
 
@@ -172,6 +173,8 @@ const BrigadeEmployeesForm = ({
                     </Stack>
 
                     {renderRCP(status, employee)}
+
+                    <LogsTodayProgress data={employee.logsToday} hours={employee.hours}/>
 
                     <TimeForm
                         value={employee.time}

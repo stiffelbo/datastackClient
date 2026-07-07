@@ -85,7 +85,9 @@ export function brigadeEmployeesDto(data) {
             rcpStart: getRcpStart(details.rcp),
             rcpEnd: getRcpEnd(details.rcp),
             rcpConn: details.rcpConn,
+            logsToday: details.logsToday,
             fteEnd: getFTEEnd(details.rcp, details.fte),
+            hours: 8 * + details.fte,
         };
     }).filter((item) => item.id);
 }

@@ -40,8 +40,6 @@ export function processesDto(data) {
                   const unit = materialDetails.unit ?? null;
                   const step = materialDetails.unit_step ?? null;
 
-                  console.log(materialDetails);
-
                   return {
                       id: materialDetails.id ?? null,
                       name: materialDetails.name ?? null,

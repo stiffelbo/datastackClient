@@ -46,21 +46,6 @@ const UserDropdown = () => {
                         {userData.first_name} {userData.last_name} 
                         <Chip label={userData.role} size="small" variant="outlined" color="default" sx={{ ml: 1 }} />
                     </Typography>        
-                    
-                    {processes && processes.length > 0 && (
-                        <Button
-                            component={RouterLink}
-                            to="/userlogform"
-                            startIcon={<AccessAlarmIcon />}
-                            variant="text"
-                            color='default'
-                            size="small"
-                            sx={{ mt: 1 }}
-                            onClick={handleMenuClose}
-                        >
-                            Logi użytkownika
-                        </Button>
-                    )}
 
                     <Button
                         component={RouterLink}
