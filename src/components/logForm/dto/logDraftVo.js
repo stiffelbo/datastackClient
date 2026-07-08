@@ -34,8 +34,6 @@ export function logDraftVo({
         ? getProductionTaskAllocations(selectedTasks)
         : getTaskAllocations(selectedTasks, { requiresQuantity });
 
-    console.log(allocations, isProduction, selectedTasks);
-
     const validation = buildValidation({
         selectedTasks,
         selectedEmployees,

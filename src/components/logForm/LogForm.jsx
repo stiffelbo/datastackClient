@@ -245,7 +245,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
             </Grid>
 
             <Grid item size={6}>
-                <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />
+                {brigade.state.brigades.length > 1 && <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />}
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
                     selectedIds={brigade.computed.selectedIds}

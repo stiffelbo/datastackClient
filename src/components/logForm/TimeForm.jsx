@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Box, Stack, TextField, Typography } from "@mui/material";
+import React from "react";
+import { Box, Stack, TextField } from "@mui/material";
 
 // --- utils
 
@@ -14,6 +14,7 @@ function parseHHMM(value) {
     const h = Number(value.slice(0, 2));
     const m = Number(value.slice(2, 4));
 
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
     if (h > 23 || m > 59) return null;
 
     return h + m / 60;
@@ -40,6 +41,22 @@ function calcDuration(start, end) {
     return Number(diff.toFixed(2));
 }
 
+function normalizeDuration(value) {
+    if (value === "" || value === null || value === undefined) {
+        return "";
+    }
+
+    return value;
+}
+
+function toPayloadDuration(value) {
+    if (value === "" || value === null || value === undefined) {
+        return null;
+    }
+
+    return Number(value);
+}
+
 // --- component
 
 const TimeForm = ({
@@ -47,114 +64,100 @@ const TimeForm = ({
     onChange,
     label = "Czas",
     dense = true,
-    sx={},
+    disabled = false,
+    sx = {},
 }) => {
-    const [date, setDate] = useState(value.date ?? todayISO());
-    const [start, setStart] = useState(value.start ?? "");
-    const [end, setEnd] = useState(value.end ?? "");
-    const [duration, setDuration] = useState(value.duration ?? "");
+    const date = value?.date ?? todayISO();
+    const start = value?.start ?? "";
+    const end = value?.end ?? "";
+    const duration = normalizeDuration(value?.duration);
 
-    const lastValueRef = useRef(null);
+    const size = dense ? "small" : "medium";
+    const borderColor = duration ? "divider" : "error.main";
 
-    //Props Value effect
-    useEffect(() => {
-        const nextDate = value?.date ?? todayISO();
-        const nextStart = value?.start ?? "";
-        const nextEnd = value?.end ?? "";
-        const nextDuration = value?.duration ?? "";
+    console.count('Time Form render');
 
-        setDate((prev) => (prev === nextDate ? prev : nextDate));
-        setStart((prev) => (prev === nextStart ? prev : nextStart));
-        setEnd((prev) => (prev === nextEnd ? prev : nextEnd));
-        setDuration((prev) => {
-            const prevNormalized = prev === null || prev === undefined ? "" : String(prev);
-            const nextNormalized =
-                nextDuration === null || nextDuration === undefined ? "" : String(nextDuration);
-
-            return prevNormalized === nextNormalized ? prev : nextDuration;
-        });
-    }, [value?.date, value?.start, value?.end, value?.duration]);
-
-    //Converter
-    useEffect(() => {
+    const emit = (patch) => {
         if (typeof onChange !== "function") return;
 
         const nextValue = {
             date,
             start,
             end,
-            duration: duration === "" ? null : Number(duration),
+            duration,
+            ...patch,
         };
 
-        const prevValue = lastValueRef.current;
+        onChange({
+            ...nextValue,
+            duration: toPayloadDuration(nextValue.duration),
+        });
+    };
 
-        const isSame =
-            prevValue &&
-            prevValue.date === nextValue.date &&
-            prevValue.start === nextValue.start &&
-            prevValue.end === nextValue.end &&
-            prevValue.duration === nextValue.duration;
-
-        if (isSame) return;
-
-        lastValueRef.current = nextValue;
-
-        onChange(nextValue);
-    }, [date, start, end, duration, onChange]);
-
-    // handlers
+    const handleDate = (v) => {
+        emit({
+            date: v,
+        });
+    };
 
     const handleStart = (v) => {
-        setStart(v);
+        const nextDuration =
+            v.length === 4 && end.length === 4
+                ? calcDuration(v, end)
+                : duration;
 
-        if (v.length === 4 && end.length === 4) {
-            setDuration(calcDuration(v, end));
-        }
+        emit({
+            start: v,
+            duration: nextDuration,
+        });
     };
 
     const handleEnd = (v) => {
-        setEnd(v);
+        const nextDuration =
+            start.length === 4 && v.length === 4
+                ? calcDuration(start, v)
+                : duration;
 
-        if (start.length === 4 && v.length === 4) {
-            setDuration(calcDuration(start, v));
-        }
+        emit({
+            end: v,
+            duration: nextDuration,
+        });
     };
 
     const handleDuration = (v) => {
-        setDuration(v);
-
         const s = parseHHMM(start);
-        if (s != null && v !== "") {
-            const e = s + Number(v);
-            setEnd(formatHHMM(e));
-        }
+
+        const nextEnd =
+            s != null && v !== ""
+                ? formatHHMM(s + Number(v))
+                : end;
+
+        emit({
+            duration: v,
+            end: nextEnd,
+        });
     };
-
-    const size = dense ? "small" : "medium";
-
-    const borderColor = duration ? "divider" : "error.main";
 
     return (
         <Box
             sx={{
                 border: "1px solid",
-                borderColor: borderColor,
+                borderColor,
                 borderRadius: 2,
                 p: 2,
                 ...sx,
             }}
         >
-            <Stack spacing={2} direction={"row"}>
-                {/* DATA */}
+            <Stack spacing={2} direction="row">
                 <TextField
                     type="date"
                     size={size}
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => handleDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
                     fullWidth
+                    disabled={disabled}
                 />
-
 
                 <TextField
                     label="Start"
@@ -164,6 +167,7 @@ const TimeForm = ({
                     onChange={(e) => handleStart(e.target.value)}
                     placeholder="0800"
                     fullWidth
+                    disabled={disabled}
                 />
 
                 <TextField
@@ -174,10 +178,9 @@ const TimeForm = ({
                     onChange={(e) => handleEnd(e.target.value)}
                     placeholder="1630"
                     fullWidth
+                    disabled={disabled}
                 />
 
-
-                {/* DURATION */}
                 <TextField
                     label="Czas (h)"
                     type="number"
@@ -186,6 +189,7 @@ const TimeForm = ({
                     onChange={(e) => handleDuration(e.target.value)}
                     inputProps={{ step: 0.25, min: 0 }}
                     fullWidth
+                    disabled={disabled}
                 />
             </Stack>
         </Box>

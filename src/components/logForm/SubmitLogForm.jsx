@@ -13,7 +13,8 @@ const SubmitLogForm = ({ dataErrors = null, logError = null, result = null, load
             return <Button
                 color='primary'
                 onClick={onSave}
-                size="small"
+                size="large"
+                variant="contained"
                 sx={{ ...sx }}
             >
                 Wprowadź dane
