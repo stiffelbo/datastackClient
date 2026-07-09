@@ -66,7 +66,7 @@ export function processesDto(data) {
             is_production: toBool(details.is_production),
             requires_quantity: toBool(details.requires_quantity),
             requires_remarks: toBool(details.requires_remarks),
-            requires_material: (+details.requires_material + +materials.length) > 1,
+            requires_material: (+details.requires_material * +materials.length) > 1,
             finishedProduct: details.process_product_name,
             machines,
             materials,

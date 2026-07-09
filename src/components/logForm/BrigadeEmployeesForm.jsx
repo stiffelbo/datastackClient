@@ -1,11 +1,12 @@
 import React from "react";
 
-import { Alert, Box, Checkbox, Chip, FormControlLabel, Stack, Typography } from "@mui/material";
+import { Alert, Box, Checkbox, Chip, FormControlLabel, Stack, Typography, Link } from "@mui/material";
 
 import TimeForm from "./TimeForm";
 import LogsTodayProgress from "./LogsTodayProgress";
 
 import { normalizeTimeValue } from "./utils";
+
 
 function getEmployeeTime(employee, employeeTimes, initialTime) {
     const fromMap = employeeTimes?.[employee.id];
@@ -101,8 +102,8 @@ const BrigadeEmployeesForm = ({
         );
     }
 
-    function renderRCP(status, employee){
-        if(!employee.rcpConn) return;
+    function renderRCP(status, employee) {
+        if (!employee.rcpConn) return;
         return (
             <Alert severity={status.severity} variant="outlined" sx={{ py: 0.25 }}>
                 <Stack spacing={0.75}>
@@ -110,6 +111,15 @@ const BrigadeEmployeesForm = ({
                         <Chip size="small" label={`Start: ${formatTime(employee.rcpStart)}`} />
                         <Chip size="small" label={`Plan: ${formatTime(employee.fteEnd)}`} />
                         <Chip size="small" label={`Koniec: ${formatTime(employee.rcpEnd)}`} />
+                        <Link
+                            component="a"
+                            href="http://192.168.1.200/ochrona/odbij.php"
+                            target="_blank"
+                            rel="noreferrer"
+                            underline="none"   
+                        >
+                            <Chip size="small" label="RCP Heimdall ->" color="info"/>
+                        </Link>
                     </Stack>
                 </Stack>
             </Alert>
@@ -174,7 +184,7 @@ const BrigadeEmployeesForm = ({
 
                     {renderRCP(status, employee)}
 
-                    <LogsTodayProgress data={employee.logsToday} hours={employee.hours}/>
+                    <LogsTodayProgress data={employee.logsToday} hours={employee.hours} />
 
                     <TimeForm
                         value={employee.time}
@@ -184,6 +194,7 @@ const BrigadeEmployeesForm = ({
                         label="Czas"
                         dense
                         disabled={disabled || !checked}
+                        showStartStop={true}
                     />
                 </Stack>
             </Box>

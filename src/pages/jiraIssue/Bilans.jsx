@@ -3,7 +3,8 @@ import React, {useMemo} from 'react';
 import {
   Box,
   Paper,
-  Typography
+  Typography,
+  Alert
 } from '@mui/material';
 
 import PowerTable from '../../components/powerTable/powerTable';
@@ -108,7 +109,9 @@ const Summary = ({ summary }) => {
 
 const Bilans = ({ data, rwd }) => {
   const costData = useMemo(() => generateCostRows(), [data?.id]);
-  console.log(costData);
+  return <Alert severity="info">
+    W opracowniu
+  </Alert>
   // ====== RENDER ======
   return (
     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, height: '100%' }}>

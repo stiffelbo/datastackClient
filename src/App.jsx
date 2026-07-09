@@ -45,6 +45,7 @@ import RCPEmployees from './pages/rcpEmployees/RCPEmployees';
 import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
 import NotFound from './pages/NotFound';
+import Sys from './pages/sys/Sys';
 
 //DevOnly
 import Comments from './pages/_dev/Comments';
@@ -66,6 +67,7 @@ const App = () => (
       >
         <Route index element={<Home />} />
                 
+        <Route path="sys" element={<Sys />} />
         <Route path="clockify" element={<Clockify />} />
         <Route path="salaries" element={<Salaries />} />
 

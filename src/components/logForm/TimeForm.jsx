@@ -1,11 +1,16 @@
 import React from "react";
-import { Box, Stack, TextField } from "@mui/material";
+import { Box, Stack, TextField, Button } from "@mui/material";
 
 // --- utils
 
 function todayISO() {
     const d = new Date();
     return d.toISOString().slice(0, 10);
+}
+
+function nowHHMM() {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, "0")}${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function parseHHMM(value) {
@@ -62,9 +67,9 @@ function toPayloadDuration(value) {
 const TimeForm = ({
     value = {},
     onChange,
-    label = "Czas",
     dense = true,
     disabled = false,
+    showStartStop = false,
     sx = {},
 }) => {
     const date = value?.date ?? todayISO();
@@ -74,8 +79,6 @@ const TimeForm = ({
 
     const size = dense ? "small" : "medium";
     const borderColor = duration ? "divider" : "error.main";
-
-    console.count('Time Form render');
 
     const emit = (patch) => {
         if (typeof onChange !== "function") return;
@@ -95,9 +98,7 @@ const TimeForm = ({
     };
 
     const handleDate = (v) => {
-        emit({
-            date: v,
-        });
+        emit({ date: v });
     };
 
     const handleStart = (v) => {
@@ -138,6 +139,28 @@ const TimeForm = ({
         });
     };
 
+    const handleStartNow = () => {
+        emit({
+            date: todayISO(),
+            start: nowHHMM(),
+            end: "",
+            duration: "",
+        });
+    };
+
+    const handleStopNow = () => {
+        const nextEnd = nowHHMM();
+        const nextDuration =
+            start.length === 4
+                ? calcDuration(start, nextEnd)
+                : "";
+
+        emit({
+            end: nextEnd,
+            duration: nextDuration,
+        });
+    };
+
     return (
         <Box
             sx={{
@@ -148,49 +171,75 @@ const TimeForm = ({
                 ...sx,
             }}
         >
-            <Stack spacing={2} direction="row">
-                <TextField
-                    type="date"
-                    size={size}
-                    value={date}
-                    onChange={(e) => handleDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    fullWidth
-                    disabled={disabled}
-                />
+            <Stack spacing={1.5}>
+                <Stack spacing={2} direction="row">
+                    <TextField
+                        type="date"
+                        size={size}
+                        value={date}
+                        onChange={(e) => handleDate(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        fullWidth
+                        disabled={disabled}
+                    />
 
-                <TextField
-                    label="Start"
-                    value={start}
-                    size={size}
-                    inputProps={{ maxLength: 4 }}
-                    onChange={(e) => handleStart(e.target.value)}
-                    placeholder="0800"
-                    fullWidth
-                    disabled={disabled}
-                />
+                    <TextField
+                        label="Start"
+                        value={start}
+                        size={size}
+                        inputProps={{ maxLength: 4 }}
+                        onChange={(e) => handleStart(e.target.value)}
+                        placeholder="0800"
+                        fullWidth
+                        disabled={disabled}
+                    />
 
-                <TextField
-                    label="Koniec"
-                    value={end}
-                    size={size}
-                    inputProps={{ maxLength: 4 }}
-                    onChange={(e) => handleEnd(e.target.value)}
-                    placeholder="1630"
-                    fullWidth
-                    disabled={disabled}
-                />
+                    <TextField
+                        label="Koniec"
+                        value={end}
+                        size={size}
+                        inputProps={{ maxLength: 4 }}
+                        onChange={(e) => handleEnd(e.target.value)}
+                        placeholder="1630"
+                        fullWidth
+                        disabled={disabled}
+                    />
 
-                <TextField
-                    label="Czas (h)"
-                    type="number"
-                    size={size}
-                    value={duration}
-                    onChange={(e) => handleDuration(e.target.value)}
-                    inputProps={{ step: 0.25, min: 0 }}
-                    fullWidth
-                    disabled={disabled}
-                />
+                    <TextField
+                        label="Czas (h)"
+                        type="number"
+                        size={size}
+                        value={duration}
+                        onChange={(e) => handleDuration(e.target.value)}
+                        inputProps={{ step: 0.25, min: 0 }}
+                        fullWidth
+                        disabled={disabled}
+                    />
+                </Stack>
+
+                {showStartStop && (
+                    <Stack direction="row" spacing={1}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                            onClick={handleStartNow}
+                            disabled={disabled}
+                        >
+                            Start
+                        </Button>
+
+                        <Button
+                            variant="contained"
+                            size="small"
+                            fullWidth
+                            onClick={handleStopNow}
+                            disabled={disabled || !start}
+                        >
+                            Stop
+                        </Button>
+                    </Stack>
+                )}
             </Stack>
         </Box>
     );

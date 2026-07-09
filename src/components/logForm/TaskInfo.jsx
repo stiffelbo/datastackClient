@@ -13,6 +13,8 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
+import RenderLink from '../../pages/jiraIssue/RenderLink';
+
 export default function TaskInfo({
     data,
     onAdd = null,
@@ -139,6 +141,16 @@ export default function TaskInfo({
                             >
                                 Link do Jiry
                             </Link>
+                        ) : null}
+
+                        {data.id ? (
+                            <RenderLink
+                                id={data.id}
+                                title={"Strona z danymi"}
+                                sx={{width: '100px', maxWidth: '100px'}}
+                                tabName='reports'
+                            />
+                        
                         ) : null}
 
                         {data.name ? (

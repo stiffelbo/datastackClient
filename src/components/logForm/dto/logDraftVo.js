@@ -125,6 +125,7 @@ export function logDraftVo({
 
             if (isProduction) {
                 // 3A. PRODUKCJA: row.qty dzielone po taskach, potem na dobre/braki
+                // bez dzielenia na pracowników
                 const productionQty = Number(row.qty || 0);
 
                 if (productionQty) {
@@ -140,85 +141,32 @@ export function logDraftVo({
                         const internalMovements = [
                             {
                                 movementType: "produkcja",
-                                qty: qtyAllocation.allocatedAmount * goodRatio,
+                                qty: roundToStepDown(
+                                    qtyAllocation.allocatedAmount * goodRatio,
+                                    materialStep
+                                ),
                             },
                             {
                                 movementType: "brak",
-                                qty: qtyAllocation.allocatedAmount * scrapRatio,
+                                qty: roundToStepDown(
+                                    qtyAllocation.allocatedAmount * scrapRatio,
+                                    materialStep
+                                ),
                             },
                         ];
 
                         internalMovements.forEach((movement) => {
                             if (!movement.qty) return;
 
-                            const employeeAllocations = allocateAmountAcrossPeopleWithStep(
-                                movement.qty,
-                                selectedEmployees,
-                                materialStep
-                            );
-
-                            employeeAllocations.forEach((employeeAllocation) => {
-                                if (!employeeAllocation.allocatedAmount) return;
-
-                                materialLogs.push(
-                                    materialLogDto({
-                                        task: qtyAllocation.task,
-                                        employee: employeeAllocation.employee,
-                                        process: selectedProcess,
-                                        material,
-
-                                        workDate:
-                                            employeeAllocation.employee?.time?.date ??
-                                            machineTime?.date ??
-                                            null,
-
-                                        structureId: processesState.structureId,
-                                        productionTaskId: null,
-
-                                        isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                        isPlan: false,
-                                        isActive: true,
-
-                                        movementType: movement.movementType,
-                                        qty: employeeAllocation.allocatedAmount,
-
-                                        remarks: getTaskRemarks(qtyAllocation.task),
-                                    })
-                                );
-                            });
-                        });
-                    });
-                }
-
-                // 3B. ODPAD MATERIAŁOWY: row.wasteQty dzielone tylko po factorze
-                const wasteQty = Number(row.wasteQty || 0);
-
-                if (wasteQty) {
-                    const wasteAllocations = allocateAmountByRatioWithStep(
-                        wasteQty,
-                        allocations,
-                        materialStep
-                    );
-
-                    wasteAllocations.forEach((qtyAllocation) => {
-                        const employeeAllocations = allocateAmountAcrossPeopleWithStep(
-                            qtyAllocation.allocatedAmount,
-                            selectedEmployees,
-                            materialStep
-                        );
-
-                        employeeAllocations.forEach((employeeAllocation) => {
-                            if (!employeeAllocation.allocatedAmount) return;
-
                             materialLogs.push(
                                 materialLogDto({
                                     task: qtyAllocation.task,
-                                    employee: employeeAllocation.employee,
+                                    employee: selectedEmployees[0] ?? null,
                                     process: selectedProcess,
                                     material,
 
                                     workDate:
-                                        employeeAllocation.employee?.time?.date ??
+                                        selectedEmployees[0]?.time?.date ??
                                         machineTime?.date ??
                                         null,
 
@@ -229,13 +177,55 @@ export function logDraftVo({
                                     isPlan: false,
                                     isActive: true,
 
-                                    movementType: "odpad",
-                                    qty: employeeAllocation.allocatedAmount,
+                                    movementType: movement.movementType,
+                                    qty: movement.qty,
 
                                     remarks: getTaskRemarks(qtyAllocation.task),
                                 })
                             );
                         });
+                    });
+                }
+
+                // 3B. ODPAD MATERIAŁOWY: row.wasteQty dzielone tylko po factorze
+                // bez dzielenia na pracowników
+                const wasteQty = Number(row.wasteQty || 0);
+
+                if (wasteQty) {
+                    const wasteAllocations = allocateAmountByRatioWithStep(
+                        wasteQty,
+                        allocations,
+                        materialStep
+                    );
+
+                    wasteAllocations.forEach((qtyAllocation) => {
+                        if (!qtyAllocation.allocatedAmount) return;
+
+                        materialLogs.push(
+                            materialLogDto({
+                                task: qtyAllocation.task,
+                                employee: selectedEmployees[0] ?? null,
+                                process: selectedProcess,
+                                material,
+
+                                workDate:
+                                    selectedEmployees[0]?.time?.date ??
+                                    machineTime?.date ??
+                                    null,
+
+                                structureId: processesState.structureId,
+                                productionTaskId: null,
+
+                                isRepair: isRework || getTaskIsRework(qtyAllocation.task),
+                                isPlan: false,
+                                isActive: true,
+
+                                movementType: "odpad",
+                                qty: qtyAllocation.allocatedAmount,
+
+                                remarks: getTaskRemarks(qtyAllocation.task),
+                            })
+                        );
                     });
                 }
             } else {
@@ -291,8 +281,7 @@ export function logDraftVo({
                                     movementType: movement.movementType,
                                     qty: employeeAllocation.allocatedAmount,
 
-                                    remarks:
-                                        getTaskRemarks(qtyAllocation.task),
+                                    remarks: getTaskRemarks(qtyAllocation.task),
                                 })
                             );
                         });

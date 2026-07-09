@@ -243,6 +243,9 @@ const TableSettings = ({ presets, columns }) => {
                                 ))}
                             </Select>
                         </FormControl>
+                        <Stack direction="row" gap={1}>
+                            
+                        </Stack>
                     </Stack>
                 </Box>
                 <Divider flexItem orientation="vertical" />

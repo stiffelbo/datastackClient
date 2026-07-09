@@ -4,10 +4,12 @@ import React from "react";
 import { Box, Typography, Chip } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', title = null, nullTitle = '', icon = null, sx={}}){
+export default function RenderLink ({id, baseUrl = 'http://192.168.1.135/datastack/jiraissuesingle/', tabName = '', title = null, nullTitle = '', icon = null, sx={}}){
     if(!id && !baseUrl) return;
     
     let url = `${baseUrl}${id}`;
+    if(tabName) url = url + '/' + tabName;
+    
     if(!id){
         return <Chip 
             color="warning"

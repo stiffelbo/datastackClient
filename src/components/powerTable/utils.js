@@ -386,6 +386,90 @@ export const exportToXLSWithSchema = (
   XLSX.writeFile(workbook, filename);
 };
 
+export const exportToJSONWithSchema = (
+  data = [],
+  columns = [],
+  filename = 'export.json',
+  options = {
+    mode: 'both', // 'raw' | 'display' | 'both'
+    includeSchema: true,
+    pretty: true
+  }
+) => {
+  if (!Array.isArray(data) || data.length === 0) {
+    toast.warning('Brak danych do przetworzenia dla pliku JSON');
+    return;
+  }
+
+  const visibleColumns = columns
+    .filter(col => col.type !== 'action')
+    .filter(col => !col.hidden)
+    .sort((a, b) => a.order - b.order);
+
+  const resolveDisplayValue = (row, col) => {
+    let value = row?.[col.field];
+
+    if ((col?.type === 'fk' || col?.input === 'select') && col?.optionsMap) {
+      if (value == null || value === '') return '';
+      return col.optionsMap[value] ?? col.optionsMap[String(value)] ?? value;
+    }
+
+    return value ?? null;
+  };
+
+  const rows = data.map(row => {
+    const output = {};
+
+    visibleColumns.forEach(col => {
+      const rawValue = row?.[col.field] ?? null;
+      const displayValue = resolveDisplayValue(row, col);
+
+      if (options.mode === 'raw') {
+        output[col.field] = rawValue;
+      } else if (options.mode === 'display') {
+        output[col.field] = displayValue;
+      } else {
+        output[col.field] = rawValue;
+
+        if (
+          (col?.type === 'fk' || col?.input === 'select') &&
+          col?.optionsMap
+        ) {
+          output[`${col.field}_label`] = displayValue;
+        }
+      }
+    });
+
+    return output;
+  });
+
+  const payload = options.includeSchema
+    ? {
+        exported_at: new Date().toISOString(),
+        row_count: rows.length,
+        columns: visibleColumns.map(col => ({
+          field: col.field,
+          headerName: col.headerName,
+          type: col.type ?? null,
+          input: col.input ?? null,
+          hidden: !!col.hidden,
+          order: col.order ?? null
+        })),
+        rows
+      }
+    : rows;
+
+  const json = JSON.stringify(payload, null, options.pretty ? 2 : 0);
+  const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(link.href);
+};
+
 
 export const computeViewSelection = ({ data = [], selectedIds = [] }) => {
   const viewIds = Array.isArray(data) ? data.map((r) => (r.row ? r.row.id : r.id)) : [];
