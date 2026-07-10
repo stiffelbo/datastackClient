@@ -43,10 +43,11 @@ const PageUser = ({ id = null, data = {}, rwd = defaultRwd }) => {
         page_id: id,
         user_id: mappedItemData.id,
         can_view: true,
-        can_add: true,
-        can_edit: true,
-        can_delete: true,
+        can_add: false,
+        can_edit: false,
+        can_delete: false,
         is_admin: false,
+        data_access_level: 1,
         is_preset: false,
         // reszta auto null
       };
