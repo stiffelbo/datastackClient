@@ -62,6 +62,50 @@ function toPayloadDuration(value) {
     return Number(value);
 }
 
+function validateTimeValue(value) {
+    const errors = {};
+
+    if (!value.date) {
+        errors.date = "Data jest wymagana";
+    }
+
+    if (value.start !== "" && parseHHMM(value.start) === null) {
+        errors.start = "Nieprawidłowy format godziny startu";
+    }
+
+    if (value.end !== "" && parseHHMM(value.end) === null) {
+        errors.end = "Nieprawidłowy format godziny końca";
+    }
+
+    if (
+        value.duration !== "" &&
+        value.duration !== null &&
+        value.duration !== undefined
+    ) {
+        const durationNumber = Number(value.duration);
+
+        if (!Number.isFinite(durationNumber) || durationNumber < 0) {
+            errors.duration = "Nieprawidłowy czas";
+        }
+    }
+
+    const parsedStart = parseHHMM(value.start);
+    const parsedEnd = parseHHMM(value.end);
+
+    if (
+        parsedStart !== null &&
+        parsedEnd !== null &&
+        parsedEnd < parsedStart
+    ) {
+        errors.end = "Godzina końca nie może być wcześniejsza niż start";
+    }
+
+    return {
+        valid: Object.keys(errors).length === 0,
+        errors,
+    };
+}
+
 // --- component
 
 const TimeForm = ({
@@ -76,6 +120,8 @@ const TimeForm = ({
     const start = value?.start ?? "";
     const end = value?.end ?? "";
     const duration = normalizeDuration(value?.duration);
+    const valid = value?.valid;
+    const errors = value?.errors || {};
 
     const size = dense ? "small" : "medium";
     const borderColor = duration ? "divider" : "error.main";
@@ -91,9 +137,17 @@ const TimeForm = ({
             ...patch,
         };
 
-        onChange({
+        const normalizedValue = {
             ...nextValue,
             duration: toPayloadDuration(nextValue.duration),
+        };
+
+        const validation = validateTimeValue(nextValue);
+
+        onChange({
+            ...normalizedValue,
+            valid: validation.valid,
+            errors: validation.errors,
         });
     };
 
@@ -187,9 +241,14 @@ const TimeForm = ({
                         label="Start"
                         value={start}
                         size={size}
-                        inputProps={{ maxLength: 4 }}
+                        inputProps={{
+                            maxLength: 4,
+                            inputMode: "numeric",
+                        }}
                         onChange={(e) => handleStart(e.target.value)}
                         placeholder="0800"
+                        error={Boolean(errors.start)}
+                        helperText={errors.start ?? " "}
                         fullWidth
                         disabled={disabled}
                     />
@@ -198,9 +257,14 @@ const TimeForm = ({
                         label="Koniec"
                         value={end}
                         size={size}
-                        inputProps={{ maxLength: 4 }}
+                        inputProps={{
+                            maxLength: 4,
+                            inputMode: "numeric",
+                        }}
                         onChange={(e) => handleEnd(e.target.value)}
                         placeholder="1630"
+                        error={Boolean(errors.end)}
+                        helperText={errors.end ?? " "}
                         fullWidth
                         disabled={disabled}
                     />
@@ -212,6 +276,8 @@ const TimeForm = ({
                         value={duration}
                         onChange={(e) => handleDuration(e.target.value)}
                         inputProps={{ step: 0.25, min: 0 }}
+                        error={Boolean(errors.duration)}
+                        helperText={errors.duration ?? " "}
                         fullWidth
                         disabled={disabled}
                     />

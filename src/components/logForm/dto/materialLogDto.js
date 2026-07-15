@@ -29,7 +29,7 @@ export function materialLogDto({
     return {
         work_date: toStringOrNull(workDate),
         task: toStringOrNull(task?.jiraKey ?? task?.key ?? task?.task),
-        employee_id: toIntOrNull(employee.id),
+        employee_id: toIntOrNull(employee?.id),
         resource_id: toIntOrNull(material?.id ?? material?.resource_id),
         process_id: toIntOrNull(process?.id),
         structure_id: toIntOrNull(structureId),

@@ -38,10 +38,12 @@ const MaterialsUsageTable = ({
 
     const [searchPhrase, setSearchPhrase] = useState("");
 
+    const safeMaterials = Array.isArray(materials) ? materials : [];
+
     const filteredMaterials = useMemo(() => {
         const phrase = searchPhrase.trim().toLowerCase();
 
-        return materials
+        return safeMaterials
             .filter((material) => {
                 if (!phrase) {
                     return true;
@@ -67,16 +69,42 @@ const MaterialsUsageTable = ({
     }, [materials, searchPhrase]);
 
     const filledMaterialsCount = useMemo(() => {
-        return materials.filter((material) => {
+        return safeMaterials.filter((material) => {
             const row = value?.[material.id] ?? {};
             return row.qty !== undefined && row.qty !== null && row.qty !== "";
         }).length;
-    }, [materials, value]);
+    }, [safeMaterials, value]);
 
     const hasRequiredWithoutAnyValue = useMemo(() => {
-        const hasRequired = materials.some((material) => material.required);
+        const hasRequired = safeMaterials.some((material) => material.required);
         return hasRequired && filledMaterialsCount === 0;
-    }, [materials, filledMaterialsCount]);
+    }, [safeMaterials, filledMaterialsCount]);
+
+
+    function handleMaterialChange(material, field, rawValue) {
+        if (material?.id === null || material?.id === undefined) {
+            return;
+        }
+
+        if (typeof onFieldChange !== "function") {
+            return;
+        }
+
+        if (rawValue === "") {
+            onFieldChange(material.id, field, "");
+            return;
+        }
+
+        const numberValue = Number(
+            String(rawValue).replace(",", ".")
+        );
+
+        if (!Number.isFinite(numberValue) || numberValue < 0) {
+            return;
+        }
+
+        onFieldChange(material.id, field, numberValue);
+    }
 
     function renderFilter() {
         return (
@@ -95,7 +123,7 @@ const MaterialsUsageTable = ({
         return (
             <Chip
                 size="small"
-                label={`${filledMaterialsCount}/${materials.length}`}
+                label={`${filledMaterialsCount}/${safeMaterials.length}`}
                 onClick={() => setSearchPhrase("")}
                 title="Kliknij, aby wyczyścić filtr"
                 color={hasRequiredWithoutAnyValue ? "warning" : "default"}
@@ -155,7 +183,7 @@ const MaterialsUsageTable = ({
                         required={material.required}
                         disabled={disabled}
                         onChange={(nextValue) =>
-                            onFieldChange?.(material.id, "qty", nextValue)
+                            handleMaterialChange(material, "qty", nextValue)
                         }
                     />
                 </TableCell>
@@ -185,10 +213,6 @@ const MaterialsUsageTable = ({
     }
 
     function renderTable() {
-        const sortedMaterials = [...materials].sort(
-            (a, b) => Number(b.required) - Number(a.required)
-        );
-
         return (
             <Box
                 sx={{

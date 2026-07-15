@@ -7,6 +7,10 @@ import { normalizeTimeValue } from "../utils";
 import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate, splitTimeSequentially } from "./logDraftVoUtils";
 import { splitProductionTimeSequentially, getProductionTaskAllocations, getGoodScrapRatios } from './productionAlocations';
 
+function uniqueErrors(errors = []) {
+    return [...new Set(errors.filter(Boolean))];
+}
+
 export function logDraftVo({
     tasksState = [],
     brigadesState = [],
@@ -53,6 +57,8 @@ export function logDraftVo({
     const outputLogs = [];
 
     const outputWorkDate = getOutputWorkDate(selectedEmployees, machineTime);
+
+    const hasSelectedEmployees = selectedEmployees.length > 0;
 
     // TRYB TASKOWY
     if (selectedTasks.length) {
@@ -367,41 +373,45 @@ export function logDraftVo({
         });
     }
 
-    const preview = buildPreview({
-        selectedProcess,
-        selectedMachine,
-        selectedEmployees,
-        selectedTasks,
-        materials,
-        allocations,
-        operationLogs,
-        machineLogs,
-        materialLogs,
-        outputLogs,
-        requiresTasks,
-        requiresQuantity,
-        requiresRemarks,
-        isRework
-    });
-
-
-    return {
-        meta: {
-            valid: validation.valid,
-            errors: validation.errors,
-            requiresTasks,
-            requiresQuantity,
-            requiresRemarks,
-            isRework,
-        },
-
-        preview,
-
-        logs: {
+    if (!hasSelectedEmployees) {
+        const preview = buildPreview({
+            selectedProcess,
+            selectedMachine,
+            selectedEmployees,
+            selectedTasks,
+            materials,
+            allocations,
             operationLogs,
             machineLogs,
             materialLogs,
             outputLogs,
-        },
-    };
+            requiresTasks,
+            requiresQuantity,
+            requiresRemarks,
+            isRework,
+        });
+
+        return {
+            meta: {
+                valid: false,
+                errors: uniqueErrors([
+                    ...validation.errors,
+                    "Wybierz co najmniej jednego pracownika.",
+                ]),
+                requiresTasks,
+                requiresQuantity,
+                requiresRemarks,
+                isRework,
+            },
+
+            preview,
+
+            logs: {
+                operationLogs,
+                machineLogs,
+                materialLogs,
+                outputLogs,
+            },
+        };
+    }
 }

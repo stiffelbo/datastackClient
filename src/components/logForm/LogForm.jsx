@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Alert, Grid, Box, Typography, LinearProgress, Button, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import { useRwd } from "../../context/RwdContext";
 import { useAuth } from "../../context/AuthContext";
@@ -10,9 +10,9 @@ import useProcesses from "./hooks/useProcesses";
 import useJiraIssueUserLogs from "./hooks/useJiraIssueUserLogs";
 
 //DTO
-import {makeUid} from './dto/jiraTaskDto';
+import { makeUid } from './dto/jiraTaskDto';
 import { brigadeEmployeesDto } from "./dto/brigadesDto";
-import {structuresDto} from "./dto/structuresDto";
+import { structuresDto } from "./dto/structuresDto";
 import { processesDto, buildMachineIndex, hasMachines } from "./dto/processesDto";
 import { logDraftVo } from "./dto/logDraftVo";
 import { makeControlTablesSchemas } from "./dto/makeControlTablesSchemas";
@@ -33,7 +33,7 @@ import RenderLogErrors from "./RenderLogErrors";
 import SubmitLogForm from "./SubmitLogForm";
 import MachineIndexedForm from "./MachineIndexedForm";
 
-const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
+const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
     const auth = useAuth();
     const { user } = auth;
@@ -50,6 +50,11 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
     const [showControlData, setShowControlData] = useState(false);
     const [reportMode, setReportMode] = useState('process'); // 'process' | 'machine'
     const [nonTaskRemarks, setNonTaskRemarks] = useState('');
+
+    const handleSetTime = (value) => {
+        console.log(value);
+        setTime(value);
+    }
 
     //Hooks
     const { height } = useRwd();
@@ -71,8 +76,13 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
         }
     }, [canUseMachineMode, reportMode]);
 
+    const processDefinitions = useMemo(
+        () => processesDto(user.processes),
+        [user.processes]
+    );
+
     const processes = useProcesses({
-        processes: processesAfterDTO,
+        processes: processDefinitions,
         onChange: null,
         employeeTimeMap: brigade.computed.employeeTimeMap,
         mode: reportMode
@@ -176,7 +186,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
                             <Box mt={2}>
                                 {hasContent && <Typography variant="h6" gutterBottom>
                                     {title}
-                                </Typography> }
+                                </Typography>}
 
                                 {hasContent ? (
                                     <PowerTable
@@ -201,17 +211,19 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
     const renderForm = () => {
         // 'process' | 'machine'
         if (reportMode === 'process') {
-            return <ProcessForm processes={processes} disabled={log.loading} structures={structures}/>
+            return <ProcessForm processes={processes} disabled={log.loading} structures={structures} />
         }
         if (reportMode === 'machine') {
             return <MachineIndexedForm processes={processes} settings={machineIndexedProcessesDTO} disabled={log.loading} />
         }
     }
 
+    console.count("LogForm render");
+
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
 
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
-            <Grid item size={6}>
+            <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }}>
                 <Grid container spacing={1} alignItems="center" sx={{ mb: 2 }}>
                     <Grid item sx={{ flexShrink: 0 }}>
                         <Manual
@@ -241,11 +253,11 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
                 />
                 {renderModeToggle()}
                 {renderForm()}
-                <RenderLogErrors errors={draft.meta.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
+                <RenderLogErrors errors={draft?.meta?.errors} sx={{ my: 2, width: '100%', maxWidth: '100%' }} />
             </Grid>
 
-            <Grid item size={6}>
-                {brigade.state.brigades.length > 1 && <TimeForm onChange={setTime} value={time} sx={{ my: 2 }} />}
+            <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }}>
+                {brigade.state.brigades.length > 1 && <TimeForm onChange={handleSetTime} value={time} sx={{ my: 2 }} />}
                 <BrigadeEmployeesForm
                     employees={brigade.state.brigades}
                     selectedIds={brigade.computed.selectedIds}
@@ -268,11 +280,11 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => {} }) => {
             </Grid>
             <Grid item size={12}>
                 <SubmitLogForm
-                    dataErrors={draft.meta.errors}
+                    dataErrors={draft?.meta?.errors}
                     logError={log.error}
                     result={log.result}
                     loading={log.loading}
-                    onSave={() => log.save(draft.logs)}
+                    onSave={() => log.save(draft?.logs)}
                     onClear={() => log.clear()}
                 />
             </Grid>

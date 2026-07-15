@@ -51,6 +51,7 @@ import Sys from './pages/sys/Sys';
 import Comments from './pages/_dev/Comments';
 import JiraIssueSingle from './pages/jiraIssue/JiraIssueSingle';
 import ToolsTypes from './pages/toolsTypes/ToolsTypes';
+import Production from './pages/production/Production';
 
 const App = () => (
     <Routes>
@@ -68,6 +69,7 @@ const App = () => (
         <Route index element={<Home />} />
                 
         <Route path="sys" element={<Sys />} />
+        <Route path="production" element={<Production />} />
         <Route path="clockify" element={<Clockify />} />
         <Route path="salaries" element={<Salaries />} />
 

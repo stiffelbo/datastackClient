@@ -6,7 +6,7 @@ import SaveResultSummary from "./SaveResultSummary";
 
 const SubmitLogForm = ({ dataErrors = null, logError = null, result = null, loading = false, onSave = null, onClear = null, sx = { width: '100%' } }) => {
 
-    if (!dataErrors.length && !logError && !result) {
+    if (!dataErrors?.length && !logError && !result) {
         if (loading) {
             return <LinearProgress />
         } else {

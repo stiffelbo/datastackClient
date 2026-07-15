@@ -13,6 +13,32 @@ const InputNumber = ({
     fullWidth = true,
     size = "small",
 }) => {
+    const handleChange = (event) => {
+        const rawValue = event.target.value;
+
+        if (rawValue === "") {
+            onChange?.("");
+            return;
+        }
+
+        const normalizedValue = rawValue.replace(",", ".");
+        const numberValue = Number(normalizedValue);
+
+        if (!Number.isFinite(numberValue)) {
+            return;
+        }
+
+        if (min !== undefined && numberValue < min) {
+            return;
+        }
+
+        if (max !== undefined && numberValue > max) {
+            return;
+        }
+
+        onChange?.(numberValue);
+    };
+
     return (
         <TextField
             fullWidth={fullWidth}
@@ -22,11 +48,12 @@ const InputNumber = ({
             value={value ?? ""}
             required={required}
             disabled={disabled}
-            onChange={(event) => onChange?.(event.target.value)}
+            onChange={handleChange}
             inputProps={{
                 min,
                 max,
                 step,
+                inputMode: "decimal",
             }}
         />
     );

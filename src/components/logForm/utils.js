@@ -4,6 +4,8 @@ export function normalizeTimeValue(value = null) {
         start: value?.start ?? "",
         end: value?.end ?? "",
         duration: value?.duration ?? "",
+        valid: value?.valid ?? true,
+        errors : value?.errors ?? {},
     };
 }
 
@@ -52,7 +54,7 @@ export function getTimeFromLastEntry(lastEntryToday) {
         return time;
     }
 
-    const startDate = new Date(lastEntryToday.replace(" ", "T"));
+    const startDate = new Date(lastEntryToday?.replace(" ", "T"));
 
     if (Number.isNaN(startDate.getTime())) {
         return time;

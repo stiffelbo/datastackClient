@@ -303,31 +303,6 @@ export default function useProcessForm({
         });
     }, [employeeTimeSignature]);
 
-
-    useEffect(() => {
-        if (typeof onChange !== "function") return;
-
-        onChange({
-            processId,
-            process: selectedProcess,
-            machineId,
-            isRework,
-            machineTime,
-            materialsReport,
-        });
-
-        
-
-    }, [
-        processId,
-        selectedProcess,
-        machineId,
-        isRework,
-        machineTime,
-        materialsReport,
-        onChange,
-    ]);
-
     function handleProcessChange(nextProcessId) {
         setProcessId(nextProcessId);
     }
