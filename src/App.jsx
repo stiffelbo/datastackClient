@@ -46,6 +46,7 @@ import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
 import NotFound from './pages/NotFound';
 import Sys from './pages/sys/Sys';
+import CostsParser from './pages/costsParser/CostsParser';
 
 //DevOnly
 import Comments from './pages/_dev/Comments';
@@ -69,11 +70,10 @@ const App = () => (
         <Route index element={<Home />} />
                 
         <Route path="sys" element={<Sys />} />
+        <Route path="costsparser" element={<CostsParser />} />
         <Route path="production" element={<Production />} />
         <Route path="clockify" element={<Clockify />} />
         <Route path="salaries" element={<Salaries />} />
-
-
         
         <Route path="jiraissuegroups" element={<JiraIssueGroups />} />
         <Route path="jiraissuedirectpurchase" element={<JiraIssueDirectPurchase />} />

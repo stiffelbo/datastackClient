@@ -373,7 +373,7 @@ export function logDraftVo({
         });
     }
 
-    if (!hasSelectedEmployees) {
+    if (hasSelectedEmployees) {
         const preview = buildPreview({
             selectedProcess,
             selectedMachine,
@@ -394,10 +394,8 @@ export function logDraftVo({
         return {
             meta: {
                 valid: false,
-                errors: uniqueErrors([
-                    ...validation.errors,
-                    "Wybierz co najmniej jednego pracownika.",
-                ]),
+                errors: 
+                   validation.errors,
                 requiresTasks,
                 requiresQuantity,
                 requiresRemarks,

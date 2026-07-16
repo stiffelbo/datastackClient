@@ -136,6 +136,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
     const renderControlTables = (show = true) => {
         if (!show) return null;
+        if (!draft) return null;
 
         const tableSchemas = makeControlTablesSchemas({
             employees: brigade.state.brigades,
@@ -218,8 +219,6 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
         }
     }
 
-    console.count("LogForm render");
-
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
 
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
@@ -284,7 +283,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
                     logError={log.error}
                     result={log.result}
                     loading={log.loading}
-                    onSave={() => log.save(draft?.logs)}
+                    onSave={() => log.save(draft.logs)}
                     onClear={() => log.clear()}
                 />
             </Grid>
