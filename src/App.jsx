@@ -36,7 +36,6 @@ import JiraIssueResourceUsageLog from './pages/jiraIssueResourceUsageLog/JiraIss
 import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperationLog';
 import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
-import JiraIssueRawLogs from './pages/jiraIssueRawLogs/JiraIssueRawLogs';
 import ItAssetsTypes from './pages/itAssetsTypes/ItAssetsTypes';
 import ItAssets from './pages/itAssets/ItAssets';
 import ItAssetsShifts from './pages/itAssetsShifts/ItAssetsShifts';
@@ -90,7 +89,6 @@ const App = () => (
         <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
         <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
-        <Route path="jiraissuerawlogs" element={<JiraIssueRawLogs />} />
         <Route path="deptcosts" element={<Costs />} />
         <Route path="departmentscostsraw" element={<DepartmentsCostsRaw />} />
         <Route path="departmentscosts" element={<DepartmentsCosts />} />
