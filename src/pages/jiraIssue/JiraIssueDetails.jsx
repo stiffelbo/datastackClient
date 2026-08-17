@@ -194,27 +194,71 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
             case "select-object": {
                 const opts = normalizeOptions(merged.selectOptions || []);
 
+                const groupedOptions = opts.reduce((acc, opt) => {
+                    const groupName = opt.group || '';
+                    if (!acc[groupName]) acc[groupName] = [];
+                    acc[groupName].push(opt);
+                    return acc;
+                }, {});
+
                 return (
                     <Box mb={2}>
-                        <FormControl fullWidth size="small" error={!!errorsText} mb={2}>
-                            <InputLabel>{merged.label}</InputLabel>
+                        <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
+                            <InputLabel id={`${field.name}-label`}>
+                                {field.label}
+                            </InputLabel>
+
                             <Select
-                                label={merged.label}
-                                value={value ?? ""}
-                                onChange={(e) => form.setField(name, e.target.value)}
-                                disabled={merged.disabled}
+                                labelId={`${field.name}-label`}
+                                name={field.name}
+                                label={field.label}
+                                value={
+                                    typeof value === 'undefined' || value === null
+                                        ? ''
+                                        : value
+                                }
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    form.setField(field.name, val);
+                                }}
+                                size={field.size || 'small'}
+                                {...(field.selectProps || {})}
                             >
-                                <MenuItem value="">-- {merged.label || "Wybierz"} --</MenuItem>
-                                {opts.map((opt) => (
-                                    <MenuItem
-                                        key={`${name}-${opt.value}`}
-                                        value={opt.value}
-                                        disabled={opt.disabled}
-                                    >
-                                        {opt.label}
-                                    </MenuItem>
-                                ))}
+                                
+                                <MenuItem value="">
+                                    {`-- ${field.label || 'Wybierz'} --`}
+                                </MenuItem>
+                              
+
+                                {Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
+                                    const items = [];
+
+                                    if (groupName) {
+                                        items.push(
+                                            <ListSubheader key={`group-${groupName}`} disableSticky>
+                                                {groupName}
+                                            </ListSubheader>
+                                        );
+                                    }
+
+                                    groupItems.forEach((opt) => {
+                                        items.push(
+                                            <MenuItem
+                                                key={`opt-${opt.value}`}
+                                                value={opt.value}
+                                                disabled={opt.disabled}
+                                                title={opt.title || ''}
+                                            >
+                                                {opt.label}
+                                            </MenuItem>
+                                        );
+                                    });
+
+                                    return items;
+                                })}
                             </Select>
+
+                            {errorsText ? <FormHelperText>{errorsText}</FormHelperText> : null}
                         </FormControl>
                     </Box>
 
@@ -358,8 +402,8 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     {form.formState.jira_parent_key || form.formState.jira_key || "—"}
                     {form.formState.jira_parent_key ? ` / ${form.formState.jira_key || ""}` : ""}
                 </Typography>
-                <RenderLink id={id} title={`Strona ${form.formState.jira_key}`}/>
-                <RenderLink baseUrl="https://germaniamint.atlassian.net/browse/" id={form.formState.jira_key} title={"Link do jiry"} icon={<LinkIcon />}/>
+                <RenderLink id={id} title={`Strona ${form.formState.jira_key}`} />
+                <RenderLink baseUrl="https://germaniamint.atlassian.net/browse/" id={form.formState.jira_key} title={"Link do jiry"} icon={<LinkIcon />} />
             </Row>
             <Row>
                 <Typography variant="h6" sx={{ mt: 0.5 }}>
@@ -384,12 +428,13 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                         </Row>
                         {renderInput("jira_issue_groups_id")}
                         {renderInput("contractor_id")}
-                        
-                        
+                        {renderInput("structure_id")}
+
+
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Ilości" defaultOpen={true}>
-                        
+
                         <Row>
                             {renderInput("qty_ordered")}
                             {renderInput("qty_to_do")}
@@ -402,21 +447,21 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Finanse" defaultOpen={true}>
-                            {renderInput("ro_nr")}
-                            {renderInput("design_price")}
-                            {renderInput("setup_price")}
-                            {renderInput("unit_price")}
+                        {renderInput("ro_nr")}
+                        {renderInput("design_price")}
+                        {renderInput("setup_price")}
+                        {renderInput("unit_price")}
 
-                            {renderInput("currency")}
-                            {renderInput("conversion_rate")}
-                            {renderInput("budget_net")}
+                        {renderInput("currency")}
+                        {renderInput("conversion_rate")}
+                        {renderInput("budget_net")}
 
-                            {renderInput("planned_margin_pct")}
-                            {renderInput("planned_revenue_net")}
-                            {renderInput("committed_costs_net")}
+                        {renderInput("planned_margin_pct")}
+                        {renderInput("planned_revenue_net")}
+                        {renderInput("committed_costs_net")}
 
-                            {renderInput("invoiced_revenue_net")}
-                            {renderInput("cash_received_net")}
+                        {renderInput("invoiced_revenue_net")}
+                        {renderInput("cash_received_net")}
                     </CollapsibleSection>
                 </Col>
 
@@ -424,7 +469,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     <CollapsibleSection title="Status" defaultOpen={true}>
                         {renderInput("is_active")}
                         {renderReadonly("status")}
-                        
+
                         {renderReadonly("jira_status_category", {
                             variant: "chip",
                             chipProps: { size: "small", color: "info", variant: "outlined" },

@@ -27,6 +27,7 @@ const defaultSchema = {
     editForm: { schema: [], label: '' },
     bulkEditForm: { schema: [], label: '' },
     columns: [],
+    filterableFields: [],
     endpoints: {},
     relations: {},
     options: {},      // { [fieldName]: Option[] }
@@ -975,7 +976,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
         }
     }, [resolveEndpoint, http, toast]);
-
 
     // final return — expose handlers as function or null (so UI can easily check)
     return {

@@ -1,0 +1,325 @@
+{
+  "scope": {
+    "area": "development",
+    "stack": [
+      "React 19",
+      "TypeScript",
+      "React Hooks",
+      "Material UI",
+      "REST API"
+    ],
+    "concepts": [
+      "Entity",
+      "Entity Schema",
+      "Entity Query",
+      "Entity Filter",
+      "Entity Preset",
+      "DTO",
+      "controlled components",
+      "pure functions",
+      "separation of concerns"
+    ]
+  },
+  "goal": {
+    "description": "System tworzenia konfiguracji zapytania w postaci JSON, zapisywanej w bazie danych i edytowanej przez prosty konfigurator.",
+    "ux": [
+      "Użytkownik wybiera preset z listy przez kliknięcie.",
+      "Wybrany preset jest oznaczony kolorem tła.",
+      "Użytkownik może edytować dowolny preset.",
+      "Zapis odbywa się jednym przyciskiem: Zapisz.",
+      "Frontend nie pokazuje technicznych trybów create, edit, fork ani apply.",
+      "Konfigurator powinien być zwarty i mieścić się mniej więcej na połowie ekranu Full HD."
+    ]
+  },
+  "input": {
+    "entity": {
+      "description": "Encja przekazywana do managera i konfiguratora.",
+      "used_data": [
+        "entity.name",
+        "entity.schema",
+        "entity.schema.columns"
+      ]
+    },
+    "schema_options": {
+      "description": "Opcje wynikające ze schematu encji.",
+      "sources": [
+        "typ pola",
+        "operatory pola",
+        "optionsMap dla pól FK",
+        "informacje potrzebne do budowy filtrów i sortowania"
+      ]
+    },
+    "server_options": {
+      "description": "Dane pobierane z serwera dla konkretnej encji.",
+      "sources": [
+        "lista presetów",
+        "distinct values dla pól",
+        "stan ostatnio wybranego presetu, jeśli jest przechowywany"
+      ]
+    },
+    "merge_rules": [
+      "Distinct values określają, które wartości są dostępne w filtrze.",
+      "Dla zwykłych pól wartość distinct może być jednocześnie value i label.",
+      "Dla FK distinct zawiera identyfikator, a label pochodzi z optionsMap odpowiedniej kolumny.",
+      "W filtrze FK zapisujemy identyfikator, nie etykietę.",
+      "Łączenie schema options i server options wykonują utility functions poza komponentami UI."
+    ]
+  },
+  "output": {
+    "description": "Preset zapisuje konfigurację EntityQuery jako JSON.",
+    "shape": {
+      "id": "number|string|null",
+      "name": "string",
+      "description": "string|null",
+      "public": "boolean",
+      "query": {
+        "filters": [
+          {
+            "field": "string",
+            "operator": "string",
+            "value": "unknown"
+          }
+        ],
+        "sort": {
+          "field": "string",
+          "direction": "asc|desc"
+        },
+        "limit": "number|null"
+      }
+    },
+    "rules": [
+      "Nowy preset może mieć id równe null.",
+      "Edycja istniejącego presetu wysyła jego id.",
+      "Filtry multiselect zapisują include i exclude jako wartości, nie etykiety.",
+      "Sortowanie jest pojedyncze.",
+      "Limit jest pojedynczą liczbą albo null.",
+      "DTO na granicy API mapuje dane formularza do payloadu backendu i odpowiedź backendu do modelu frontendu."
+    ]
+  },
+  "components": {
+    "EntityQueryManager": {
+      "purpose": "Łączy hook, listę presetów i edytor.",
+      "props": [
+        "entity",
+        "onClose"
+      ],
+      "state": [
+        "selectedPresetId",
+        "editorOpen"
+      ],
+      "notes": [
+        "Używa jednego obiektu zwróconego przez useEntityPresets.",
+        "Nie destrukturyzuje całego hooka bez potrzeby.",
+        "Nie tworzy adapterów, które tylko przekazują argumenty dalej."
+      ]
+    },
+    "EntityQueryPresetList": {
+      "purpose": "Wyświetla prostą, klikalną listę presetów.",
+      "props": [
+        "presets",
+        "selectedPresetId",
+        "onSelect",
+        "onEdit",
+        "onDelete"
+      ],
+      "notes": [
+        "Bez tabeli.",
+        "Wybrany element ma inne tło.",
+        "Cały element ustawia preset jako wybrany.",
+        "Ikona jest potrzebna głównie dla usuwania.",
+        "Usuń występuje tylko na liście."
+      ]
+    },
+    "EntityQueryPresetEditor": {
+      "purpose": "Edytuje metadata i query wybranego presetu.",
+      "props": [
+        "preset",
+        "entity",
+        "options",
+        "onSave",
+        "onCancel"
+      ],
+      "layout": [
+        [
+          "metadata",
+          "sort_and_limit"
+        ],
+        [
+          "filters"
+        ]
+      ],
+      "notes": [
+        "Na dużym ekranie używa zwartej siatki.",
+        "Na małym ekranie sekcje układają się pionowo.",
+        "Ma tylko podstawowe akcje: Anuluj i Zapisz."
+      ]
+    },
+    "EntityQueryPresetMetadata": {
+      "purpose": "Edytuje nazwę, opis i public.",
+      "props": [
+        "value",
+        "onChange",
+        "disabled"
+      ],
+      "notes": [
+        "Opis ma około dwóch linii.",
+        "Bez liczników znaków, alertów i dekoracyjnych statusów."
+      ]
+    },
+    "EntityQuerySort": {
+      "purpose": "Wybiera jedno sortowanie.",
+      "props": [
+        "value",
+        "options",
+        "onChange",
+        "disabled"
+      ],
+      "notes": [
+        "Interfejs podobny do wyboru Najnowsze lub Najstarsze.",
+        "Bez wielopoziomowej listy sortowań."
+      ]
+    },
+    "EntityQueryLimit": {
+      "purpose": "Edytuje pojedynczy limit.",
+      "props": [
+        "value",
+        "onChange",
+        "disabled"
+      ],
+      "notes": [
+        "Jedno małe pole liczbowe.",
+        "Bez przełączników, chipów, alertów i szybkich presetów."
+      ]
+    },
+    "EntityQueryFilters": {
+      "purpose": "Zarządza listą filtrów.",
+      "props": [
+        "value",
+        "fields",
+        "distinctOptions",
+        "onChange",
+        "disabled"
+      ],
+      "notes": [
+        "Logika przygotowania danych nie należy do komponentu.",
+        "Komponent otrzymuje gotowe opcje pól i wartości."
+      ]
+    },
+    "EntityQueryMultiSelect": {
+      "purpose": "Wyświetla include i exclude.",
+      "props": [
+        "options",
+        "value",
+        "onChange",
+        "disabled"
+      ],
+      "notes": [
+        "Wyświetla label.",
+        "Zapisuje value.",
+        "Nie zna entity schema ani distinct endpointu."
+      ]
+    }
+  },
+  "utilities": {
+    "principle": "Utility first.",
+    "responsibilities": [
+      "normalizacja EntityQuery",
+      "klonowanie presetów",
+      "porównywanie query",
+      "mapowanie distinct values",
+      "łączenie distinct values z optionsMap",
+      "budowanie opcji dla multiselecta",
+      "walidacja prostych struktur",
+      "formatowanie danych",
+      "mapowanie DTO"
+    ],
+    "fk_options": {
+      "input": [
+        "field",
+        "distinctValues",
+        "entitySchema"
+      ],
+      "output": [
+        {
+          "value": "oryginalne id",
+          "label": "etykieta z optionsMap"
+        }
+      ],
+      "rules": [
+        "Znajdź kolumnę pola w entity.schema.columns.",
+        "Pobierz optionsMap.",
+        "Ogranicz opcje do wartości obecnych w distinctValues.",
+        "Nie zmieniaj typu identyfikatora bez potrzeby.",
+        "Brak labela może użyć String(value) jako fallback."
+      ]
+    }
+  },
+  "coding_style": {
+    "general": [
+      "KISS",
+      "YAGNI",
+      "DRY tylko tam, gdzie duplikacja jest realna",
+      "separation of concerns",
+      "controlled components",
+      "pure functions dla transformacji danych",
+      "DTO na granicy API",
+      "czytelność ponad abstrakcję"
+    ],
+    "formatting": [
+      "Nie zawijaj krótkich deklaracji i destrukturyzacji.",
+      "Przykład: const EntityQueryManager = ({entity, onClose = () => {}}) => {",
+      "Nie rozbijaj krótkich propsów na wiele linii bez potrzeby.",
+      "Wykorzystuj szerokość ekranu.",
+      "Kod ma być zwarty, ale czytelny."
+    ],
+    "hooks": [
+      "Nie używaj useMemo i useCallback domyślnie.",
+      "Proste derived values licz bez memoizacji.",
+      "Proste handlery zapisuj jako zwykłe funkcje.",
+      "Memoizację dodawaj tylko z konkretnego powodu."
+    ],
+    "objects": [
+      "Nie destrukturyzuj dużego obiektu hooka, jeśli pogarsza to kontekst.",
+      "Preferuj entityPresets.options, entityPresets.presets i entityPresets.savePreset.",
+      "Jawne źródło wartości ułatwia czytanie kodu i pracę IDE."
+    ],
+    "rendering": [
+      "Nie twórz renderXxx dla każdego przycisku.",
+      "Subrendery reprezentują sekcje albo duże warianty widoku.",
+      "Duże ternary z rozbudowanym JSX wydzielaj do nazwanych subrenderów.",
+      "Proste color, variant, disabled i sx mogą zostać w JSX.",
+      "Nie twórz funkcji tylko do ustalania koloru lub wariantu przycisku."
+    ],
+    "components": [
+      "Minimalna liczba propsów.",
+      "Minimalna liczba zależności.",
+      "Komponent UI nie pobiera i nie formatuje danych.",
+      "Komponent UI otrzymuje dane gotowe do wyświetlenia.",
+      "Nie dodawaj dekoratorów, statusów i trybów bez wymagania biznesowego."
+    ]
+  },
+  "frontend_backend_roles": {
+    "frontend": [
+      "Wyświetla listę presetów.",
+      "Przechowuje selectedPresetId.",
+      "Edytuje lokalny draft.",
+      "Buduje przyjazny konfigurator.",
+      "Łączy schema options z server options przez utilities.",
+      "Mapuje dane do DTO.",
+      "Wysyła jeden zapis.",
+      "Nie decyduje, czy cudzy preset ma zostać skopiowany."
+    ],
+    "backend": [
+      "Przechowuje preset jako JSON.",
+      "Waliduje strukturę query.",
+      "Egzekwuje uprawnienia.",
+      "Aktualizuje własny preset.",
+      "Tworzy kopię przy zapisie cudzego presetu.",
+      "Tworzy nowy preset, gdy id jest puste.",
+      "Zwraca distinct values.",
+      "Egzekwuje techniczny limit zapytania.",
+      "Stosuje zapisany query podczas pobierania danych."
+    ]
+  },
+  "main_rule": "Najpierw utility i prosty model danych, potem cienkie komponenty UI. Konfigurator ma być banalny w obsłudze i zwarty wizualnie."
+}

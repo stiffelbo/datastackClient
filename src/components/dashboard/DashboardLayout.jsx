@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 
 import Manual from '../Manual';
+import EntityQueryButton from './entityPresets/EntityQueryButton';
 
 /**
  * DashboardLayout
@@ -25,7 +26,8 @@ const DashboardLayout = ({
   maxLeftRatio = 0.8,
   onResizeEnd,
   mode = 'dashboard',
-  manual = null
+  manual = null,
+  entity
 }) => {
   const containerRef = useRef(null);
   const [leftRatio, setLeftRatio] = useState(initialLeftRatio);
@@ -126,6 +128,26 @@ const DashboardLayout = ({
       </Box>
     );
   };
+
+  const renderEntityFilters = () => {
+    if(!isDashboard) return;
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          left: 16,
+          bottom: 48,
+          zIndex: 20,
+        }}
+      >
+        <EntityQueryButton
+          entity={entity}
+        />
+      </Box>
+    );
+  }
+
+
   return (
     <Box
       ref={containerRef}
@@ -187,6 +209,7 @@ const DashboardLayout = ({
           {right}
         </Box>
       )}
+      {renderEntityFilters()}
       {renderManual()}
     </Box>
   );

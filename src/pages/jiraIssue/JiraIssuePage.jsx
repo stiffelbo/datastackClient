@@ -5,7 +5,7 @@ import JiraIssueDetails from './JiraIssueDetails';
 import LogForm from '../../components/logForm/LogForm';
 import JiraIssueClockify from './JiraIssueClockify';
 import JiraIssueReports from './JiraIssueReports';
-import Bilans from './Bilans';
+import Bilans from './Bilans/Bilans';
 
 
 const JiraIssuePage = ({

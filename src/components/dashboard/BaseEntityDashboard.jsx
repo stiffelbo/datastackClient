@@ -175,11 +175,10 @@ const BaseEntityDashboard = ({
       initialLeftRatio={0.4}
       minLeftRatio={0.2}
       maxLeftRatio={0.8}
-      onResizeEnd={(ratio) => {
-        console.log(`[Dashboard][${entityName}] leftRatio:`, ratio);
-      }}
+      onResizeEnd={(ratio) => {/* na razie nic */}}
       mode={mode}
       manual={manual}
+      entity={entity}
     />
   );
 };
