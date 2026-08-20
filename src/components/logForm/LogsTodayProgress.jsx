@@ -1,14 +1,65 @@
 import React, { useMemo } from "react";
 import { Box, Tooltip, Typography } from "@mui/material";
 
-const parseDate = (value) => new Date(value.replace(" ", "T"));
+const parseDate = (value) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day, hour, minute, second] = match.map(Number);
+
+  const date = new Date(
+    year,
+    month - 1,
+    day,
+    hour,
+    minute,
+    second
+  );
+
+  // Zabezpieczenie przed automatyczną normalizacją JS,
+  // np. 2026-02-31 -> marzec
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day ||
+    date.getHours() !== hour ||
+    date.getMinutes() !== minute ||
+    date.getSeconds() !== second
+  ) {
+    return null;
+  }
+
+  return date;
+};
 
 const diffMinutes = (start, end) => {
-  return Math.max(0, (end.getTime() - start.getTime()) / 60000);
+  if (!start || !end) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    (end.getTime() - start.getTime()) / 60000
+  );
 };
 
 const formatTime = (value) => {
-  return parseDate(value).toLocaleTimeString("pl-PL", {
+  const date = parseDate(value);
+
+  if (!date) {
+    return "—";
+  }
+
+  return date.toLocaleTimeString("pl-PL", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -21,26 +72,60 @@ const LogsTodayProgress = ({
   dayStart = null,
 }) => {
   const items = useMemo(() => {
-    if (!data.length) return [];
+    if (!Array.isArray(data) || !data.length) {
+      return [];
+    }
 
-    const sorted = [...data].sort(
-      (a, b) => parseDate(a.start_time) - parseDate(b.start_time)
-    );
+    if (!Number.isFinite(hours) || hours <= 0) {
+      return [];
+    }
 
-    const timelineStart = dayStart
+    const parsedEntries = data
+      .map((entry) => {
+        const start = parseDate(entry?.start_time);
+        const end = parseDate(entry?.end_time);
+
+        return {
+          entry,
+          start,
+          end,
+        };
+      })
+      .filter(({ start, end }) => {
+        return start && end && end >= start;
+      })
+      .sort((a, b) => {
+        return a.start.getTime() - b.start.getTime();
+      });
+
+    if (!parsedEntries.length) {
+      return [];
+    }
+
+    const parsedDayStart = dayStart
       ? parseDate(dayStart)
-      : parseDate(sorted[0].start_time);
+      : null;
+
+    const timelineStart =
+      parsedDayStart ?? parsedEntries[0].start;
 
     const totalMinutes = hours * 60;
 
     const result = [];
+
     let cursor = timelineStart;
 
-    sorted.forEach((entry) => {
-      const start = parseDate(entry.start_time);
-      const end = parseDate(entry.end_time);
+    parsedEntries.forEach(({ entry, start, end }) => {
+      /*
+       * Jeśli wpis zaczyna się przed początkiem osi,
+       * nie dodajemy ujemnej przerwy.
+       */
+      const visibleStart =
+        start < timelineStart
+          ? timelineStart
+          : start;
 
-      const gap = diffMinutes(cursor, start);
+      const gap = diffMinutes(cursor, visibleStart);
 
       if (gap > 0) {
         result.push({
@@ -49,18 +134,34 @@ const LogsTodayProgress = ({
         });
       }
 
-      result.push({
-        type: "entry",
-        entry,
-        minutes: diffMinutes(start, end),
-      });
+      const entryMinutes = diffMinutes(
+        visibleStart,
+        end
+      );
 
-      cursor = end;
+      if (entryMinutes > 0) {
+        result.push({
+          type: "entry",
+          entry,
+          minutes: entryMinutes,
+        });
+      }
+
+      /*
+       * Nie cofamy kursora przy nachodzących
+       * na siebie wpisach.
+       */
+      if (end > cursor) {
+        cursor = end;
+      }
     });
 
     return result.map((item) => ({
       ...item,
-      width: `${(item.minutes / totalMinutes) * 100}%`,
+      width: `${Math.min(
+        100,
+        (item.minutes / totalMinutes) * 100
+      )}%`,
     }));
   }, [data, hours, dayStart]);
 
@@ -86,6 +187,7 @@ const LogsTodayProgress = ({
                 width: item.width,
                 height: "100%",
                 backgroundColor: "grey.100",
+                flexShrink: 0,
               }}
             />
           );
@@ -95,29 +197,47 @@ const LogsTodayProgress = ({
 
         return (
           <Tooltip
-            key={entry.id}
+            key={entry.id ?? `entry-${index}`}
             arrow
             placement="top"
             title={
               <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  {entry.processName} {entry.task ? ' - ' : ''} {entry.task}
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                >
+                  {entry.processName}
+                  {entry.task ? ` - ${entry.task}` : ""}
                 </Typography>
 
-                <Typography variant="caption" display="block">
-                  {formatTime(entry.start_time)}–{formatTime(entry.end_time)}
+                <Typography
+                  variant="caption"
+                  display="block"
+                >
+                  {formatTime(entry.start_time)}
+                  {"–"}
+                  {formatTime(entry.end_time)}
                 </Typography>
 
-                <Typography variant="caption" display="block">
-                  Czas: {entry.duration_decimal}h
+                <Typography
+                  variant="caption"
+                  display="block"
+                >
+                  Czas: {entry.duration_decimal ?? "—"}h
                 </Typography>
 
-                <Typography variant="caption" display="block">
-                  Ilość: {entry.qty}
+                <Typography
+                  variant="caption"
+                  display="block"
+                >
+                  Ilość: {entry.qty ?? "—"}
                 </Typography>
 
                 {entry.remarks && (
-                  <Typography variant="caption" display="block">
+                  <Typography
+                    variant="caption"
+                    display="block"
+                  >
                     Uwagi: {entry.remarks}
                   </Typography>
                 )}
@@ -129,10 +249,19 @@ const LogsTodayProgress = ({
                 width: item.width,
                 height: "100%",
                 minWidth: 4,
-                backgroundColor: entry.is_repair ? "warning.main" : "primary.main",
-                borderRight: "1px solid rgba(255,255,255,0.55)",
+                flexShrink: 0,
+
+                backgroundColor: entry.is_repair
+                  ? "warning.main"
+                  : "primary.main",
+
+                borderRight:
+                  "1px solid rgba(255,255,255,0.55)",
+
                 cursor: "pointer",
+
                 transition: "filter 120ms ease",
+
                 "&:hover": {
                   filter: "brightness(0.9)",
                 },

@@ -82,6 +82,12 @@ const Bilans = ({data, rwd}) => {
         fetchBilans(data?.id);
     }, [data?.id, fetchBilans]);
 
+    let showDetails = false;
+
+    if (report?.accessLevel) {
+        showDetails = report.accessLevel > 1;
+    }
+
     const renderNavigation = () => (
         <Paper
             variant="outlined"
@@ -138,7 +144,7 @@ const Bilans = ({data, rwd}) => {
                         Karta bilansowa
                     </Button>
 
-                    <Button
+                    {showDetails && <Button
                         startIcon={<TableRowsRoundedIcon/>}
                         size="small"
                         variant={
@@ -151,7 +157,7 @@ const Bilans = ({data, rwd}) => {
                         }}
                     >
                         Tabela kosztów
-                    </Button>
+                    </Button>}
                 </ButtonGroup>
             </Stack>
         </Paper>
@@ -222,23 +228,32 @@ const Bilans = ({data, rwd}) => {
         </Box>
     );
 
-    const renderCostsTable = () => (
-        <Box
-            sx={{
-                flex: 1,
-                minHeight: 0,
-            }}
-        >
-            <PowerTable
-                data={report?.costs ?? []}
-                height={rwd?.height - 272}
-                entityName="JiraIssueBilans"
-                columnSchema={entity.schema?.columns ?? []}
-                loading={loading}
-                onRefresh={() => fetchBilans(data?.id)}
-            />
-        </Box>
-    );
+    const renderCostsTable = () => {
+        if(!showDetails) {
+            return (
+                <Alert severity="info">
+                    Brak dostepu do szczegółowych pozycji kosztowych.
+                </Alert>
+            );
+        }
+        return (
+            <Box
+                sx={{
+                    flex: 1,
+                    minHeight: 0,
+                }}
+            >
+                <PowerTable
+                    data={report?.costs ?? []}
+                    height={rwd?.height - 272}
+                    entityName="JiraIssueBilans"
+                    columnSchema={entity.schema?.columns ?? []}
+                    loading={loading}
+                    onRefresh={() => fetchBilans(data?.id)}
+                />
+            </Box>
+        );
+    }
 
     const renderContent = () => {
         if (loading && !report) {

@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { Box, Stack, Tooltip, Typography } from "@mui/material";
 import { colorFromString } from "../../../utils/colorHash";
 
+import DistributionTable from "./DistributionTable";
+
 const formatNumber = (value, max = 1) =>
     new Intl.NumberFormat("pl-PL", {
         maximumFractionDigits: max,
@@ -22,6 +24,7 @@ const DistributionBar = ({
     items = [],
     height = 22,
     valueFormatter = (v) => v,
+    cumulative = false
 }) => {
     const data = useMemo(() => normalize(items), [items]);
 
@@ -31,10 +34,8 @@ const DistributionBar = ({
 
     if (!data.length || total <= 0) return null;
 
-    console.log(data);
-
     return (
-        <Box>
+        <Box mb={1}>
             <Stack
                 direction="row"
                 justifyContent="space-between"
@@ -86,29 +87,12 @@ const DistributionBar = ({
                 })}
             </Box>
 
-            {/* legenda (ultra compact) */}
-            <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 0.5 }}>
-                {data.map((item, idx) => (
-                    <Stack
-                        key={item.key || idx}
-                        direction="row"
-                        spacing={0.5}
-                        alignItems="center"
-                    >
-                        <Box
-                            sx={{
-                                width: 7,
-                                height: 7,
-                                borderRadius: 0.25,
-                                bgcolor: item.color,
-                            }}
-                        />
-                        <Typography sx={{ fontSize: 10.5, color: "text.secondary" }}>
-                            {item.label}
-                        </Typography>
-                    </Stack>
-                ))}
-            </Stack>
+            <DistributionTable
+                items={data}
+                valueFormatter={valueFormatter}
+                showHeader={false}
+                cumulative={cumulative}
+            />
         </Box>
     );
 };

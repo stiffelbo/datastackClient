@@ -37,6 +37,10 @@ const EntityQueryButton = ({entity, disabled = false}) => {
         setOpen(false);
     };
 
+    if(!entity || !entity.schema || !entity.schema.filterableFields || entity.schema.filterableFields.length === 0) {
+        return null;
+    }
+
     return (
         <>
             <Tooltip title="Otwórz konfigurator filtrów">

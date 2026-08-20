@@ -105,6 +105,36 @@ export const formatDate = (value) => {
     return new Intl.DateTimeFormat("pl-PL").format(date);
 };
 
+const groupCostsByMargin = (costs = []) => {
+    const grouped = {};
+
+    [1,2,3,4,5,6].map(item => {
+        grouped[item] = {
+                key: `m${item}`,
+                label: `Marża ${item}`,
+                value: 0,
+                secondary: 0,
+            }
+    });
+
+    costs.forEach(item => {
+        if(grouped[item.margin]){
+            grouped[item.margin]['value'] += +item.total;
+        }else{
+            grouped[item.margin] = {
+                key: `m${item.margin}`,
+                label: `Marża ${item.margin}`,
+                value: +item.total,
+                secondary: null,
+            }
+        }
+    });
+
+    
+    const result = Object.keys(grouped).sort((a,b) => a.key - b.key).map(key => grouped[key]);
+
+    return result;
+}
 
 const prepareProjectSection = ({
     info,
@@ -450,7 +480,7 @@ const prepareRevenueSection = ({ revenue }) => {
 };
 
 
-const prepareCostsSection = ({ costs, hours }) => ({
+const prepareCostsSection = ({ costs, hours, costsDetails }) => ({
     title: "Koszty",
 
     totals: [
@@ -476,6 +506,13 @@ const prepareCostsSection = ({ costs, hours }) => ({
     ],
 
     distributions: [
+        {
+            key: "costsByMargin",
+            title: "Per Marża",
+            valueFormatter: formatCurrency,
+            items: groupCostsByMargin(costsDetails),
+            cumulative: true
+        },
         {
             key: "costStructure",
             title: "Struktura kosztów",
@@ -505,6 +542,7 @@ const prepareCostsSection = ({ costs, hours }) => ({
                     value: costs.departments?.total_net_pln,
                 },
             ],
+            cumulative : false
         },
         {
             key: "departments",
@@ -525,6 +563,7 @@ const prepareCostsSection = ({ costs, hours }) => ({
                         : null,
                 })
             ),
+            cumulative : false
         },
     ],
 });
@@ -543,6 +582,7 @@ const prepareRemarksSection = ({ remarks, status }) => ({
 export const createBilansSummaryDto = (response) => {
     const info = response?.info ?? {};
     const bilans = response?.bilans ?? response ?? {};
+    const costsDetails = response?.costs ?? [];
 
     const {
         summary = {},
@@ -584,6 +624,7 @@ export const createBilansSummaryDto = (response) => {
         costs: prepareCostsSection({
             costs,
             hours,
+            costsDetails
         }),
 
         remarks: prepareRemarksSection({

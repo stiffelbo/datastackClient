@@ -16,6 +16,7 @@ import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 
 // Components
 import DistributionBar from "./DistributionBar";
+import DistributionTable from "./DistributionTable";
 import CompactField from "./CompactField";
 import SummaryValue from "./SummaryValue";
 import Schedule from "./Schedule";
@@ -489,12 +490,15 @@ const BilansSummary = ({ data }) => {
 
             <Stack spacing={1.5}>
                 {dto.costs.distributions.map((distribution) => (
-                    <DistributionBar
-                        key={distribution.key}
-                        title={distribution.title}
-                        items={distribution.items}
-                        valueFormatter={distribution.valueFormatter}
-                    />
+                    <Box>
+                        <DistributionBar
+                            key={distribution.key}
+                            title={distribution.title}
+                            items={distribution.items}
+                            valueFormatter={distribution.valueFormatter}
+                            cumulative={distribution.cumulative}
+                        />
+                    </Box>
                 ))}
             </Stack>
         </Box>
