@@ -201,51 +201,7 @@ const TableSettings = ({ presets, columns }) => {
                             inputProps={{ min: 8, max: 32, step: 1 }}
                         />
 
-                        <Stack direction="row" gap={1}>
-                            <TextField
-                                fullWidth
-                                label="Padding X px"
-                                size="small"
-                                type="number"
-                                value={form.table.px}
-                                onChange={(e) => updateTable('px', e.target.value)}
-                                inputProps={{ min: 0, max: 48, step: 1 }}
-                            />
-
-                            <TextField
-                                fullWidth
-                                label="Padding Y px"
-                                size="small"
-                                type="number"
-                                value={form.table.py}
-                                onChange={(e) => updateTable('py', e.target.value)}
-                                inputProps={{ min: 0, max: 48, step: 1 }}
-                            />
-                        </Stack>
-
                         <Divider />
-                        <FormControl size="small" fullWidth>
-                            <InputLabel id="page-size-label">
-                                Rozmiar strony
-                            </InputLabel>
-
-                            <Select
-                                labelId="page-size-label"
-                                label="Rozmiar strony"
-                                value={form.table.pageSize}
-                                onChange={(e) => updateTable('pageSize', e.target.value)}
-                                disabled
-                            >
-                                {[100, 200, 500, 1000].map(size => (
-                                    <MenuItem key={size} value={size}>
-                                        {size} wierszy
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <Stack direction="row" gap={1}>
-                            
-                        </Stack>
                     </Stack>
                 </Box>
                 <Divider flexItem orientation="vertical" />

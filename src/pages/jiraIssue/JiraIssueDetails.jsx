@@ -64,15 +64,27 @@ const renderLoading = () => (
     </Box>
 );
 
+const resolveFieldAccess = ({ name, access }) => {
+    if (!name) return false;
+    if (!access?.view_restricted_fields) {
+        return true;
+    } else {
+        const restrictedFields = `${access?.view_restricted_fields}`.split(',');
+        const isRestricted = restrictedFields.includes(name);
+        return isRestricted ? false : true;
+    }
+}
 
 const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
     const schema = normalizeSchema(entity.schema.editForm.schema);
-
+    const mainAccess = entity.schema.access || {};
+    const access = mainAccess.page || {}
+    
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
     };
-
+    
     const form = useForm({
         data: row,
         schema,
@@ -83,6 +95,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
         addons: null,
     });
 
+    
     if (entity.loading) {
         return renderLoading();
     }
@@ -224,11 +237,11 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                                 size={field.size || 'small'}
                                 {...(field.selectProps || {})}
                             >
-                                
+
                                 <MenuItem value="">
                                     {`-- ${field.label || 'Wybierz'} --`}
                                 </MenuItem>
-                              
+
 
                                 {Object.entries(groupedOptions).flatMap(([groupName, groupItems]) => {
                                     const items = [];
@@ -447,21 +460,18 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                     </CollapsibleSection>
 
                     <CollapsibleSection title="Finanse" defaultOpen={true}>
-                        {renderInput("ro_nr")}
-                        {renderInput("design_price")}
-                        {renderInput("setup_price")}
-                        {renderInput("unit_price")}
-
-                        {renderInput("currency")}
-                        {renderInput("conversion_rate")}
-                        {renderInput("budget_net")}
-
-                        {renderInput("planned_margin_pct")}
-                        {renderInput("planned_revenue_net")}
-                        {renderInput("committed_costs_net")}
-
-                        {renderInput("invoiced_revenue_net")}
-                        {renderInput("cash_received_net")}
+                        {resolveFieldAccess({ name: "ro_nr", access }) ? renderInput("ro_nr") : null}
+                        {resolveFieldAccess({ name: "design_price", access }) ? renderInput("design_price") : null}
+                        {resolveFieldAccess({ name: "setup_price", access }) ? renderInput("setup_price") : null}
+                        {resolveFieldAccess({ name: "unit_price", access }) ? renderInput("unit_price") : null}
+                        {resolveFieldAccess({ name: "currency", access }) ? renderInput("currency") : null}
+                        {resolveFieldAccess({ name: "conversion_rate", access }) ? renderInput("conversion_rate") : null}
+                        {resolveFieldAccess({ name: "budget_net", access }) ? renderInput("budget_net") : null}
+                        {resolveFieldAccess({ name: "planned_margin_pct", access }) ? renderInput("planned_margin_pct") : null}
+                        {resolveFieldAccess({ name: "planned_revenue_net", access }) ? renderInput("planned_revenue_net") : null}
+                        {resolveFieldAccess({ name: "committed_costs_net", access }) ? renderInput("committed_costs_net") : null}
+                        {resolveFieldAccess({ name: "invoiced_revenue_net", access }) ? renderInput("invoiced_revenue_net") : null}
+                        {resolveFieldAccess({ name: "cash_received_net", access }) ? renderInput("cash_received_net") : null}
                     </CollapsibleSection>
                 </Col>
 

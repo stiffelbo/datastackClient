@@ -15,9 +15,9 @@ const toTrimmed = (v) => {
 const toBoolDefault = (v, def = false) =>
     typeof v === 'boolean' ? v : def;
 
-const toPageSize = (v, def = 200) => {
+const toPageSize = (v, def = 1000) => {
   const n = toNum(v);
-  return [100, 200, 500, 1000].includes(n) ? n : def;
+  return [100, 200, 500, 1000, 2000].includes(n) ? n : def;
 };
 
 export const createViewConfig = ({

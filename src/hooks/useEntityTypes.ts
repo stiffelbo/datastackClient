@@ -22,15 +22,20 @@ export interface UseEntityParams<Row = any> {
  * Z czasem możesz to doprecyzować.
  */
 export interface UseEntitySchema {
-  addForm: any;
-  editForm: any;
-  bulkEditForm: any;
+  addForm: FormSchema;
+  editForm: FormSchema;
+  bulkEditForm: FormSchema;
+
   columns: any[];
+
   endpoints?: Record<string, string | null>;
   relations?: Record<string, unknown>;
   options?: Record<string, unknown>;
+
   importSchema?: any[];
+
   heightSpan?: number;
+
   mapper?: {
     itemField?: string;
   };
@@ -51,8 +56,8 @@ export interface UseEntityResult<Row = any, Schema = UseEntitySchema> {
   // CRUD
   create: ((data: any) => Promise<any>) | null;
   updateField:
-    | ((args: { id: any; field: string; value: any }) => Promise<any>)
-    | null;
+  | ((args: { id: any; field: string; value: any }) => Promise<any>)
+  | null;
   update: ((id: any, changes: any) => Promise<boolean>) | null;
   updateMany: ((ids: any[], changes: any) => Promise<number>) | null;
   remove: ((id: any) => Promise<boolean>) | null;
@@ -60,15 +65,15 @@ export interface UseEntityResult<Row = any, Schema = UseEntitySchema> {
 
   // import/upload
   upload:
-    | ((
-        dataRows: any[],
-      ) => Promise<{
-        inserted: number;
-        skipped: number;
-        ids: any[];
-        errors: string[];
-      }>)
-    | null;
+  | ((
+    dataRows: any[],
+  ) => Promise<{
+    inserted: number;
+    skipped: number;
+    ids: any[];
+    errors: string[];
+  }>)
+  | null;
 
   // pojedynczy rekord
   getOne: ((id: any) => Promise<any>) | null;
@@ -87,3 +92,72 @@ export interface UseEntityResult<Row = any, Schema = UseEntitySchema> {
 export type UseEntityFn<Row = any, Schema = UseEntitySchema> = (
   params: UseEntityParams<Row>,
 ) => UseEntityResult<Row, Schema>;
+
+export type FormInputType =
+  | 'hidden'
+  | 'text'
+  | 'email'
+  | 'number'
+  | 'date'
+  | 'datetime'
+  | 'datetime-local'
+  | 'textarea'
+  | 'password'
+  | 'boolean'
+  | 'switch'
+  | 'select'
+  | 'select-object'
+  | 'select-multiple'
+  | 'file'
+  | 'custom'
+  | 'object';
+
+export type SelectOptionValue =
+  | string
+  | number
+  | boolean
+  | null;
+
+export interface SelectOption {
+  value: SelectOptionValue;
+  label: string;
+  title: string | null;
+  disabled: boolean;
+  group: string | null;
+  description: string | null;
+}
+
+export interface GridSpan {
+  xl: number;
+  md: number;
+  xs: number;
+}
+
+export type FormFieldValidation = Record<string, unknown>;
+
+export interface FormField {
+  name: string;
+  type: FormInputType;
+
+  label?: string;
+  description?: string;
+  placeholder?: string;
+
+  defaultValue?: unknown;
+  step?: string;
+
+  required?: boolean;
+  disabled?: boolean;
+
+  fieldGroup?: string;
+
+  validation?: FormFieldValidation;
+  selectOptions?: SelectOption[];
+  grid?: GridSpan;
+}
+
+export interface FormSchema {
+  schema: FormField[];
+  formData: boolean;
+  label: string;
+}

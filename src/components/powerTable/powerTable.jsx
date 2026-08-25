@@ -21,8 +21,6 @@ import BulkFormModal from './bulkFormModal';
 import UploadModal from './uploadModal';
 import AddFormModal from './addFormModal';
 
-const V_N_COUNT = 6000;
-
 const defaultTree = {
   enabled: false,
   canDisable: true,
@@ -180,8 +178,7 @@ const PowerTable = ({
     );
   }, [filteredData, columnsSchema.sortModel, columnsSchema.columns]);
 
-  const cellNodes = (filteredData?.length * columnsSchema?.getVisibleColumns()?.length);
-  const isVirtualized = cellNodes > V_N_COUNT ? true : false;
+  const isVirtualized = true;
 
   const { getGroupedCols } = columnsSchema;
   const isGrouped = getGroupedCols().length;

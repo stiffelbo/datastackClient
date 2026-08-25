@@ -1,7 +1,18 @@
 // virtualizedGroupedBody.jsx
-import React, { useMemo, useRef } from 'react';
-import { TableBody, TableRow, TableCell, Box, IconButton } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import React from 'react';
+import {
+  TableBody,
+  TableRow,
+  TableCell,
+  Box,
+  IconButton
+} from '@mui/material';
+
+import {
+  ExpandLess,
+  ExpandMore
+} from '@mui/icons-material';
+
 import PowerTableCell from './powerTableCell';
 import PowerTableRow from './powerTableRow';
 import ActionCell from './cell/actionCell';
@@ -13,75 +24,89 @@ const VirtualizedGroupedBody = ({
   settings,
   groupCollapseState,
   toggleCollapse,
-  overscan = 5,
-  height = 600,
-  scrollTop = 0,
+  rowVirtualizer,
   actionsApi,
   editing,
 }) => {
-  const rowHeight = settings.rowHeight || 45;
-  const rowCount = flatData.length;
+  const rowHeight = Number(settings?.rowHeight) || 45;
+  const fontSize = settings?.fontSize || '0.8rem';
 
-  const viewportHeight = Math.max(height, rowHeight);
-  const visibleCount = Math.ceil(viewportHeight / rowHeight);
+  const visibleColumns =
+    columnsSchema.getVisibleColumns();
 
-  const rawBaseIndex = Math.floor(scrollTop / rowHeight);
+  const virtualRows =
+    rowVirtualizer.getVirtualItems();
 
-  // --- HISTERZA NA BASEINDEX ---
-  const prevRef = useRef({ baseIndex: rawBaseIndex, scrollTop });
-
-  let baseIndex = rawBaseIndex;
-  const prev = prevRef.current;
-
-  const baseDiff = Math.abs(rawBaseIndex - prev.baseIndex);
-  const scrollDiff = Math.abs(scrollTop - prev.scrollTop);
-
-  // jeśli:
-  // - baseIndex różni się tylko o 1
-  // - i scrollTop prawie się nie zmienił (np. < pół wysokości rzędu)
-  // to uznajemy, że to drganie layoutu i TRZYMAMY poprzedni baseIndex
-  if (baseDiff === 1 && scrollDiff < rowHeight / 2) {
-    baseIndex = prev.baseIndex;
-  } else {
-    // normalny, "prawdziwy" ruch scrolla → aktualizujemy pamięć
-    prevRef.current = {
-      baseIndex: rawBaseIndex,
-      scrollTop,
-    };
-    baseIndex = rawBaseIndex;
-  }
-  const startIndex = Math.max(0, baseIndex - overscan);
-  const endIndex = Math.min(rowCount, baseIndex + visibleCount + overscan);
-
-  const visibleRows = useMemo(
-    () => flatData.slice(startIndex, endIndex),
-    [flatData, startIndex, endIndex]
-  );
-
-  const paddingTop = startIndex * rowHeight;
-  const paddingBottom = (rowCount - endIndex) * rowHeight;
-
-  const visibleColumns = columnsSchema.getVisibleColumns();
+  const totalSize =
+    rowVirtualizer.getTotalSize();
 
   return (
-    <TableBody>
-      {paddingTop > 0 && (
-        <tr style={{ height: paddingTop }}>
-          <td colSpan={visibleColumns.length} />
-        </tr>
-      )}
-      {/**** Group Row ****/}
-      {visibleRows.map((item, idx) => {
+    <TableBody
+      sx={{
+        position: 'relative',
+        display: 'block',
+        height: `${totalSize}px`,
+        width: '100%',
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const item = flatData[virtualRow.index];
+
+        if (!item) return null;
+
+        const virtualRowSx = {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+
+          width: '100%',
+          height: `${rowHeight}px`,
+          minHeight: `${rowHeight}px`,
+          maxHeight: `${rowHeight}px`,
+
+          transform: `translateY(${virtualRow.start}px)`,
+
+          display: 'flex',
+
+          boxSizing: 'border-box',
+        };
+
+        /*
+         * -------------------------------------------------
+         * GROUP ROW
+         * -------------------------------------------------
+         */
         if (item.type === 'group') {
-          const open = !groupCollapseState[item.path];
-          const groupRows = item.rows || []; // użyj rows z drzewa, nie filtruj po flatData
+          const open =
+            !groupCollapseState[item.path];
+
+          const groupRows =
+            item.rows || [];
 
           return (
             <TableRow
-              key={`group-${item.path}-${idx}`}
-              sx={{ backgroundColor: '#f3f3f3', height: rowHeight }}
+              key={`group-${item.path}`}
+              data-index={virtualRow.index}
+              sx={{
+                ...virtualRowSx,
+
+                backgroundColor: '#f3f3f3',
+
+                '& > td': {
+                  height: `${rowHeight}px`,
+                  minHeight: `${rowHeight}px`,
+                  maxHeight: `${rowHeight}px`,
+                  boxSizing: 'border-box',
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  overflow: 'hidden',
+                },
+              }}
             >
               {visibleColumns.map((col) => {
+                /*
+                 * ACTION COLUMN
+                 */
                 if (col.type === 'action') {
                   return (
                     <ActionCell
@@ -90,49 +115,166 @@ const VirtualizedGroupedBody = ({
                       params={{}}
                       parent="group"
                       actionsApi={actionsApi}
-                      cellSX={{}}
                       data={groupRows}
+                      settings={settings}
+                      cellSX={{
+                        flex: '0 0 auto',
+
+                        width: col.width,
+                        minWidth: col.minWidth,
+                        maxWidth: col.maxWidth,
+                      }}
                     />
                   );
                 }
 
+                /*
+                 * GROUP LABEL COLUMN
+                 */
                 if (col.field === item.field) {
-                  let displayValue = item.value;
+                  let displayValue =
+                    item.value;
 
-                  if (col.input === 'select' && Array.isArray(col.options) && displayValue) {
-                    const option = col.options.find((option) => {
-                      if (typeof option === 'object') {
-                        return +option.value === +item.value;
-                      }
-                      return false;
-                    });
-                    if (option) displayValue = option.label;
+                  if (
+                    col.input === 'select' &&
+                    Array.isArray(col.options) &&
+                    displayValue
+                  ) {
+                    const option =
+                      col.options.find(
+                        (option) => {
+                          if (
+                            typeof option ===
+                            'object'
+                          ) {
+                            return (
+                              +option.value ===
+                              +item.value
+                            );
+                          }
+
+                          return false;
+                        }
+                      );
+
+                    if (option) {
+                      displayValue =
+                        option.label;
+                    }
                   }
 
                   return (
-                    <TableCell key={col.field}>
-                      <Box 
-                        sx={{ display: 'flex', alignItems: 'center', height: rowHeight, 
-                          maxHeight: rowHeight, overflow: 'hidden', fontSize: '0.8em' 
+                    <TableCell
+                      key={col.field}
+                      sx={{
+                        flex: '0 0 auto',
+
+                        width: col.width,
+                        minWidth: col.minWidth,
+                        maxWidth: col.maxWidth,
+
+                        height: `${rowHeight}px`,
+                        minHeight: `${rowHeight}px`,
+                        maxHeight: `${rowHeight}px`,
+
+                        padding: 0,
+
+                        boxSizing:
+                          'border-box',
+
+                        overflow: 'hidden',
+
+                        borderRight:
+                          '1px solid #eee',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: '100%',
+                          minHeight: 0,
+                          maxHeight: '100%',
+
+                          boxSizing:
+                            'border-box',
+
+                          display: 'flex',
+                          alignItems: 'center',
+
+                          px: 1,
+
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+
+                          fontSize,
                         }}
-                        title={displayValue}
+                        title={String(
+                          displayValue ?? ''
+                        )}
                       >
-                        <IconButton size="small" onClick={() => toggleCollapse(item.path)}>
-                          {open ? <ExpandMore /> : <ExpandLess />}
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            toggleCollapse(
+                              item.path
+                            )
+                          }
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            minWidth: 32,
+                            minHeight: 32,
+
+                            padding: 0,
+
+                            flexShrink: 0,
+                          }}
+                        >
+                          {open ? (
+                            <ExpandMore />
+                          ) : (
+                            <ExpandLess />
+                          )}
                         </IconButton>
-                        {`${displayValue} (${item.rows?.length ?? 0})`}
+
+                        <Box
+                          component="span"
+                          sx={{
+                            minWidth: 0,
+
+                            overflow: 'hidden',
+                            textOverflow:
+                              'ellipsis',
+                            whiteSpace:
+                              'nowrap',
+                          }}
+                        >
+                          {`${displayValue} (${item.rows?.length ?? 0})`}
+                        </Box>
                       </Box>
                     </TableCell>
                   );
                 }
 
-                if (item.aggregates?.[col.field] !== undefined) {
+                /*
+                 * AGGREGATION
+                 */
+                if (
+                  item.aggregates?.[
+                    col.field
+                  ] !== undefined
+                ) {
                   return (
                     <PowerTableCell
                       key={col.field}
-                      value={item.aggregates[col.field]}
+                      value={
+                        item.aggregates[
+                          col.field
+                        ]
+                      }
                       column={col}
-                      columnsSchema={columnsSchema}
+                      columnsSchema={
+                        columnsSchema
+                      }
                       settings={settings}
                       parent="grouped"
                       actionsApi={actionsApi}
@@ -140,16 +282,53 @@ const VirtualizedGroupedBody = ({
                   );
                 }
 
-                return <TableCell key={col.field} />;
+                /*
+                 * EMPTY CELL
+                 */
+                return (
+                  <TableCell
+                    key={col.field}
+                    sx={{
+                      flex: '0 0 auto',
+
+                      width: col.width,
+                      minWidth: col.minWidth,
+                      maxWidth: col.maxWidth,
+
+                      height: `${rowHeight}px`,
+                      minHeight: `${rowHeight}px`,
+                      maxHeight: `${rowHeight}px`,
+
+                      padding: 0,
+
+                      boxSizing:
+                        'border-box',
+
+                      overflow: 'hidden',
+
+                      borderRight:
+                        '1px solid #eee',
+                    }}
+                  />
+                );
               })}
             </TableRow>
           );
         }
 
-        // zwykły wiersz danych
+        /*
+         * -------------------------------------------------
+         * NORMAL DATA ROW
+         * -------------------------------------------------
+         */
+
+        const rowId =
+          item.row?.id ??
+          virtualRow.index;
+
         return (
           <PowerTableRow
-            key={`row-${item.row?.id ?? idx}`}
+            key={`row-${rowId}`}
             row={item.row}
             columnsSchema={columnsSchema}
             rowRules={rowRules}
@@ -157,15 +336,16 @@ const VirtualizedGroupedBody = ({
             actionsApi={actionsApi}
             parent="grouprow"
             editing={editing}
+
+            /*
+             * NOWE:
+             * PowerTableRow musi przyjąć sx
+             * albo style.
+             */
+            sx={virtualRowSx}
           />
         );
       })}
-
-      {paddingBottom > 0 && (
-        <tr style={{ height: paddingBottom }}>
-          <td colSpan={visibleColumns.length} />
-        </tr>
-      )}
     </TableBody>
   );
 };

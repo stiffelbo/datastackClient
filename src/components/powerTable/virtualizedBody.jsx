@@ -1,5 +1,6 @@
-import React, { useMemo, useRef } from 'react';
+import React from 'react';
 import { TableBody } from '@mui/material';
+
 import PowerTableRow from './powerTableRow';
 
 const VirtualizedBody = ({
@@ -7,68 +8,85 @@ const VirtualizedBody = ({
   columnsSchema,
   rowRules,
   settings,
-  overscan = 5,
-  height,
-  scrollTop = 0,
+  rowVirtualizer,
   editing,
   actionsApi,
 }) => {
-  const rowHeight = settings.rowHeight || 45;
-  const viewportHeight = Math.max(height, rowHeight);
-  const visibleCount = Math.ceil(viewportHeight / rowHeight);
+  const rowHeight =
+    Number(settings?.rowHeight) || 45;
 
-  const baseIndex = Math.floor(scrollTop / rowHeight);
+  const virtualRows =
+    rowVirtualizer.getVirtualItems();
 
-  const prevBaseRef = useRef(baseIndex);
-  let stableBase = baseIndex;
-
-  if (Math.abs(baseIndex - prevBaseRef.current) === 1) {
-    // malutka histereza – ignorujemy „drgnięcie” o 1
-    stableBase = prevBaseRef.current;
-  } else {
-    prevBaseRef.current = baseIndex;
-  }
-
-  const startIndex = Math.max(0, stableBase - overscan);
-  const endIndex = Math.min(
-    data.length,
-    stableBase + visibleCount + overscan
-  );
-
-  const visibleRows = useMemo(
-    () => data.slice(startIndex, endIndex),
-    [data, startIndex, endIndex]
-  );
-
-  const paddingTop = startIndex * rowHeight;
-  const paddingBottom = (data.length - endIndex) * rowHeight;
+  const totalSize =
+    rowVirtualizer.getTotalSize();
 
   return (
-    <TableBody>
-      {paddingTop > 0 && (
-        <tr style={{ height: paddingTop }}>
-          <td colSpan={columnsSchema.getVisibleColumns().length} />
-        </tr>
-      )}
+    <TableBody
+      sx={{
+        position: 'relative',
+        display: 'block',
 
-      {visibleRows.map((row, idx) => (
-        <PowerTableRow
-          key={row.id || startIndex + idx}
-          row={row}
-          columnsSchema={columnsSchema}
-          rowRules={rowRules}
-          settings={settings}
-          editing={editing}
-          actionsApi={actionsApi}
-          parent="body"
-        />
-      ))}
+        height: `${totalSize}px`,
+        width: '100%',
 
-      {paddingBottom > 0 && (
-        <tr style={{ height: paddingBottom }}>
-          <td colSpan={columnsSchema.getVisibleColumns().length} />
-        </tr>
-      )}
+        boxSizing: 'border-box',
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const row = data[virtualRow.index];
+
+        if (!row) {
+          return null;
+        }
+
+        const rowId =
+          row.id ??
+          virtualRow.index;
+
+        return (
+          <PowerTableRow
+            key={`row-${rowId}`}
+            row={row}
+            columnsSchema={columnsSchema}
+            rowRules={rowRules}
+            settings={{
+              ...settings,
+
+              /*
+               * Ten renderer używa już
+               * absolute + flex rows.
+               */
+              isVirtualized: true,
+              virtualFlex: true,
+              rowHeight,
+            }}
+            editing={editing}
+            actionsApi={actionsApi}
+            parent="body"
+
+            sx={{
+              position: 'absolute',
+
+              top: 0,
+              left: 0,
+
+              width: '100%',
+
+              height: `${rowHeight}px`,
+              minHeight: `${rowHeight}px`,
+              maxHeight: `${rowHeight}px`,
+
+              display: 'flex',
+
+              transform:
+                `translateY(${virtualRow.start}px)`,
+
+              boxSizing: 'border-box',
+            }}
+          />
+        );
+      })}
     </TableBody>
   );
 };

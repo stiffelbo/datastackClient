@@ -1,5 +1,6 @@
 import React from 'react';
 import { TableBody } from '@mui/material';
+
 import PowerTableRow from './powerTableRow';
 import VirtualizedBody from './virtualizedBody';
 
@@ -8,24 +9,21 @@ const PowerTableBody = ({
   columnsSchema,
   rowRules = [],
   settings = {},
-  height,
-  scrollHeight,
-  scrollTop = 0,
+  rowVirtualizer,
   editing,
   actionsApi,
 }) => {
-  const viewportHeight =
-    scrollHeight || height || settings.height || 400;
-
-  if (settings.isVirtualized) {
+  if (
+    settings.isVirtualized &&
+    rowVirtualizer
+  ) {
     return (
       <VirtualizedBody
         data={data}
         columnsSchema={columnsSchema}
         rowRules={rowRules}
         settings={settings}
-        height={viewportHeight}     // ← viewport, nie bodyHeight
-        scrollTop={scrollTop}
+        rowVirtualizer={rowVirtualizer}
         editing={editing}
         actionsApi={actionsApi}
       />
@@ -36,13 +34,22 @@ const PowerTableBody = ({
     <TableBody>
       {data.map((row, idx) => (
         <PowerTableRow
-          key={row.id || idx}
+          key={row.id ?? idx}
           row={row}
           columnsSchema={columnsSchema}
           rowRules={rowRules}
-          settings={settings}
+          settings={{
+            ...settings,
+
+            /*
+             * Zwykły body nie korzysta
+             * z absolute/flex virtual rows.
+             */
+            virtualFlex: false,
+          }}
           editing={editing}
           actionsApi={actionsApi}
+          parent="body"
         />
       ))}
     </TableBody>

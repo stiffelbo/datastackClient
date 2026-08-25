@@ -33,6 +33,7 @@ const defaultSchema = {
     options: {},      // { [fieldName]: Option[] }
     importSchema: [],
     heightSpan: 85,
+    access: {},
 };
 
 export function normalizeSelectOptions(options = []) {

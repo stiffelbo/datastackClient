@@ -359,7 +359,7 @@ export const exportToXLSWithSchema = (
     let value = row?.[col.field];
 
     // FK/select: id -> label
-    if ((col?.type === 'fk' || col?.input === 'select') && col?.optionsMap) {
+    if (col?.type !== 'number' && col?.input === 'select' && col?.optionsMap) {
       if (value == null || value === '') return '';
       const mapped = col.optionsMap[value] ?? col.optionsMap[String(value)];
       value = mapped != null ? mapped : value;

@@ -175,7 +175,7 @@ export default useAutoColumns;
 export const createActionColumns = ({ isDeleteCol, isSelectCol, isSelectedItemsCol }) => {
   const columns = [];
 
-  const makeColumn = (name, width = 26) => {
+  const makeColumn = (name, width = 40) => {
     return {
       field: `__action_${name}`,
       fieldGroup: 'actions',

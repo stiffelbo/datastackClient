@@ -3,6 +3,7 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
+import PageDetails from './PageDetails';
 import PageUser from './PageUser';
 
 const PagePage = ({
@@ -20,6 +21,12 @@ const PagePage = ({
 
   // tu definicje tabsów i propsy dla subkomponentów
   const tabs = [
+    {
+      key: 'pageDetails',
+      label: 'Szczegóły',
+      pageKey: 'page.details', // klucz z rejestru stron
+      component: <PageDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard}/>,
+    },
     {
       key: 'pageUsers',
       label: 'Użytkownicy',

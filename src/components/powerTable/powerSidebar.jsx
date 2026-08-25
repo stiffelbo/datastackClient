@@ -14,11 +14,12 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SaveIcon from '@mui/icons-material/Save';
+import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty';
 
 import AllFilters from './filter/allFilters';
 import { normalizeOverrides, equalOverrides } from './hooks/presetUtils';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false, showExport = false, showPresets = false }) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false, showExport = false, showPresets = false}) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 

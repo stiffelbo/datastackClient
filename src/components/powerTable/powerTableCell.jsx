@@ -4,43 +4,66 @@ import DisplayCell from './cell/displayCell';
 import EditCell from './cell/editCell';
 import ActionCell from './cell/actionCell';
 
-/**
- * PowerTableCell – kontroler renderowania komórki.
- * Decyduje, czy renderować tryb wyświetlania, czy edycji.
- */
 const PowerTableCell = ({
   value,
   column,
   columnSchema,
-  settings,
+  settings = {},
   params,
-  editing, // obiekt z hooka useTableEditing()
+  editing,
   parent = 'body',
   actionsApi = {}
 }) => {
-
   const { startEdit, stopEdit, isEditing, commitEdit } = editing || {};
+
   const isEditMode = isEditing ? isEditing(params) : false;
 
-  /** Kliknięcie 2× = wejście w edycję */
+  const isVirtualized = !!settings.isVirtualized;
+
+  const rowHeight =
+    isVirtualized && settings.rowHeight
+      ? Number(settings.rowHeight)
+      : null;
+
+  const cellSettings = {
+    ...settings,
+
+    isVirtualized,
+    rowHeight,
+
+    // przy absolute/flex rows
+    virtualFlex: !!settings.virtualFlex,
+
+    // geometria kolumny dostępna w każdym cell rendererze
+    columnWidth: column?.width,
+    columnMinWidth: column?.minWidth,
+    columnMaxWidth: column?.maxWidth,
+  };
+
   const handleDoubleClick = () => {
     const editable =
       typeof column.editable === 'function'
         ? column.editable(params)
         : column.editable;
 
-    if (editable && typeof startEdit === 'function') startEdit(params);
+    if (
+      editable &&
+      typeof startEdit === 'function'
+    ) {
+      startEdit(params);
+    }
   };
 
-  /** Commit z EditCell */
   const handleCommit = (newValue, cellParams) => {
-    if (typeof commitEdit === 'function')
+    if (typeof commitEdit === 'function') {
       commitEdit(newValue, cellParams);
+    }
   };
 
-  /** Obsługa anulowania */
   const handleCancel = () => {
-    if (typeof stopEdit === 'function') stopEdit();
+    if (typeof stopEdit === 'function') {
+      stopEdit();
+    }
   };
 
   if (column.type === 'action') {
@@ -51,31 +74,36 @@ const PowerTableCell = ({
         params={params || {}}
         parent={parent}
         actionsApi={actionsApi}
+        settings={cellSettings}
       />
     );
-  }else{
-     return isEditMode ? (
+  }
+
+  if (isEditMode) {
+    return (
       <EditCell
         value={value}
         onCommit={handleCommit}
         onCancel={handleCancel}
-        settings={settings}
+        settings={cellSettings}
         column={column}
         params={params}
         parent={parent}
-      />
-    ) : (
-      <DisplayCell
-        value={value}
-        column={column}
-        settings={settings}
-        params={params}
-        onDoubleClick={handleDoubleClick}
-        parent={parent}
-        editing={editing}
       />
     );
-  } 
+  }
+
+  return (
+    <DisplayCell
+      value={value}
+      column={column}
+      settings={cellSettings}
+      params={params}
+      onDoubleClick={handleDoubleClick}
+      parent={parent}
+      editing={editing}
+    />
+  );
 };
 
 export default PowerTableCell;

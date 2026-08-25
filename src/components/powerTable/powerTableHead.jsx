@@ -30,10 +30,12 @@ const getCellSX = (col) => ({
   fontWeight: 'bold',
   fontSize: '0.8em',
   position: 'sticky',
+  padding: 0,
   top: 0,
   zIndex: 2,
   whiteSpace: 'nowrap',
   borderRight: '1px solid #ddd',
+  boxSizing: 'border-box',
 });
 
 const PowerTableHead = ({
@@ -48,6 +50,7 @@ const PowerTableHead = ({
   // 🔹 NOWE:
   isTree = false,
   treeColumnWidth = 55,
+  settings = {},
 }) => {
   const ref = useRef(null);
 
@@ -56,9 +59,9 @@ const PowerTableHead = ({
   useEffect(() => {
     if (ref.current && onHeightChange) {
       const calcHeight = ref.current.getBoundingClientRect().height;
-      if (height !==  calcHeight){
+      if (height !== calcHeight) {
         onHeightChange(calcHeight);
-      } 
+      }
     }
   }, [height, onHeightChange]);
 
@@ -78,8 +81,27 @@ const PowerTableHead = ({
 
   return (
     <>
-      <TableHead ref={ref}>
-        <TableRow>
+      <TableHead
+        ref={ref}
+        sx={{
+          display: settings?.virtualFlex ? 'grid' : 'table-header-group',
+
+          ...(settings?.virtualFlex && {
+            position: 'sticky',
+            top: 0,
+            zIndex: 20,
+            backgroundColor: '#fff',
+          }),
+        }}
+      >
+        <TableRow
+          sx={{
+            ...(settings?.virtualFlex && {
+              display: 'flex',
+              width: '100%',
+            }),
+          }}
+        >
           {/* 🔹 Systemowa pierwsza kolumna dla trybu TREE */}
           {isTree && (
             <TableCell
@@ -90,12 +112,13 @@ const PowerTableHead = ({
                 overflow: 'hidden',
                 backgroundColor: '#f8f8f8ff',
                 fontWeight: 'bold',
-                fontSize: '0.8em',
+                fontSize: settings.fontSize || '0.8em',
                 position: 'sticky',
                 top: 0,
                 zIndex: 3, // trochę wyżej niż zwykłe head cells
                 whiteSpace: 'nowrap',
                 borderRight: '1px solid #ddd',
+                boxSizing: 'border-box'
               }}
               // tu możesz kiedyś wrzucić np. ikonę drzewa / expand-all
               title="Struktura drzewa"
@@ -153,9 +176,11 @@ const PowerTableHead = ({
                 >
                   <Box
                     sx={{
+                      paddingLeft: '4px',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
+                      width: '100%', maxWidth: '100%', minWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'
                     }}
                   >
                     {/* HEADER CLICK → OPEN CONFIGURATOR */}
@@ -167,7 +192,7 @@ const PowerTableHead = ({
                       <span>{typeIcons[col.type] || ''}</span>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 600, userSelect: 'none' }}
+                        sx={{ fontWeight: 600, fontSize: settings.fontSize || '0.8em', userSelect: 'none' }}
                       >
                         {col.headerName || col.field}
                       </Typography>
