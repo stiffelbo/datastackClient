@@ -54,6 +54,27 @@ function toDatetimeLocalValue(value) {
   return "";
 }
 
+function toTimeLocalValue(value) {
+  if (!value) return "";
+
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  // "2026-09-03 12:45:00" -> "12:45:00"
+  if (value.includes(" ")) {
+    return value.split(" ")[1]?.slice(0, 8) ?? "";
+  }
+
+  // Obsługa również "2026-09-03T12:45:00"
+  if (value.includes("T")) {
+    return value.split("T")[1]?.slice(0, 8) ?? "";
+  }
+
+  // Jeśli backend kiedyś zwróci samo "12:45:00"
+  return value.slice(0, 8);
+}
+
 
 function renderGroupedMenuItems(options = []) {
   const groupedOptions =
@@ -135,8 +156,6 @@ const EditCell = ({
 
   const didFocusRef =
     useRef(false);
-
-
   /*
    * =======================================================
    * SETTINGS
@@ -316,9 +335,7 @@ const EditCell = ({
    */
 
   const toBackendValue = (v) => {
-    if (
-      inputType === "datetime"
-    ) {
+    if (inputType === "datetime") {
       if (!v) {
         return null;
       }
@@ -329,13 +346,48 @@ const EditCell = ({
       ) {
         return (
           v.replace("T", " ") +
-          (
-            v.length === 16
-              ? ":00"
-              : ""
-          )
+          (v.length === 16 ? ":00" : "")
         );
       }
+    }
+
+    if (inputType === "time") {
+      if (!v) {
+        return null;
+      }
+
+      let time = String(v);
+
+      // Jeśli v jest pełnym datetime:
+      // "2026-09-03 13:00:00"
+      // albo
+      // "2026-09-03T13:00:00"
+      // wyciągamy tylko czas
+      if (time.includes(" ")) {
+        time = time.split(" ")[1] ?? "";
+      } else if (time.includes("T")) {
+        time = time.split("T")[1] ?? "";
+      }
+
+      // HH:mm -> HH:mm:ss
+      if (time.length === 5) {
+        time += ":00";
+      }
+
+      time = time.slice(0, 8);
+
+      // Jeśli initialValue zawiera datę,
+      // zachowujemy ją
+      if (
+        typeof initialValue === "string" &&
+        /^\d{4}-\d{2}-\d{2}[ T]/.test(initialValue)
+      ) {
+        const date = initialValue.slice(0, 10);
+
+        return `${date} ${time}`;
+      }
+
+      return time;
     }
 
     return v;
@@ -478,8 +530,52 @@ const EditCell = ({
       />
     );
   }
+  /*
+    * TIME
+    */
+  else if (inputType === "time") {
+    inputElement = (
+      <TextField
+        inputRef={inputRef}
 
+        value={toTimeLocalValue(value)}
 
+        onChange={(e) =>
+          handleLocalChange(e.target.value)
+        }
+
+        onBlur={() =>
+          handleCommit()
+        }
+
+        onKeyDown={handleKeyDown}
+
+        fullWidth
+        size="small"
+        variant="standard"
+
+        type="text"
+
+        placeholder="GG:MM:SS"
+
+        inputProps={{
+          inputMode: "numeric",
+        }}
+
+        error={!!error}
+
+        helperText={
+          isVirtual
+            ? undefined
+            : error || ""
+        }
+
+        title={error || undefined}
+
+        sx={virtualInputSx}
+      />
+    );
+  }
   /*
    * DATE
    */
@@ -582,7 +678,6 @@ const EditCell = ({
     );
   }
 
-
   /*
    * SELECT
    */
@@ -594,8 +689,8 @@ const EditCell = ({
       Array.isArray(column?.options)
         ? column.options
         : Array.isArray(
-            column?.selectOptions
-          )
+          column?.selectOptions
+        )
           ? column.selectOptions
           : [];
 
@@ -641,11 +736,10 @@ const EditCell = ({
         sx={virtualInputSx}
       >
         <MenuItem value="">
-          {`-- ${
-            column?.label ||
+          {`-- ${column?.label ||
             column?.headerName ||
             "Wybierz"
-          } --`}
+            } --`}
         </MenuItem>
 
         {renderGroupedMenuItems(

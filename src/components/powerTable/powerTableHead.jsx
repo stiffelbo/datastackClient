@@ -15,6 +15,8 @@ const typeIcons = {
   string: '🅰️',
   number: '🔢',
   date: '📅',
+  datetime: '🕒',
+  time: '⏰',
   bool: '✔️',
   boolean: '✔️',
   fk: '🔗',

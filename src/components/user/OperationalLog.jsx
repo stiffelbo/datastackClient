@@ -41,15 +41,15 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = 
 
             addFormSchema={entity.schema.addForm}
             addFormInitialValues={{issue_id: issue.id}}
-            bulkEditFormSchema={null}
+            bulkEditFormSchema={entity.schema.bulkEditForm}
             importSchema={null}
 
             onRefresh={entity.refresh}
             onPost={entity.create}
             onEdit={entity.updateField}
             onUpload={null}
-            onBulkEdit={null}
-            onDelete={entity.remove}
+            onBulkEdit={entity.updateMany}
+            onDelete={(id) => { if(window.confirm('Czy na pewno chcesz usunąć?')) { entity.remove(id); } }} //zapytaj najpierw czy na pewno chcesz usunąć
             onBulkDelete={null}
 
             error={entity.error}

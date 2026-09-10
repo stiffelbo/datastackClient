@@ -2,9 +2,10 @@
 
 
 // hooks/useEntity.js
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import { toast } from 'react-toastify';
 import http from '../http';
+import { EntityContext } from '../context/EntityContext';
 
 /**
  * useEntity hook
@@ -26,6 +27,7 @@ const defaultSchema = {
     addForm: { schema: [], label: '' },
     editForm: { schema: [], label: '' },
     bulkEditForm: { schema: [], label: '' },
+    bulkCopyForm: { schema: [], label: '' },
     columns: [],
     filterableFields: [],
     endpoints: {},
@@ -197,6 +199,7 @@ function organizeSchema(input = defaultSchema) {
         addForm: { ...(defaultSchema.addForm || {}), ...(input.addForm || {}) },
         editForm: { ...(defaultSchema.editForm || {}), ...(input.editForm || {}) },
         bulkEditForm: { ...(defaultSchema.bulkEditForm || {}), ...(input.bulkEditForm || {}) },
+        bulkCopyForm: { ...(defaultSchema.bulkCopyForm || {}), ...(input.bulkCopyForm || {}) },
     };
 
     const rawOptionsDict = schema.options && typeof schema.options === "object"
@@ -245,7 +248,7 @@ function organizeSchema(input = defaultSchema) {
 
         // priorytet 1: własne selectOptions z pola
         if (Array.isArray(item.selectOptions) && item.selectOptions.length) {
-            return {...item, selectOptions : normalizeSelectOptions(item.selectOptions)};
+            return { ...item, selectOptions: normalizeSelectOptions(item.selectOptions) };
         }
 
         // priorytet 2: własne options z pola
@@ -319,6 +322,7 @@ function organizeSchema(input = defaultSchema) {
     schema.addForm = resolveForm(schema.addForm);
     schema.editForm = resolveForm(schema.editForm);
     schema.bulkEditForm = resolveForm(schema.bulkEditForm);
+    schema.bulkCopyForm = resolveForm(schema.bulkCopyForm);
 
     if (Array.isArray(schema.columns)) {
         schema.columns = schema.columns.map(resolveColumnOptions);
@@ -377,19 +381,70 @@ function toFormData(payload) {
 
 
 export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null }) {
-    // UI / network state
+
+    const { getEntityData, setEntityData } = use(EntityContext);
+
+    // Generowanie unikalnego klucza cache (upewnij się, że masz do niego dostęp w tym miejscu)
+    const queryKey = JSON.stringify(query || {});
+    const schemaQueryKey = JSON.stringify(schemaQuery || {});
+    const cacheKey = `${entityName}_${endpoint}_${itemId || ''}`;
+
+    // 1. ODCZYT AKTUALNYCH WARTOŚCI Z KONTEKSTU (Odpowiednik zmiennych stanowych)
+    const entityState = getEntityData(cacheKey);
+    const rows = entityState.rows;
+    const schema = entityState.schema || defaultSchema;
+    const allowed = entityState.allowed;
+    const schemaVersion = entityState.schemaVersion;
+
+    // 2. FUNKCJE ADAPTUJĄCE (Odpowiedniki funkcji modyfikujących set...)
+    const setRows = useCallback((updater) => {
+        setEntityData(cacheKey, (prev) => {
+            const currentRows = prev.rows ?? [];
+            const nextRows = typeof updater === 'function' ? updater(currentRows) : updater;
+            return {
+                ...prev,
+                rows: nextRows,
+                timestamp: Date.now() // Automatycznie aktualizujemy timestamp przy każdej zmianie danych!
+            };
+        });
+    }, [cacheKey, setEntityData]);
+
+    const setSchema = useCallback((updater) => {
+        setEntityData(cacheKey, (prev) => {
+            const currentSchema = prev.schema || defaultSchema;
+            const nextSchema = typeof updater === 'function' ? updater(currentSchema) : updater;
+            return {
+                ...prev,
+                schema: nextSchema
+            };
+        });
+    }, [cacheKey, setEntityData]);
+
+    const setAllowed = useCallback((updater) => {
+        setEntityData(cacheKey, (prev) => {
+            const currentAllowed = prev.allowed;
+            const nextAllowed = typeof updater === 'function' ? updater(currentAllowed) : updater;
+            return {
+                ...prev,
+                allowed: nextAllowed
+            };
+        });
+    }, [cacheKey, setEntityData]);
+
+    const setSchemaVersion = useCallback((updater) => {
+        setEntityData(cacheKey, (prev) => {
+            const currentVersion = prev.schemaVersion;
+            const nextVersion = typeof updater === 'function' ? updater(currentVersion) : updater;
+            return {
+                ...prev,
+                schemaVersion: nextVersion
+            };
+        });
+    }, [cacheKey, setEntityData]);
+
+    // Lokalne stany dla operacji sieciowych UI (one pozostają lokalne, bo dotyczą tylko danego widoku w danej chwili)
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
-    // schema (merged UI from backend + defaults)
-    const [allowed, setAllowed] = useState(false);
-    const [schema, setSchema] = useState(defaultSchema);
-    const [schemaVersion, setSchemaVersion] = useState(0);
-
-
-    // rows (single source of truth; optional frontend processing applied on fetch)
-    const [rows, setRows] = useState([]);
-
     // Resolve endpoint: returns a full URL/string or null if disabled / not present.
     // NOTE: we do NOT fallback to `${endpoint}/${name}` — endpoint must be provided by backend or defaults.
 
@@ -448,9 +503,9 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
 
             return processedSchema;
-        } catch (err) {            
+        } catch (err) {
             setError(err);
-            if(err.status === 403){
+            if (err.status === 403) {
                 setAllowed(false);
                 return null;
             }
@@ -460,7 +515,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
         }
     }, [resolveEndpoint, readOnly, schemaQuery]);
-
 
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async (schemaOverride = null) => {
@@ -515,7 +569,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         }
     }, [resolveEndpoint, processRows, query, schema, schemaOnly]);
 
-
     // refresh: fetch schema then rows
     const refresh = useCallback(async () => {
         try {
@@ -535,18 +588,30 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         }
     }, [fetchSchema, fetchRows, schemaOnly]);
 
-    const queryKey = JSON.stringify(query || {});
-    const schemaQueryKey = JSON.stringify(schemaQuery || {});
 
     useEffect(() => {
-        setRows([]);
-        refresh().catch(e => console.error(e));
+        // 1. Get a snapshot of the current item state from cache
+        const currentCache = getEntityData(cacheKey);
+        const cachedRows = currentCache.rows ?? [];
+        const cachedTimestamp = currentCache.timestamp;
+
+        // 2. Define our 1-hour Time-To-Live threshold (in milliseconds)
+        const ONE_HOUR = 60 * 60 * 1000;
+        const isExpired = cachedTimestamp && (Date.now() - cachedTimestamp > ONE_HOUR);
+
+        // 3. Conditionally fire the network refresh request
+        if (cachedRows.length === 0 || isExpired) {
+            refresh().catch(e => console.error(e));
+        } else {
+            // Data is present and still fresh! Reset any error states from previous runs.
+            setError(null);
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [entityName, endpoint, queryKey, schemaQueryKey]);
+    }, [cacheKey]);
 
     // ---------------- CRUD guards & implementations ----------------
     // Each operation checks resolveEndpoint(name) — if null -> disabled.
-
     const getOne = useCallback(async (id) => {
         if (id === undefined || id === null || id === '') {
             console.warn('getOne called without id');
@@ -609,7 +674,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
         }
     }, [resolveEndpoint, endpoint, setRows, setLoading]);
-
 
     const create = useCallback(async (data) => {
         const url = resolveEndpoint('create');
@@ -778,6 +842,38 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             setLoading(false);
         }
     }, [resolveEndpoint, http, getOne, setRows, setLoading, setError, toast]);
+
+    const copyMany = useCallback(async (ids = [], changes = {}) => {
+        const url = resolveEndpoint('copyMany');
+        if (!url) {
+            toast.warning('Kopiowanie wyłączone dla tej encji.');
+            return 0;
+        }
+        if (!Array.isArray(ids) || ids.length === 0) return 0;
+        if (!changes || typeof changes !== 'object' || Object.keys(changes).length === 0) return 0;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await http.post(url, { ids, changes });
+            const { ok, copied, successIds, failedIds, message } = res?.data ?? {};
+
+            if (Array.isArray(failedIds) && failedIds.length) {
+                toast.info(`Nie skopiowano ${failedIds.length} rekordów.`);
+            }
+            if (message && ok === false) {
+                setError?.(message);
+            }
+
+            return typeof copied === 'number' ? copied : successIds.length;
+        } catch (err) {
+            console.error('copyMany error', err);
+            toast.error('Błąd masowego kopiowania');
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    }, [resolveEndpoint, http, setLoading, setError, toast]);
 
     const remove = useCallback(async (id) => {
         const url = resolveEndpoint('delete');
@@ -987,7 +1083,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         allowed,
         schema,
         schemaVersion,
-        
+
         // handlers (return null for handlers that are disabled)
         clearError: () => setError(null),
         create: resolveEndpoint('create') ? create : null,
@@ -995,6 +1091,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         update: resolveEndpoint('update') ? update : null,
         updateFD: resolveEndpoint('update') ? updateFD : null,
         updateMany: resolveEndpoint('updateMany') ? updateMany : null,
+        copyMany: resolveEndpoint('copyMany') ? copyMany : null,
         remove: resolveEndpoint('delete') ? remove : null,
         removeMany: resolveEndpoint('deleteMany') ? removeMany : null,
         upload: resolveEndpoint('upload') ? upload : null,

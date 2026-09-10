@@ -15,11 +15,12 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import ThreeSixtyIcon from '@mui/icons-material/ThreeSixty';
+import PanoramaFishEyeIcon from '@mui/icons-material/PanoramaFishEye';
 
 import AllFilters from './filter/allFilters';
 import { normalizeOverrides, equalOverrides } from './hooks/presetUtils';
 
-const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false, showExport = false, showPresets = false}) => {
+const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, actionsApi, onExport, onRefresh, onBulkDelete, loading, bulkEdit = false, showAdd = false, showUpload = false, showExport = false, showPresets = false }) => {
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -112,10 +113,22 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, action
       } else {
         return <Tooltip title={"Usuń filtr zaznaczone (" + actionsApi.selectedIds.length + ")"}>
           <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => columnsSchema.setShowSelected(false)}>
-            <ClearIcon fontSize="small" />
+            <PanoramaFishEyeIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       }
+    }
+  }
+
+  const renderClearSelected = () => {
+    if (actionsApi.selectedIds.length) {
+
+      return <Tooltip title={"Wyczyść zaznaczenie (" + actionsApi.selectedIds.length + ")"}>
+        <IconButton size="small" sx={{ width: 40, height: 40 }} color="secondary" onClick={() => actionsApi.clearMultiSelect()}>
+          <ClearIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+
     }
   }
 
@@ -244,13 +257,15 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, action
     >
       {renderSearchControl()}
       {renderAdd()}
-      {renderShowSelected()}
       {renderRefreshControl()}
       {renderPresetControl()}
       {renderExportControl()}
+      {renderUploadControl()}
+
+      {renderShowSelected()}
+      {renderClearSelected()}
       {renderBulkEditControl()}
       {renderBulkDeleteControl()}
-      {renderUploadControl()}
     </Box>
   );
 };

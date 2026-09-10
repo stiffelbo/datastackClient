@@ -10,6 +10,8 @@ export const TYPES = [
   { key: "string", label: "Tekstowy 🅰️" },
   { key: "number", label: "Liczbowy 🔢" },
   { key: "date", label: "Data 📅" },
+  { key: "datetime", label: "Data i czas 🕒" },
+  { key: "time", label: "Czas ⏰" },
   { key: "bool", label: "Logiczny ✔️" },
 ];
 

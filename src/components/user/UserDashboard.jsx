@@ -9,6 +9,7 @@ import LogForm from "../logForm/LogForm";
 
 import OperationLog from "./OperationalLog";
 import UsersPagesStack from "./UsersPagesStack";
+import UserWorkReport from "./UserWorkReport";
 
 import {
     Box,
@@ -33,6 +34,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import PersonIcon from '@mui/icons-material/Person';
 import WebIcon from '@mui/icons-material/Web';
+import AssessmentIcon from '@mui/icons-material/Assessment';
 
 import { useRwd } from "../../context/RwdContext";
 
@@ -72,6 +74,12 @@ const NAV_ITEMS = [
         label: "Wydania produkcyjne",
         icon: <AssignmentTurnedInIcon fontSize="small" color="primary" />,
         component: <OperationLog entityName={'UserProductionOutputLog'} endpoint={'/jira_issue_user_logs/production_output_log/'}/>,
+    },
+    {
+        key: "workReport",
+        label: "Raport Pracy",
+        icon: <AssessmentIcon fontSize="small" color="secondary" />,
+        component: <UserWorkReport />,
     },
     {
         key: "techstack",

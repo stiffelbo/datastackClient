@@ -607,3 +607,75 @@ export const flattenTree = (
   return result;
 };
 
+export const inferInput = (type) => {
+  switch (type) {
+    case 'number':
+      return 'number';
+
+    case 'bool':
+    case 'boolean':
+      return 'bool';
+
+    case 'time':
+      return 'time';
+
+    case 'date':
+      return 'date';
+
+    case 'datetime':
+      return 'datetime';
+
+    case 'fk':
+      return 'select';
+
+    default:
+      return 'text';
+  }
+};
+
+export const inferDisplayType = (type) => {
+  switch (type) {
+    case 'bool':
+    case 'boolean':
+      return 'bool';
+
+    case 'number':
+      return 'numeric';
+
+    case 'time':
+      return 'time';
+
+    case 'date':
+      return 'date';
+
+    case 'datetime':
+      return 'datetime';
+
+    case 'fk':
+      return 'select';
+
+    default:
+      return 'text';
+  }
+};
+
+export const inferAlign = (type) => {
+  switch (type) {
+    case 'bool':
+    case 'boolean':
+      return 'center';
+
+    case 'number':
+      return 'right';
+
+    default:
+      return 'left';
+  }
+};
+
+export const getTypeChanges = (type) => ({
+  type,
+  input: inferInput(type),
+  displayType: inferDisplayType(type),
+  align: inferAlign(type),
+});

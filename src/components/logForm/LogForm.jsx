@@ -32,6 +32,7 @@ import PowerTable from "../powerTable/powerTable";
 import RenderLogErrors from "./RenderLogErrors";
 import SubmitLogForm from "./SubmitLogForm";
 import MachineIndexedForm from "./MachineIndexedForm";
+import MissingReportsWarning from "./MissingReportsWarning";
 
 const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
@@ -52,7 +53,6 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
     const [nonTaskRemarks, setNonTaskRemarks] = useState('');
 
     const handleSetTime = (value) => {
-        console.log(value);
         setTime(value);
     }
 
@@ -220,7 +220,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
     }
 
     return <Box mt={3} sx={{ width: '100%', height: height - 112, overflowY: 'auto', pr: 2 }}>
-
+        <MissingReportsWarning report={user?.worklog}/>
         <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 3 }}>
             <Grid item size={{ xs: 12, sm: 12, md: 12, lg: 6, xl: 6 }}>
                 <Grid container spacing={1} alignItems="center" sx={{ mb: 2 }}>

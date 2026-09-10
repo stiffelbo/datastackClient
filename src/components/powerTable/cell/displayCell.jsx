@@ -83,6 +83,83 @@ const renderBool = (v, fontSize) => {
   );
 };
 
+const formatTemporalDisplayValue = (value, type) => {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "";
+  }
+
+  const str = String(value).trim();
+
+  switch (type) {
+    /*
+     * "2026-09-03"
+     * "2026-09-03 12:45:00"
+     * "2026-09-03T12:45:00"
+     *
+     * -> "2026-09-03"
+     */
+    case "date": {
+      const match = str.match(
+        /^(\d{4}-\d{2}-\d{2})/
+      );
+
+      return match
+        ? match[1]
+        : str;
+    }
+
+    /*
+     * "12:45"
+     * "12:45:00"
+     * "2026-09-03 12:45:00"
+     * "2026-09-03T12:45:00"
+     *
+     * -> "12:45:00"
+     */
+    case "time": {
+      const match = str.match(
+        /(?:^|[ T])(\d{2}:\d{2})(?::(\d{2}))?/
+      );
+
+      if (!match) {
+        return str;
+      }
+
+      const [, hm, seconds] = match;
+
+      return `${hm}:${seconds ?? "00"}`;
+    }
+
+    /*
+     * "2026-09-03 12:45:00"
+     * "2026-09-03T12:45:00"
+     * "2026-09-03T12:45"
+     *
+     * -> "2026-09-03 12:45:00"
+     */
+    case "datetime": {
+      const match = str.match(
+        /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::(\d{2}))?/
+      );
+
+      if (!match) {
+        return str;
+      }
+
+      const [, date, hm, seconds] = match;
+
+      return `${date} ${hm}:${seconds ?? "00"}`;
+    }
+
+    default:
+      return value;
+  }
+};
+
 const DisplayCell = ({
   value,
   column = {},
@@ -172,6 +249,13 @@ const DisplayCell = ({
   let displayValue = value ?? "";
   let title = "";
 
+  const displayType =
+    column.displayType ??
+    column.type;
+
+  /*
+   * Custom formatter ma pierwszeństwo.
+   */
   if (typeof formatter === "function") {
     try {
       displayValue = formatter(
@@ -184,6 +268,23 @@ const DisplayCell = ({
         err
       );
     }
+  }
+
+  /*
+   * Jeżeli nie ma custom formattera,
+   * stosujemy domyślne formatowanie
+   * date / datetime / time.
+   */
+  else if (
+    displayType === "date" ||
+    displayType === "datetime" ||
+    displayType === "time"
+  ) {
+    displayValue =
+      formatTemporalDisplayValue(
+        value,
+        displayType
+      );
   }
 
   if (parent === "footer") {
@@ -244,7 +345,7 @@ const DisplayCell = ({
 
   if (
     column.input === "select" &&
-    Array.isArray(column.options) && 
+    Array.isArray(column.options) &&
     column.type !== "number"
   ) {
     const option =

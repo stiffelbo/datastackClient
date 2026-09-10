@@ -10,6 +10,7 @@ import { AuthProvider } from './context/AuthContext';
 import { NavProvider } from './context/NavContext';
 import { RwdProvider } from './context/RwdContext';
 import { DashboardProvider } from './context/DashboardContext';
+import { EntityProvider } from './context/EntityContext';
 
 const root = createRoot(document.getElementById('root'));
 
@@ -21,8 +22,10 @@ root.render(
         <AuthProvider>
           <NavProvider>      
             <DashboardProvider>
-              <App />
-              <ToastContainer position="bottom-right" autoClose={3000} />
+              <EntityProvider>
+                <App />
+                <ToastContainer position="bottom-right" autoClose={3000} />
+              </EntityProvider>
             </DashboardProvider>
           </NavProvider>
         </AuthProvider>

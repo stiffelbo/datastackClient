@@ -24,6 +24,8 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
   //Sefe get operators for type
   const availableOperators = operatorsByType[type] || operatorsByType['string'];
 
+  console.log(value);
+
   // 🔹 Operator select
   const renderOperator = () => (
     <TextField
@@ -44,6 +46,7 @@ const Filter = ({ column, filter, data, onChange, onRemove, columnsSchema }) => 
 
   // 🔹 Dispatcher po typie
   const renderValue = () => {
+    console.log(type);
     switch (type) {
       case 'string':
         return renderStringValue();
@@ -178,7 +181,7 @@ Filter.ValueInput = ({ type, value, onChange, label = 'Value' }) => (
     size="small"
     label={label}
     type={type}
-    value={value || ''}
+    value={`${value}`}
     onChange={(e) => onChange(e.target.value)}
   />
 );
@@ -188,7 +191,7 @@ Filter.NumberInput = ({ value, onChange, label = 'Value' }) => (
     size="small"
     type="number"
     label={label}
-    value={value || ''}
+    value={`${value}`}
     onChange={(e) => onChange(Number(e.target.value))}
   />
 );

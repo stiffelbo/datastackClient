@@ -1,56 +1,138 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getAggregatedValues } from '../utils';
+import { getAggregatedValues, getTypeChanges, inferDisplayType, inferAlign, inferInput} from '../utils';
 
 const extractSortModel = (overrides = []) =>
   overrides
     .map(o => (o?.sort?.direction ? { field: o.field, direction: o.sort.direction } : null))
     .filter(Boolean);
 
-const applyOverrides = (map, overrides = [], { allowCreate = true } = {}) => {
+const applyOverrides = (
+  map,
+  overrides = [],
+  { allowCreate = true } = {}
+) => {
   overrides.forEach(o => {
     if (!o?.field) return;
 
     const existing = map.get(o.field);
 
-    // dla stored: pomijamy nieznane pola
-    if (!existing && !allowCreate) return;
-
-    const base = existing || {};
-    const merged = { ...base, ...o };
-
-    // zachowaj input jeśli override nie dostarcza wartości
-    if (base.input && o.input === undefined) {
-      merged.input = base.input;
+    if (!existing && !allowCreate) {
+      return;
     }
 
-    // zachowaj options jeśli override nie dostarcza listy (lub dał pustą)
+    const base = existing || {};
+
+    const merged = {
+      ...base,
+      ...o,
+    };
+
+    /*
+     * Jeśli override zmienia TYPE,
+     * przeliczamy właściwości zależne od type,
+     * chyba że override jawnie podał własną wartość.
+     */
     if (
-      (merged.options === null || merged.options === undefined ||
-        (Array.isArray(merged.options) && merged.options.length === 0)) &&
-      Array.isArray(base.options) && base.options.length > 0
+      o.type !== undefined &&
+      o.type !== base.type
+    ) {
+      if (o.input === undefined) {
+        merged.input = inferInput(o.type);
+      }
+
+      if (o.displayType === undefined) {
+        merged.displayType =
+          inferDisplayType(o.type);
+      }
+
+      if (o.align === undefined) {
+        merged.align = inferAlign(o.type);
+      }
+    } else {
+      /*
+       * Type się nie zmienia:
+       * zachowujemy dotychczasowe input.
+       */
+      if (
+        base.input &&
+        o.input === undefined
+      ) {
+        merged.input = base.input;
+      }
+    }
+
+    /*
+     * options
+     */
+    if (
+      (
+        merged.options === null ||
+        merged.options === undefined ||
+        (
+          Array.isArray(merged.options) &&
+          merged.options.length === 0
+        )
+      ) &&
+      Array.isArray(base.options) &&
+      base.options.length > 0
     ) {
       merged.options = base.options;
     }
 
-    // zachowaj renderCell, styleFn, formatterKey/formatterOptions, aggregationFn itp.
-    if (!merged.renderCell && base.renderCell) merged.renderCell = base.renderCell;
-    if (!merged.styleFn && base.styleFn) merged.styleFn = base.styleFn;
+    /*
+     * render / formatter / aggregation
+     */
+    if (
+      !merged.renderCell &&
+      base.renderCell
+    ) {
+      merged.renderCell = base.renderCell;
+    }
 
     if (
-      (merged.formatterOptions == null ||
-        (typeof merged.formatterOptions === 'object' &&
-          Object.keys(merged.formatterOptions || {}).length === 0)) &&
+      !merged.styleFn &&
+      base.styleFn
+    ) {
+      merged.styleFn = base.styleFn;
+    }
+
+    if (
+      (
+        merged.formatterOptions == null ||
+        (
+          typeof merged.formatterOptions ===
+            'object' &&
+          Object.keys(
+            merged.formatterOptions || {}
+          ).length === 0
+        )
+      ) &&
       base.formatterOptions
     ) {
-      merged.formatterOptions = base.formatterOptions;
+      merged.formatterOptions =
+        base.formatterOptions;
     }
 
-    if ((merged.formatterKey == null || merged.formatterKey === '') && base.formatterKey) {
-      merged.formatterKey = base.formatterKey;
+    if (
+      (
+        merged.formatterKey == null ||
+        merged.formatterKey === ''
+      ) &&
+      base.formatterKey
+    ) {
+      merged.formatterKey =
+        base.formatterKey;
     }
 
-    if ((merged.aggregationFn == null || merged.aggregationFn === '') && base.aggregationFn) {
-      merged.aggregationFn = base.aggregationFn;
+    if (
+      (
+        merged.aggregationFn == null ||
+        merged.aggregationFn === ''
+      ) &&
+      base.aggregationFn
+    ) {
+      merged.aggregationFn =
+        base.aggregationFn;
     }
 
     map.set(o.field, merged);
@@ -383,7 +465,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     getColumnByField,
     setColumnWidth: (field, width) => updateField(field, { width }),
     reorderColumn,
-    setType: (field, type) => updateField(field, { type }),
+    setType: (field, type) => updateField(field, getTypeChanges(type)),
     resetColumnState: () => {
       const base = mergeColumns({
         auto: autoColumns,

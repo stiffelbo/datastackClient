@@ -5,16 +5,68 @@ import { useMemo } from 'react';
 /* -------------------------------------------------------------------------- */
 
 const detectType = (value) => {
-  if (value === null || value === undefined) return 'string';
-  if (typeof value === 'number' && !isNaN(value)) return 'number';
-  if (typeof value === 'boolean') return 'bool';
-  if (typeof value === 'string') {
-    const num = Number(value);
-    if (!isNaN(num) && value.trim() !== '') return 'number';
-    if (!isNaN(Date.parse(value))) return 'date';
+  if (
+    value === null ||
+    value === undefined
+  ) {
     return 'string';
   }
-  if (value instanceof Date) return 'date';
+
+  if (
+    typeof value === 'number' &&
+    !Number.isNaN(value)
+  ) {
+    return 'number';
+  }
+
+  if (typeof value === 'boolean') {
+    return 'bool';
+  }
+
+  if (value instanceof Date) {
+    return 'datetime';
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return 'string';
+    }
+
+    const num = Number(trimmed);
+
+    if (!Number.isNaN(num)) {
+      return 'number';
+    }
+
+    // YYYY-MM-DD
+    if (
+      /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+    ) {
+      return 'date';
+    }
+
+    // HH:mm / HH:mm:ss
+    if (
+      /^\d{2}:\d{2}(:\d{2})?$/.test(trimmed)
+    ) {
+      return 'time';
+    }
+
+    // YYYY-MM-DD HH:mm[:ss]
+    // YYYY-MM-DDTHH:mm[:ss]
+    if (
+      /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?/.test(
+        trimmed
+      )
+    ) {
+      return 'datetime';
+    }
+
+    return 'string';
+  }
+
   return 'string';
 };
 
@@ -50,6 +102,8 @@ const inferInput = (type) => {
     case 'bool':
     case 'boolean':
       return 'bool';
+    case 'time':
+      return 'time';
     case 'date':
       return 'date';
     case 'fk':
@@ -66,6 +120,8 @@ const inferDisplayType = (type) => {
       return 'bool';
     case 'number':
       return 'numeric';
+    case 'time':
+      return 'time';
     case 'date':
       return 'date';
     case 'fk':

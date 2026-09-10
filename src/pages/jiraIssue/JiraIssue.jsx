@@ -16,7 +16,7 @@ const JiraIssue = () => {
  
     return (
         <BaseEntityDashboard
-            renderPage={(props) => <JiraIssuePage entity={entity} entityName={entityName} {...props} />}
+            renderPage={(props) => <JiraIssuePage key={entityName} entity={entity} entityName={entityName} {...props} />}
             entity={entity}
             entityName={entityName}
             basePath={basePath}

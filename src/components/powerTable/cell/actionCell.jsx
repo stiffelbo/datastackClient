@@ -297,6 +297,7 @@ const getButton = ({
       button.title = "Usuń wiersz";
 
       button.handler = () =>
+        window.confirm("Czy na pewno chcesz usunąć ten wiersz?") &&
         actionsApi.deleteOne?.(params.id);
     } else {
       button.icon = null;

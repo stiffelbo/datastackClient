@@ -633,4 +633,3 @@ export const createBilansSummaryDto = (response) => {
         }),
     };
 };
-

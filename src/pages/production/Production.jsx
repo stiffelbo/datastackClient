@@ -46,7 +46,7 @@ const Production = () => {
     const [layouts, setLayouts] = useState([]);
 
     const fetchProcesses = async () => {
-        const url = '/processes/get.php';
+        const url = '/processes/get.php?productionTasks=true';
         setLoading(true);
         const res = await http.get(url);
         setProcesses(res.data);

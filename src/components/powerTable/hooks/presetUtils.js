@@ -104,7 +104,7 @@ const NORMALIZE = {
     return v;
   },
 
-  type: (v) => toEnum(v, ['string', 'number', 'date', 'bool', 'action', 'fk']),
+  type: (v) => toEnum(v, ['string', 'number', 'date', 'time', 'bool', 'action', 'fk']),
   align: (v) => toEnum(v, ['left', 'center', 'right']),
 
   width: (v) => toNum(v),
