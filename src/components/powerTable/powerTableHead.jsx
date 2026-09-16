@@ -11,16 +11,7 @@ import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import ColumnConfigurator from './columnConfigurator/columnConfigurator';
 import ActionCell from './cell/actionCell';
 
-const typeIcons = {
-  string: '🅰️',
-  number: '🔢',
-  date: '📅',
-  datetime: '🕒',
-  time: '⏰',
-  bool: '✔️',
-  boolean: '✔️',
-  fk: '🔗',
-};
+import { typeIcons } from './utils';
 
 const getCellSX = (col) => ({
   cursor: 'pointer',

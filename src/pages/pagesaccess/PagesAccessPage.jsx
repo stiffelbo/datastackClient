@@ -1,8 +1,7 @@
 import React from 'react';
 
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
-import PageAccessViewFields from './PageAccessViewFields';
-import PageAccessEditFields from './PageAccessEditFields';
+import PageAccessFields from './PageAccessFields';
 
 const PageAccessPage = ({
     entityName,
@@ -23,15 +22,8 @@ const PageAccessPage = ({
             key: 'viewFields',
             label: 'Pola Ukryte',
             pageKey: 'page_access.view_fields', // klucz z rejestru stron
-            component: <PageAccessViewFields id={id} row={row} rwd={rwd} entity={entity}/>,
+            component: <PageAccessFields id={id} row={row} rwd={rwd} entity={entity}/>,
         },
-        {
-            key: 'editFields',
-            label: 'Pola Bez Edycji',
-            pageKey: 'page_access.edit_fields', // klucz z rejestru stron
-            component: <PageAccessEditFields id={id} row={row} rwd={rwd} entity={entity}/>,
-        },
-        // itd...
     ];
 
     return (
@@ -45,6 +37,7 @@ const PageAccessPage = ({
             tab={tab}
             setTab={setTab}
             rwd={rwd}
+            headerFields={['userName', 'pageName']}
         />
     );
 };

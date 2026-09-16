@@ -679,3 +679,15 @@ export const getTypeChanges = (type) => ({
   displayType: inferDisplayType(type),
   align: inferAlign(type),
 });
+
+
+export const typeIcons = {
+  string: '🅰️',
+  number: '🔢',
+  date: '📅',
+  datetime: '🕒',
+  time: '⏰',
+  bool: '✔️',
+  boolean: '✔️',
+  fk: '🔗',
+};
