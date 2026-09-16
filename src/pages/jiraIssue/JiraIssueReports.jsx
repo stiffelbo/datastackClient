@@ -64,7 +64,7 @@ const JiraIssueReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-    const height = rwd.height - 190;
+    const height = rwd.height - 192;
 
     const [activeView, setActiveView] = useState("operationLog");
 
@@ -214,9 +214,9 @@ const JiraIssueReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
                         overflow: "auto",
                     }}
                 >
-                    <Box sx={{ p: 2 }}>
-                        {renderComponent()}
-                    </Box>
+         
+                    {renderComponent()}
+
                 </Paper>
             </Box>
         </Box>

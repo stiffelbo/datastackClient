@@ -3,10 +3,9 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 import JiraIssueDetails from './JiraIssueDetails';
 import LogForm from '../../components/logForm/LogForm';
-import JiraIssueClockify from './JiraIssueClockify';
+import JiraIssueTree from './JiraIssueTree';
 import JiraIssueReports from './JiraIssueReports';
 import Bilans from './Bilans/Bilans';
-
 
 const JiraIssuePage = ({
   entityName,
@@ -36,10 +35,16 @@ const JiraIssuePage = ({
       component: <JiraIssueReports id={id} row={row} rwd={rwd}/>,
     },
     {
-      key: 'clockify',
-      label: 'Clockify',
-      pageKey: 'jiraissue.clockify', // klucz z rejestru stron
-      component: <JiraIssueClockify sygn={row?.jira_key} rwd={rwd}/>,
+      key: 'issuetree',
+      label: 'Drzewo',
+      pageKey: 'jiraissue.issuetree', // klucz z rejestru stron
+      component: <JiraIssueTree 
+                id={id}
+                row={row}
+                entity={entity}
+                dashboard={dashboard}
+                rwd={rwd}
+            />
     },
     {
       key: 'bilans',

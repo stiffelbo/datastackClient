@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { Outlet, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRwd } from '../../context/RwdContext';
+import { EntityContext } from '../../context/EntityContext';
 
 
 import { AppBar, Toolbar, Typography, Box, Button, Menu, MenuItem, IconButton, Container, Tabs, Tab, Chip } from '@mui/material';
@@ -14,8 +15,11 @@ import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import AppVersion from './AppVersion';
 
 
+
 const UserDropdown = () => {
     const { user, logout, refreshUser } = useAuth();
+
+    const { getMemoryUsage } = use(EntityContext);
 
     const [anchorEl, setAnchorEl] = useState(null);
 
@@ -33,6 +37,8 @@ const UserDropdown = () => {
     const processes = user?.processes;
     const userData = user?.userData || {};
 
+    const memoryUsage = getMemoryUsage().human; // Get total memory usage of the EntityContext
+
     return (
         <Box>
             <IconButton size="large" color="inherit" onClick={handleMenuOpen}>
@@ -45,6 +51,9 @@ const UserDropdown = () => {
                     <Typography variant="subtitle1">
                         {userData.first_name} {userData.last_name} 
                         <Chip label={userData.role} size="small" variant="outlined" color="default" sx={{ ml: 1 }} />
+                    </Typography>        
+                    <Typography variant="caption" color="textSecondary">
+                        Rozmiar pamięci danych: {memoryUsage}                        
                     </Typography>        
 
                     <Button

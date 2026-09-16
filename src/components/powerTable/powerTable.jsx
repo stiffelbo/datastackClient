@@ -20,6 +20,7 @@ import SettingsModal from './settingsModal';
 import BulkFormModal from './bulkFormModal';
 import UploadModal from './uploadModal';
 import AddFormModal from './addFormModal';
+import DeleteConfirmDialog from "./deleteConfirmDialog";
 
 const defaultTree = {
   enabled: false,
@@ -352,6 +353,12 @@ const PowerTable = ({
       </Box>
 
       {renderModalContent()}
+      <DeleteConfirmDialog
+        open={!!actionsApi.deleteRequest}
+        onCancel={actionsApi.cancelDelete}
+        onConfirm={actionsApi.confirmDelete}
+        loading={loading}
+      />
     </>
   );
 }

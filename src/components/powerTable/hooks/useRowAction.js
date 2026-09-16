@@ -14,23 +14,24 @@ export const useRowAction = ({
 }) => {
   /* local state seeded from props; stays source of truth in this hook */
   const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteRequest, setDeleteRequest] = useState(null);
   /* ---------------------------------------------------------------------- */
   /* 🔸 Single select                                                       */
   /* ---------------------------------------------------------------------- */
   const toggleSelect = (id) => {
-    if(typeof onSelect === 'function'){
-      if(id !== selected){
+    if (typeof onSelect === 'function') {
+      if (id !== selected) {
         onSelect(id);
-      }else{
+      } else {
         onSelect(null);
       }
-    }    
+    }
   };
 
-  const clearSelect =() => {
-    if(typeof onSelect === 'function'){
+  const clearSelect = () => {
+    if (typeof onSelect === 'function') {
       onSelect(null);
-    }  
+    }
   }
 
   /* ---------------------------------------------------------------------- */
@@ -79,25 +80,40 @@ export const useRowAction = ({
   /* ---------------------------------------------------------------------- */
   /* 🗑️ Single DELETE helper (optional tidy-up of selections)               */
   /* ---------------------------------------------------------------------- */
-  const deleteOne = (id) => {
+  const requestDelete = (id) => {
     if (id === null || id === undefined) return;
     if (typeof onDelete !== "function") return;
 
-    onDelete(id);
+    setDeleteRequest({
+      type: "single",
+      id,
+    });
+  };
 
-    // if the deleted one was selected, clear it & notify
-    if (typeof onSelect === 'function' && selected === id) {
-      onSelect(null);
+  const cancelDelete = () => {
+    setDeleteRequest(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteRequest) return;
+
+    if (deleteRequest.type === "single") {
+      const id = deleteRequest.id;
+
+      await onDelete?.(id);
+
+      if (typeof onSelect === "function" && selected === id) {
+        onSelect(null);
+      }
+
+      setSelectedIds(prev => {
+        if (!prev.includes(id)) return prev;
+        return prev.filter(x => x !== id);
+      });
     }
 
-    // if the deleted one was in multi, remove it & notify
-    let nextRef;
-    setSelectedIds(prev => {
-      if (!prev.includes(id)) return prev;
-      nextRef = prev.filter(x => x !== id);
-      return nextRef;
-    });
-  }
+    setDeleteRequest(null);
+  };
 
   /* ---------------------------------------------------------------------- */
   /* 🧱 Columns flags                                                       */
@@ -113,21 +129,21 @@ export const useRowAction = ({
   return {
     columnActions,
 
-    // state
     selected,
     selectedIds,
 
-    // single
     toggleSelect,
     clearSelect,
 
-    // multi
     toggleMultiSelect,
     clearMultiSelect,
     addManyToMultiSelect,
     removeManyFromMultiSelect,
 
-    // delete helper
-    deleteOne,
+    // delete
+    deleteRequest,
+    requestDelete,
+    cancelDelete,
+    confirmDelete,
   };
 };

@@ -88,7 +88,9 @@ const CollapsibleSection = ({
   open: controlledOpen,
   onOpenChange = null,
   sx = {},
+  show = true
 }) => {
+  if(!show) return;
   const [internalOpen, setInternalOpen] = useState(defaultOpen);
 
   const isControlled = typeof controlledOpen === "boolean";

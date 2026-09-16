@@ -18,17 +18,17 @@ const basename = '/datastack';
 
 root.render(
   <BrowserRouter basename={basename} >
-      <RwdProvider>
-        <AuthProvider>
-          <NavProvider>      
+    <RwdProvider>
+      <AuthProvider>
+        <EntityProvider>
+          <NavProvider>
             <DashboardProvider>
-              <EntityProvider>
-                <App />
-                <ToastContainer position="bottom-right" autoClose={3000} />
-              </EntityProvider>
+              <App />
+              <ToastContainer position="bottom-right" autoClose={3000} />
             </DashboardProvider>
           </NavProvider>
-        </AuthProvider>
-      </RwdProvider> 
+        </EntityProvider>
+      </AuthProvider>
+    </RwdProvider>
   </BrowserRouter>
 );

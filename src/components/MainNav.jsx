@@ -17,8 +17,10 @@ import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import MenuIcon from '@mui/icons-material/Menu';
 
 import { useNav } from '../context/NavContext';
+import { useRwd } from '../context/RwdContext';
 
 const MainNav = ({ pages }) => {
+
   if (!pages?.length) return null;
 
   const { page } = useNav();

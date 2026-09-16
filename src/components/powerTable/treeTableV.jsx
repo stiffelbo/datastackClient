@@ -1,4 +1,5 @@
 // treeTableV.jsx
+
 import React, {
   useState,
   useMemo,
@@ -6,18 +7,66 @@ import React, {
   useCallback,
   useRef,
 } from 'react';
-import { TableContainer, Table, Paper, Box } from '@mui/material';
+
+import {
+  Table,
+  Paper,
+  Box,
+} from '@mui/material';
+
+import { useVirtualizer } from '@tanstack/react-virtual';
+
 import PowerTableHead from './powerTableHead';
 import PowerTableFooter from './powerTableFooter';
 import VirtualizedTreeBody from './virtualizedTreeBody';
-import { buildTreeByParent, flattenTree } from './utils';
+
+import {
+  buildTreeByParent,
+  flattenTree,
+} from './utils';
+
+
+/*
+ * =========================================================
+ * COLUMN WIDTH
+ * =========================================================
+ */
+
+const getNumericWidth = (
+  value,
+  fallback = 120
+) => {
+  if (
+    typeof value === 'number' &&
+    Number.isFinite(value)
+  ) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+};
+
+
+/*
+ * =========================================================
+ * TREE TABLE
+ * =========================================================
+ */
 
 const TreeTableV = ({
   initialData,
-  data,
+  data = [],
   columnsSchema,
   rowRules,
-  settings,
+  settings = {},
   treeConfig = {},
   height = 600,
   editing,
@@ -29,145 +78,448 @@ const TreeTableV = ({
     rootValue = null,
   } = treeConfig;
 
+
+  /*
+   * =====================================================
+   * TREE
+   * =====================================================
+   */
+
   const [roots] = useMemo(
-    () => buildTreeByParent(data, { idField, parentField, rootValue }),
-    [data, idField, parentField, rootValue]
+    () =>
+      buildTreeByParent(
+        data,
+        {
+          idField,
+          parentField,
+          rootValue,
+        }
+      ),
+    [
+      data,
+      idField,
+      parentField,
+      rootValue,
+    ]
   );
 
-  // collapse state dla węzłów drzewa
-  const [collapseState, setCollapseState] = useState({});
+
+  /*
+   * =====================================================
+   * COLLAPSE STATE
+   * =====================================================
+   */
+
+  const [
+    collapseState,
+    setCollapseState,
+  ] = useState({});
+
 
   useEffect(() => {
     setCollapseState({});
-  }, [data, idField, parentField, rootValue]);
+  }, [
+    data,
+    idField,
+    parentField,
+    rootValue,
+  ]);
 
-  // flatData ma zawierać tylko WIDOCZNE węzły (dzieci pomijane, jeśli rodzic collapsed)
+
+  const toggleTreeNode =
+    useCallback((path) => {
+      setCollapseState((prev) => ({
+        ...prev,
+        [path]: !prev[path],
+      }));
+    }, []);
+
+
+  /*
+   * =====================================================
+   * FLAT DATA
+   * =====================================================
+   *
+   * Tylko widoczne elementy drzewa.
+   *
+   * Jeżeli node jest collapsed,
+   * jego dzieci NIE trafiają do flatData.
+   *
+   * To jest jedyne źródło danych dla virtualizera.
+   */
+
   const flatData = useMemo(
-    () => flattenTree(roots, collapseState, { idField }),
-    [roots, collapseState, idField]
+    () =>
+      flattenTree(
+        roots,
+        collapseState,
+        { idField }
+      ),
+    [
+      roots,
+      collapseState,
+      idField,
+    ]
   );
 
-  const toggleTreeNode = useCallback((path) => {
-    setCollapseState((prev) => ({
-      ...prev,
-      [path]: !prev[path],
-    }));
-  }, []);
 
-  const [heightMap, setHeightMap] = useState({ header: 42.5, footer: 36 });
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
+  /*
+   * =====================================================
+   * HEIGHT
+   * =====================================================
+   */
 
-  const containerRef = useRef(null);
+  const [
+    heightMap,
+    setHeightMap,
+  ] = useState({
+    header: 42.5,
+    footer: 36,
+  });
 
-  const handleHeightChange = useCallback((section, value) => {
-    setHeightMap((prev) => {
-      if (prev[section] === value) return prev;
-      return { ...prev, [section]: value };
+
+  const rowHeight =
+    Number(settings?.rowHeight) || 45;
+
+
+  const handleHeightChange =
+    useCallback(
+      (section, value) => {
+        setHeightMap((prev) => {
+          if (
+            prev[section] === value
+          ) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            [section]: value,
+          };
+        });
+      },
+      []
+    );
+
+
+  /*
+   * =====================================================
+   * SCROLL REF
+   * =====================================================
+   *
+   * Ten element obsługuje WYŁĄCZNIE scroll Y.
+   *
+   * TanStack Virtual obserwuje właśnie jego.
+   */
+
+  const verticalScrollRef =
+    useRef(null);
+
+
+  /*
+   * =====================================================
+   * COLUMN GEOMETRY
+   * =====================================================
+   */
+
+  const visibleColumns = useMemo(
+    () =>
+      columnsSchema
+        .getVisibleColumns?.() || [],
+    [columnsSchema]
+  );
+
+
+  const tableWidth = useMemo(
+    () =>
+      visibleColumns.reduce(
+        (sum, col) => {
+          const width =
+            getNumericWidth(
+              col.width ??
+                col.minWidth,
+              col.type === 'action'
+                ? 40
+                : 120
+            );
+
+          return sum + width;
+        },
+        0
+      ),
+    [visibleColumns]
+  );
+
+
+  /*
+   * =====================================================
+   * TANSTACK VIRTUAL
+   * =====================================================
+   */
+
+  const rowVirtualizer =
+    useVirtualizer({
+      count: flatData.length,
+
+      getScrollElement: () =>
+        verticalScrollRef.current,
+
+      estimateSize: () =>
+        rowHeight,
+
+      overscan: 0,
+
+      useFlushSync: false,
+
+      /*
+       * Bardzo ważne przy collapse/expand.
+       *
+       * Nie używamy samego indexu jeśli mamy
+       * stabilne ID/path.
+       */
+      getItemKey: (index) => {
+        const item = flatData[index];
+
+        return (
+          item?.[idField] ??
+          item?.id ??
+          item?.path ??
+          item?.key ??
+          index
+        );
+      },
     });
-  }, []);
 
-  // scrollTop tylko z eventu scrolla
-  const handleScroll = (e) => {
-    const nextTop = e.target.scrollTop;
-    setScrollTop((prev) => (prev === nextTop ? prev : nextTop));
-  };
 
-  // viewport height z TableContainer przez ResizeObserver
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+  /*
+   * =====================================================
+   * SETTINGS
+   * =====================================================
+   */
 
-    const update = () => {
-      const h = el.clientHeight;
-      setViewportHeight((prev) => (prev === h ? prev : h));
-    };
+  const settingsWithVirtual =
+    useMemo(
+      () => ({
+        ...settings,
 
-    update();
+        isVirtualized: true,
+        virtualFlex: true,
 
-    const observer = new ResizeObserver(update);
-    observer.observe(el);
+        rowHeight,
+        height,
+      }),
+      [
+        settings,
+        rowHeight,
+        height,
+      ]
+    );
 
-    return () => observer.disconnect();
-  }, []);
 
-  const rowHeight = settings?.rowHeight || 45;
-  const headerFooterHeight = heightMap.header + heightMap.footer;
-  const fallbackBodyHeight = Math.max(height - headerFooterHeight, 0);
-  const effectiveViewport = viewportHeight || fallbackBodyHeight || height;
+  /*
+   * =====================================================
+   * ACTIONS API
+   * =====================================================
+   */
 
-  // clamp scrollTop po zmianie liczby widocznych wierszy (expand/collapse)
-  useEffect(() => {
-    const totalHeight = flatData.length * rowHeight;
-    const maxScroll = Math.max(totalHeight - effectiveViewport, 0);
+  const treeActionsApi =
+    useMemo(
+      () => ({
+        ...actionsApi,
+        toggleTreeNode,
+      }),
+      [
+        actionsApi,
+        toggleTreeNode,
+      ]
+    );
 
-    setScrollTop((prev) => (prev > maxScroll ? maxScroll : prev));
-  }, [flatData.length, effectiveViewport, rowHeight]);
 
-  const settingsWithVirtual = {
-    ...settings,
-    rowHeight,
-    isVirtualized: true,
-    height,
-  };
+  /*
+   * =====================================================
+   * TABLE GEOMETRY
+   * =====================================================
+   */
 
-  // rozszerzamy actionsApi o toggleTreeNode
-  const treeActionsApi = {
-    ...actionsApi,
-    toggleTreeNode,
-  };
+  const virtualTableSx =
+    useMemo(
+      () => ({
+        display: 'grid',
+
+        width:
+          `${tableWidth}px`,
+
+        minWidth:
+          `${tableWidth}px`,
+
+        maxWidth:
+          `${tableWidth}px`,
+      }),
+      [tableWidth]
+    );
+
+
+  /*
+   * =====================================================
+   * RENDER
+   * =====================================================
+   */
 
   return (
-    <Box sx={{ height, width: '100%' }}>
-      <TableContainer
+    <Box
+      sx={{
+        height,
+        width: '100%',
+        minWidth: 0,
+        overflow: 'hidden',
+      }}
+    >
+      {/*
+       * ===============================================
+       * HORIZONTAL SCROLLER
+       * ===============================================
+       *
+       * Jedyny scroll X.
+       *
+       * Header, body i footer przesuwają się razem
+       * przez natywny browser scroll.
+       */}
+
+      <Box
         component={Paper}
-        ref={containerRef}
         sx={{
-          height,
+          height: '100%',
           width: '100%',
-          maxWidth: '100%',
-          overflowY: 'auto',
+          minWidth: 0,
+
+          overflowX: 'auto',
+          overflowY: 'hidden',
+
+          position: 'relative',
         }}
-        onScroll={handleScroll}
       >
-        <Table
-          stickyHeader={false} // virtualized + tree: bez sticky
-          size="small"
-          sx={{ tableLayout: 'fixed', width: '100%' }}
+        {/*
+         * =============================================
+         * COMMON CONTENT WIDTH
+         * =============================================
+         */}
+
+        <Box
+          sx={{
+            height: '100%',
+
+            width:
+              `${tableWidth}px`,
+
+            minWidth: '100%',
+
+            position: 'relative',
+          }}
         >
-          <PowerTableHead
-            columnsSchema={columnsSchema}
-            settings={settingsWithVirtual}
-            initialData={initialData}
-            onHeightChange={(val) => handleHeightChange('header', val)}
-            height={heightMap.header}
-            actionsApi={treeActionsApi}
-            data={data}
-            isTree={true}
-          />
+          {/*
+           * ===========================================
+           * VERTICAL SCROLLER
+           * ===========================================
+           *
+           * TanStack Virtual obserwuje ten element.
+           */}
 
-          <VirtualizedTreeBody
-            flatData={flatData}
-            columnsSchema={columnsSchema}
-            rowRules={rowRules}
-            settings={settingsWithVirtual}
-            height={effectiveViewport}   // viewport, nie bodyHeight
-            scrollTop={scrollTop}
-            editing={editing}
-            actionsApi={treeActionsApi}
-          />
+          <Box
+            ref={verticalScrollRef}
+            sx={{
+              height: '100%',
+              minHeight: 0,
 
-          <PowerTableFooter
-            data={data}
-            columnsSchema={columnsSchema}
-            settings={settingsWithVirtual}
-            onHeightChange={(val) => handleHeightChange('footer', val)}
-            height={heightMap.footer}
-            actionsApi={treeActionsApi}
-            isTree={true}
-          />
-        </Table>
-      </TableContainer>
+              overflowY: 'auto',
+              overflowX: 'hidden',
+
+              position: 'relative',
+            }}
+          >
+            <Table
+              size="small"
+              sx={virtualTableSx}
+            >
+              <PowerTableHead
+                columnsSchema={
+                  columnsSchema
+                }
+                settings={
+                  settingsWithVirtual
+                }
+                initialData={
+                  initialData
+                }
+                onHeightChange={(
+                  value
+                ) =>
+                  handleHeightChange(
+                    'header',
+                    value
+                  )
+                }
+                height={
+                  heightMap.header
+                }
+                actionsApi={
+                  treeActionsApi
+                }
+                data={data}
+                isTree={true}
+              />
+
+              <VirtualizedTreeBody
+                flatData={
+                  flatData
+                }
+                columnsSchema={
+                  columnsSchema
+                }
+                rowRules={
+                  rowRules
+                }
+                settings={
+                  settingsWithVirtual
+                }
+                editing={
+                  editing
+                }
+                actionsApi={
+                  treeActionsApi
+                }
+                rowVirtualizer={
+                  rowVirtualizer
+                }
+              />
+
+              <PowerTableFooter
+                data={data}
+                columnsSchema={
+                  columnsSchema
+                }
+                settings={
+                  settingsWithVirtual
+                }
+                onHeightChange={(
+                  value
+                ) =>
+                  handleHeightChange(
+                    'footer',
+                    value
+                  )
+                }
+                height={
+                  heightMap.footer
+                }
+                actionsApi={
+                  treeActionsApi
+                }
+                isTree={true}
+              />
+            </Table>
+          </Box>
+        </Box>
+      </Box>
     </Box>
   );
 };

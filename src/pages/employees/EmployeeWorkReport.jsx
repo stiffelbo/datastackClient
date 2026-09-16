@@ -13,8 +13,6 @@ import MonthPicker from "../../components/MonthPicker";
 const EmployeeWorkReport = ({ id = null, rwd, heightSpan = 188 }) => {
     const entityName = "EmployeeWorkReport";
     const month = useMonths();
-
-    console.log(id);
     
     const entity = useEntity({endpoint : '/reports_worklog/', query: {employeeId: id, dateFrom: month.startDate, dateTo: month.endDate}});
 
@@ -23,7 +21,7 @@ const EmployeeWorkReport = ({ id = null, rwd, heightSpan = 188 }) => {
     const tableHeight = height - 26;
 
     return <Box sx={{width: '100%', height, maxHeight: height}}>
-        {entity.loading ? <LinearProgress /> : <MonthPicker value={month.currentMonth} onPrev={month.prev} onNext={month.next}/>}
+        <MonthPicker value={month.currentMonth} onPrev={month.prev} onNext={month.next} disabled={entity.loading} />
         <PowerTable 
             entityName={entityName}
             height={tableHeight}

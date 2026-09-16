@@ -105,7 +105,7 @@ const UserDashboard = () => {
     const rwd = useRwd();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-    const height = rwd.height - 78;
+    const height = rwd.height - 86;
 
     const [activeView, setActiveView] = useState("profile");
 
@@ -227,7 +227,7 @@ const UserDashboard = () => {
                         </Typography>
                     </Box>
 
-                    <Box sx={{ p: 2 }}>
+                    <Box sx={{ p: 1 }}>
                         {activeItem.component}
                     </Box>
                 </Paper>

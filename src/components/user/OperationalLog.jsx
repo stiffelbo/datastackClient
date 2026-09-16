@@ -17,7 +17,7 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = 
         entity.refresh();
     }, [entityName, endpoint, issueId]);
 
-    const effectiveHeight = height ? height : window.innerHeight - 166;
+    const effectiveHeight = height ? height - 36 : window.innerHeight - 166;
 
     const columns = entity.schema.columns.map(c => {
             if(c?.field === "issue_id") {
@@ -49,7 +49,7 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = 
             onEdit={entity.updateField}
             onUpload={null}
             onBulkEdit={entity.updateMany}
-            onDelete={(id) => { if(window.confirm('Czy na pewno chcesz usunąć?')) { entity.remove(id); } }} //zapytaj najpierw czy na pewno chcesz usunąć
+            onDelete={(id) => entity.remove(id)} //zapytaj najpierw czy na pewno chcesz usunąć
             onBulkDelete={null}
 
             error={entity.error}

@@ -75,7 +75,7 @@ const resolveFieldAccess = ({ name, access }) => {
     }
 }
 
-const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
+const JiraIssueDetails = ({ id, row, rwd, entity, dashboard }) => {
     const schema = normalizeSchema(entity.schema.editForm.schema);
     const mainAccess = entity.schema.access || {};
     const access = mainAccess.page || {}
@@ -406,6 +406,8 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
     // zamiast getErrorText(form.errors, name)
     const errorsText = form.getErrorText(name);
 
+    const isOrder = `${row.is_order}` === '1';
+
     return (
         <Box sx={{ width: "100%", maxWidth: "100%", p: 2 }}>
             <Row gap={2} align="flex-start">
@@ -446,7 +448,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
 
                     </CollapsibleSection>
 
-                    <CollapsibleSection title="Ilości" defaultOpen={true}>
+                    <CollapsibleSection title="Ilości" defaultOpen={true} show={isOrder}>
 
                         <Row>
                             {renderInput("qty_ordered")}
@@ -459,7 +461,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                         </Row>
                     </CollapsibleSection>
 
-                    <CollapsibleSection title="Finanse" defaultOpen={true}>
+                    <CollapsibleSection title="Finanse" defaultOpen={true} show={isOrder}>
                         {resolveFieldAccess({ name: "ro_nr", access }) ? renderInput("ro_nr") : null}
                         {resolveFieldAccess({ name: "design_price", access }) ? renderInput("design_price") : null}
                         {resolveFieldAccess({ name: "setup_price", access }) ? renderInput("setup_price") : null}
@@ -491,7 +493,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
 
                         {renderReadonly("jira_resolution")}
                     </CollapsibleSection>
-                    <CollapsibleSection title="Daty Operacyjne" defaultOpen={true}>
+                    <CollapsibleSection title="Daty Operacyjne" defaultOpen={true} show={isOrder}>
                         {renderInput("receipt_date")}
                         {renderInput("production_request_date")}
                         {renderInput("start_date")}
@@ -514,6 +516,7 @@ const JiraIssueDetails = ({ id, row, entity, dashboard }) => {
                 disabled={!form.isValid || !form.isChanged || entity.loading}
                 loading={entity.loading}
             />
+
         </Box >
     );
 };

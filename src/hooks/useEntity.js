@@ -387,7 +387,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
     // Generowanie unikalnego klucza cache (upewnij się, że masz do niego dostęp w tym miejscu)
     const queryKey = JSON.stringify(query || {});
     const schemaQueryKey = JSON.stringify(schemaQuery || {});
-    const cacheKey = `${entityName}_${endpoint}_${itemId || ''}`;
+    const cacheKey = `${entityName}_${endpoint}_${itemId || ''}_${queryKey}_${schemaQueryKey}`;
 
     // 1. ODCZYT AKTUALNYCH WARTOŚCI Z KONTEKSTU (Odpowiednik zmiennych stanowych)
     const entityState = getEntityData(cacheKey);

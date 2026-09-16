@@ -1,5 +1,6 @@
 // virtualizedTreeBody.jsx
-import React, { useMemo } from 'react';
+
+import React from 'react';
 import { TableBody } from '@mui/material';
 import PowerTableRow from './powerTableRow';
 
@@ -8,111 +9,168 @@ const VirtualizedTreeBody = ({
   columnsSchema,
   rowRules,
   settings,
-  overscan = 0,
-  height = 600,
-  scrollTop = 0,
   editing,
   actionsApi,
+  rowVirtualizer,
 }) => {
-  const rowHeight = Number(settings?.rowHeight) || 45;
-  const rowCount = flatData.length;
+  const rowHeight =
+    Number(settings?.rowHeight) || 45;
 
-  const viewportHeight = Math.max(Number(height) || 0, rowHeight);
-  const visibleCount = Math.ceil(viewportHeight / rowHeight);
+  /*
+   * =====================================================
+   * TANSTACK VIRTUAL
+   * =====================================================
+   */
 
-  const baseIndex = Math.max(
-    0,
-    Math.min(
-      Math.max(rowCount - 1, 0),
-      Math.floor(scrollTop / rowHeight)
-    )
-  );
+  const virtualRows =
+    rowVirtualizer.getVirtualItems();
 
-  const startIndex = Math.max(0, baseIndex - overscan);
+  const totalSize =
+    rowVirtualizer.getTotalSize();
 
-  const endIndex = Math.min(
-    rowCount,
-    baseIndex + visibleCount + overscan
-  );
 
-  const visibleRows = useMemo(
-    () => flatData.slice(startIndex, endIndex),
-    [flatData, startIndex, endIndex]
-  );
-
-  const paddingTop = startIndex * rowHeight;
-
-  const paddingBottom = Math.max(
-    0,
-    (rowCount - endIndex) * rowHeight
-  );
-
-  // +1 bo tree ma systemową kolumnę drzewa
-  const colSpan = columnsSchema.getVisibleColumns().length + 1;
+  /*
+   * =====================================================
+   * RENDER
+   * =====================================================
+   */
 
   return (
-    <TableBody>
-      {paddingTop > 0 && (
-        <tr
-          aria-hidden="true"
-          style={{
-            height: `${paddingTop}px`,
-            padding: 0,
-            border: 0,
-          }}
-        >
-          <td
-            colSpan={colSpan}
-            style={{
-              height: `${paddingTop}px`,
-              padding: 0,
-              border: 0,
-            }}
-          />
-        </tr>
-      )}
+    <TableBody
+      sx={{
+        position: 'relative',
 
-      {visibleRows.map((item, idx) => {
-        const idField = settings?.idField ?? 'id';
+        /*
+         * Tak samo jak w VirtualizedGroupedBody.
+         *
+         * TableBody reprezentuje pełną wysokość
+         * wszystkich WIDOCZNYCH elementów drzewa.
+         */
+        display: 'block',
+
+        height: `${totalSize}px`,
+
+        width: '100%',
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        /*
+         * virtualRow.index wskazuje bezpośrednio
+         * na element flatData.
+         *
+         * flatData zawiera tylko widoczne node'y,
+         * czyli dzieci collapsed node'a nie istnieją
+         * tutaj z punktu widzenia virtualizera.
+         */
+        const item =
+          flatData[virtualRow.index];
+
+        if (!item) {
+          return null;
+        }
+
+
+        /*
+         * =================================================
+         * ROW POSITION
+         * =================================================
+         */
+
+        const virtualRowSx = {
+          position: 'absolute',
+
+          top: 0,
+          left: 0,
+
+          width: '100%',
+
+          height: `${rowHeight}px`,
+          minHeight: `${rowHeight}px`,
+          maxHeight: `${rowHeight}px`,
+
+          transform:
+            `translateY(${virtualRow.start}px)`,
+
+          display: 'flex',
+
+          boxSizing: 'border-box',
+        };
+
+
+        /*
+         * =================================================
+         * STABLE ROW KEY
+         * =================================================
+         */
+
+        const idField =
+          settings?.idField ?? 'id';
 
         const rowId =
           item.row?.[idField] ??
           item.row?.id ??
-          startIndex + idx;
+          item[idField] ??
+          item.id ??
+          item.path ??
+          virtualRow.key ??
+          virtualRow.index;
+
+
+        /*
+         * =================================================
+         * TREE DATA ROW
+         * =================================================
+         *
+         * parent="tree" zostaje bez zmian.
+         *
+         * PowerTableRow / PowerTableCell mogą dzięki temu
+         * dalej obsługiwać:
+         *
+         * - tree column
+         * - indentation
+         * - expand/collapse
+         * - actionsApi.toggleTreeNode
+         */
 
         return (
           <PowerTableRow
             key={`tree-row-${rowId}`}
+
             row={item.row}
-            columnsSchema={columnsSchema}
-            rowRules={rowRules}
-            settings={settings}
-            editing={editing}
-            actionsApi={actionsApi}
+
+            columnsSchema={
+              columnsSchema
+            }
+
+            rowRules={
+              rowRules
+            }
+
+            settings={
+              settings
+            }
+
+            editing={
+              editing
+            }
+
+            actionsApi={
+              actionsApi
+            }
+
             parent="tree"
+
+            /*
+             * PowerTableRow musi przekazać sx
+             * do swojego głównego TableRow.
+             *
+             * Dokładnie tak samo jak dla
+             * VirtualizedGroupedBody.
+             */
+            sx={virtualRowSx}
           />
         );
       })}
-
-      {paddingBottom > 0 && (
-        <tr
-          aria-hidden="true"
-          style={{
-            height: `${paddingBottom}px`,
-            padding: 0,
-            border: 0,
-          }}
-        >
-          <td
-            colSpan={colSpan}
-            style={{
-              height: `${paddingBottom}px`,
-              padding: 0,
-              border: 0,
-            }}
-          />
-        </tr>
-      )}
     </TableBody>
   );
 };

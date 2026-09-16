@@ -10,8 +10,10 @@ function MonthPicker({
   value,
   onPrev,
   onNext,
+  disabled = false,
   size = 'small',
   sx,
+  name = "",
 }) {
   return (
     <ButtonGroup
@@ -22,18 +24,21 @@ function MonthPicker({
     >
       <Button
         onClick={onPrev}
+        disabled={disabled} 
         aria-label="Poprzedni miesiąc"
       >
         <ChevronLeftIcon fontSize="small" />
       </Button>
 
       <Button
+        disabled={disabled} 
       >
         {value}
       </Button>
 
       <Button
         onClick={onNext}
+        disabled={disabled} 
         aria-label="Następny miesiąc"
       >
         <ChevronRightIcon fontSize="small" />

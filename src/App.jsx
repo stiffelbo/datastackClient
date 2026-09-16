@@ -36,6 +36,7 @@ import JiraIssueResourceUsageLog from './pages/jiraIssueResourceUsageLog/JiraIss
 import JiraIssueOperationLog from './pages/jiraIssueOperationLog/JiraIssueOperationLog';
 import JiraIssueProductionOutputLog from './pages/jiraIssueProductionOutputLog/JiraIssueProductionOutputLog';
 import JiraIssueProductionTasks from './pages/jiraIssueProductionTasks/JiraIssueProductionTasks';
+import SynqWithJira from './pages/synqWithJira/SynqWithJira';
 import ItAssetsTypes from './pages/itAssetsTypes/ItAssetsTypes';
 import ItAssets from './pages/itAssets/ItAssets';
 import ItAssetsShifts from './pages/itAssetsShifts/ItAssetsShifts';
@@ -69,6 +70,7 @@ const App = () => (
         <Route index element={<Home />} />
                 
         <Route path="sys" element={<Sys />} />
+        <Route path="synq" element={<SynqWithJira />} />
         <Route path="costsparser" element={<CostsParser />} />
         <Route path="production" element={<Production />} />
         <Route path="clockify" element={<Clockify />} />
