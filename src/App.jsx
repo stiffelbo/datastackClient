@@ -26,6 +26,8 @@ import ProcessesResources from './pages/processesResources/ProcessesResources';
 import ProcessesUsers from './pages/processesUsers/ProcessesUsers';
 import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
+import ProductDefinitions from './pages/productDefinitions/ProductDefinitions';
+import Numismatics from './pages/numismatics/Numismatics';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
 import JiraIssueHistory from './pages/jiraIssue/JiraIssueHistory';
@@ -144,6 +146,14 @@ const App = () => (
         <Route path="toolstypes/:id/:tab" element={<ToolsTypes />} />
         <Route path="toolstypes/:id" element={<ToolsTypes />} />
         <Route path="toolstypes" element={<ToolsTypes />} />
+
+        <Route path="productdefinitions/:id/:tab" element={<ProductDefinitions />} />
+        <Route path="productdefinitions/:id" element={<ProductDefinitions />} />
+        <Route path="productdefinitions" element={<ProductDefinitions />} />
+
+        <Route path="numismatics/:id/:tab" element={<Numismatics />} />
+        <Route path="numismatics/:id" element={<Numismatics />} />
+        <Route path="numismatics" element={<Numismatics />} />
 
         <Route path="machines/:id/:tab" element={<Machines />} />
         <Route path="machines/:id" element={<Machines />} />

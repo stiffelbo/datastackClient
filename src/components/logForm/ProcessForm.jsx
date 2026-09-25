@@ -28,7 +28,6 @@ const ProcessForm = ({
 
     function renderMaterialsSection() {
         if (!processes?.computed?.hasMaterials) return null;
-
         return (
             <MaterialsUsageTable
                 materials={processes.data.materials}

@@ -139,7 +139,7 @@ const applyOverrides = (
   });
 };
 
-const mergeColumns = ({ auto = [], dev = [], base = [], stored = [], actions = [] }) => {
+const mergeColumns = ({ auto = [], dev = [], base = [], stored = [], actions = [], enableEdit }) => {
   const map = new Map();
 
   // 1️⃣ Wybieramy zestaw bazowy:
@@ -184,7 +184,11 @@ const mergeColumns = ({ auto = [], dev = [], base = [], stored = [], actions = [
   });
 
   // 7️⃣ Ciągłe indeksy 0..N
-  return merged.map((c, idx) => ({ ...c, order: idx }));
+  return merged.map((c, idx) => ({
+    ...c,
+    order: idx,
+    editable: enableEdit === true && c.editable === true,
+  }));
 };
 
 
@@ -230,6 +234,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
       auto: autoColumns,
       dev: devSchema,
       actions: columnActions,
+      enableEdit : enableEdit
     });
 
     // === 🔹 Dodajemy kolumny akcji tylko, jeśli nie ma zapisanych presetów ===
@@ -240,6 +245,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
       restored = mergeColumns({
         base,           // wynik pierwszego biegu
         stored: savedCols,
+        enableEdit : enableEdit
         // actions: opcjonalnie, jak chcesz dorzucać kolumny akcji też po presiecie
       });
     } else {
@@ -471,6 +477,7 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
         auto: autoColumns,
         dev: devSchema,
         actions: columnActions,
+        enableEdit: enableEdit
       });
       setColumns(base);
     },

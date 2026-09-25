@@ -4,6 +4,12 @@ import PowerTable from '../../components/powerTable/powerTable';
 
 import useEntity from '../../hooks/useEntity';
 
+const defaultRwd = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+};
+
+
 const JiraIssueProductionTasks = ({ id = null, row = {}, rwd = defaultRwd }) => {
     
     const entityName = "JiraIssueProductionTasks";

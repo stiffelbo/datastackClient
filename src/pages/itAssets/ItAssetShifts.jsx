@@ -8,6 +8,12 @@ import ShiftToUserForm from './ShiftToUserForm';
 import RenderShifts from './RednerShifts';
 import useAssetShifts from './useAssetShifts';
 
+const defaultRwd = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+};
+
+
 const ItAssetShifts = ({ id = null, row = {}, rwd = defaultRwd, entity, dashboard }) => {
 
     const shiftsEntity = useEntity({

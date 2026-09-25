@@ -147,12 +147,12 @@ const inferAlign = (type) => {
 /* 🔹 HELPERS                                                                 */
 /* -------------------------------------------------------------------------- */
 
-const buildColumn = ({ key, value, devCol = {} }) => {
+const buildColumn = ({ key, value, devCol = {}, enableEdit }) => {
   const type = devCol?.type ?? detectType(value);
   const input = devCol?.input ?? inferInput(type);
   const width = devCol?.width ?? detectWidth(value);
   const aggregationFn = devCol?.aggregationFn ?? devCol?.aggregation ?? null;
-
+  const editable = devCol?.editable && enableEdit ? true : false;
   return {
     /* 📘 Identyfikacja */
     field: key,
@@ -165,7 +165,7 @@ const buildColumn = ({ key, value, devCol = {} }) => {
     displayType: devCol?.displayType ?? inferDisplayType(type),
 
     /* 📙 Edycja / Walidacja */
-    editable: devCol?.editable ?? false,
+    editable: editable,
     validationFn: devCol?.validationFn ?? null,
     options: devCol?.options ?? [],
     optionsMap: devCol?.optionsMap ?? {},
@@ -197,7 +197,7 @@ const buildColumn = ({ key, value, devCol = {} }) => {
 /* 🔹 HOOK                                                                    */
 /* -------------------------------------------------------------------------- */
 
-const useAutoColumns = ({ data = [], dev = {}, strictSchema = false }) => {
+const useAutoColumns = ({ data = [], dev = {}, strictSchema = false, enableEdit = false }) => {
   return useMemo(() => {
     const safeData = Array.isArray(data) ? data : [];
     const sample = safeData[0] && typeof safeData[0] === 'object' ? safeData[0] : null;
@@ -209,7 +209,7 @@ const useAutoColumns = ({ data = [], dev = {}, strictSchema = false }) => {
       return devKeys.map((key) => {
         const value = sample?.[key];
         const devCol = dev[key] || {};
-        return buildColumn({ key, value, devCol });
+        return buildColumn({ key, value, devCol, enableEdit });
       });
     }
 

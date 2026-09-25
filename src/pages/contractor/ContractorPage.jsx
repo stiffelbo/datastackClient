@@ -2,6 +2,7 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 import ContractorDetails from './ContractorDetails';
+import ContractorIssues from './ContractorIssues';
 
 const BlankComponent = (props) => {
     return <div>
@@ -31,8 +32,14 @@ const ContractorPage = ({
       pageKey: 'contractor.details', // klucz z rejestru stron
       component: <ContractorDetails id={id} row={row} entity={entity}/>,
     },
+    {
+      key: 'issues',
+      label: 'Projekty',
+      pageKey: 'contractor.issues', // klucz z rejestru stron
+      component: <ContractorIssues id={id} row={row} entity={entity} rwd={rwd}/>,
+    },
     // itd...
-  ];
+  ]
 
   return (
     <BaseEntityPage

@@ -12,7 +12,7 @@ function createMaterialReportRow(material) {
         step: material?.step ?? 0.01,
         required: Boolean(material?.required),
         canWaste: Boolean(material?.canWaste),
-
+        divide: Boolean(material?.divide),
         qty: "",
         wasteQty: "",
     };
@@ -285,7 +285,6 @@ export default function useProcessForm({
         setMaterialsReport(createMaterialsReport(materials));
 
         if(selectedProcess){
-            console.log(selectedProcess);
             setStructureId(selectedProcess.structureId);
         }
     }, [

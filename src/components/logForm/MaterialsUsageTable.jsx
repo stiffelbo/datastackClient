@@ -148,7 +148,7 @@ const MaterialsUsageTable = ({
         const qty = row.qty ?? "";
         const wasteQty = row.wasteQty ?? "";
         const canWaste = Boolean(material.canWaste);
-
+        const divide = material.divide;
         const labelTitle = material.required ? "wartość jest wymagana" : "";
 
         return (
@@ -208,6 +208,9 @@ const MaterialsUsageTable = ({
                         </Typography>
                     )}
                 </TableCell>
+                <TableCell>
+                    {divide ? 'tak' : 'nie'}
+                </TableCell>
             </TableRow>
         );
     }
@@ -247,6 +250,7 @@ const MaterialsUsageTable = ({
                             <TableCell>Jm</TableCell>
                             <TableCell>Ilość</TableCell>
                             <TableCell>Odpad</TableCell>
+                            <TableCell>Dzieli</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>{filteredMaterials.map(renderRow)}</TableBody>

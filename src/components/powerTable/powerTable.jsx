@@ -88,8 +88,9 @@ const PowerTable = ({
 
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({ data, dev: devColumnsLookup, enableEdit: !!onEdit, strictSchema: strictSchema });
-
-  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion });
+  
+  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion, enableEdit : !!onEdit });
+  
   const editing = useTableEditing(onEdit);
 
   const [modalState, setModalState] = useState({ open: false, view: null });

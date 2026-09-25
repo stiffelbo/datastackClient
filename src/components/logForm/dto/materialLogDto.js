@@ -21,7 +21,7 @@ export function materialLogDto({
     isPlan = false,
     isActive = true,
 
-    movementType = "consume_good",
+    movementType = "produkcja",
     qty = null,
 
     remarks = null
@@ -34,7 +34,7 @@ export function materialLogDto({
         process_id: toIntOrNull(process?.id),
         structure_id: toIntOrNull(structureId),
         qty: toNumberOrNull(qty) ?? 0,
-        movement_type: toStringOrNull(movementType) ?? "consume_good",
+        movement_type: toStringOrNull(movementType) ?? "produkcja",
         is_repair: toBool01(isRepair),
         remarks: toStringOrNull(remarks),        
         is_active: toBool01(isActive),

@@ -39,7 +39,6 @@ export function processesDto(data) {
                   const materialDetails = material?.details ?? {};
                   const unit = materialDetails.unit ?? null;
                   const step = materialDetails.unit_step ?? null;
-
                   return {
                       id: materialDetails.id ?? null,
                       name: materialDetails.name ?? null,
@@ -47,7 +46,8 @@ export function processesDto(data) {
                       required: toBool(material?.is_required),
                       unit,
                       step: step ?? getMaterialStep(unit),
-                      canWaste: toBool(material?.can_waste)
+                      canWaste: toBool(material?.can_waste),
+                      divide: toBool(materialDetails.is_divisible)
                   };
               })
             : [];

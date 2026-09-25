@@ -42,8 +42,8 @@ export function defaultTime() {
     return {
         date,
         start: formatHHMM(start), // "1000"
-        end: formatHHMM(end),     // "1100"
-        duration: 1,              // godziny dziesiętne
+        end: '',     // "1100"
+        duration: 0,              // godziny dziesiętne
     };
 }
 
@@ -67,8 +67,8 @@ export function getTimeFromLastEntry(lastEntryToday) {
         ...time,
         date: startDate.toISOString().slice(0, 10),
         start: formatHHMM(startDate),
-        end: formatHHMM(endDate),
-        duration: 1,
+        end: '',
+        duration: 0,
     };
 }
 

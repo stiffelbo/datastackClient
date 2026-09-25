@@ -4,7 +4,7 @@ import { materialLogDto } from "./materialLogDto";
 import { outputLogDto } from "./outputLogDto";
 
 import { normalizeTimeValue } from "../utils";
-import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate, splitTimeSequentially } from "./logDraftVoUtils";
+import { safeArray, round2, round4, getTaskQuantity, getTaskQuantityGood, getTaskQuantityScrap, getTaskRemarks, getTaskIsRework, getTimeDuration, getTaskAllocations, roundToStepDown, allocateAmountByRatioWithStep, allocateAmountAcrossPeopleWithStep, allocateIntegerAcrossPeople, splitDurationByRatio, splitAmountByRatio, buildPreview, buildValidation, getOutputWorkDate, splitTimeSequentially, splitAmountPreservingTotal } from "./logDraftVoUtils";
 import { splitProductionTimeSequentially, getProductionTaskAllocations, getGoodScrapRatios } from './productionAlocations';
 
 function uniqueErrors(errors = []) {
@@ -125,177 +125,285 @@ export function logDraftVo({
         // 3. MATERIALS
         materials.forEach((material) => {
             const row = materialsReport?.[material.id];
+
             if (!row) return;
 
-            const materialStep = Number(material.step || row.step || 0.01);
+            const materialStep = Number(
+                material.step || row.step || 0.01
+            );
 
+            /*
+             * divide NIE decyduje o podziale materiału na taski.
+             *
+             * Materiał ZAWSZE dzielimy pomiędzy taski.
+             *
+             * divide decyduje WYŁĄCZNIE o tym, czy ilość
+             * przypisaną do konkretnego taska dzielimy dalej
+             * na produkcja / brak.
+             */
+            const divideGoodScrap = Boolean(material.divide);
+
+            /*
+             * Materiałów nie dzielimy na pracowników.
+             * Do logu podstawiamy pierwszego.
+             */
+            const materialEmployee =
+                selectedEmployees[0] ?? null;
+
+            const materialWorkDate =
+                materialEmployee?.time?.date ??
+                machineTime?.date ??
+                null;
+
+            /*
+             * Mały lokalny helper, żeby nie duplikować
+             * materialLogDto w każdym branchu.
+             */
+            const pushMaterialLog = ({
+                task,
+                movementType,
+                qty,
+            }) => {
+                if (!qty) return;
+
+                materialLogs.push(
+                    materialLogDto({
+                        task,
+                        employee: materialEmployee,
+                        process: selectedProcess,
+                        material,
+
+                        workDate: materialWorkDate,
+
+                        structureId:
+                            processesState.structureId,
+
+                        productionTaskId: null,
+
+                        isRepair:
+                            isRework ||
+                            getTaskIsRework(task),
+
+                        isPlan: false,
+                        isActive: true,
+
+                        movementType,
+                        qty,
+
+                        remarks: getTaskRemarks(task),
+                    })
+                );
+            };
+
+
+            /*
+             * ==========================================
+             * PRODUKCJA
+             * ==========================================
+             */
             if (isProduction) {
-                // 3A. PRODUKCJA: row.qty dzielone po taskach, potem na dobre/braki
-                // bez dzielenia na pracowników
-                const productionQty = Number(row.qty || 0);
+                const productionQty =
+                    Number(row.qty || 0);
 
-                if (productionQty) {
-                    const taskQtyAllocations = allocateAmountByRatioWithStep(
-                        productionQty,
-                        allocations,
-                        materialStep
-                    );
-
-                    taskQtyAllocations.forEach((qtyAllocation) => {
-                        const { goodRatio, scrapRatio } = getGoodScrapRatios(qtyAllocation.task);
-
-                        const internalMovements = [
-                            {
-                                movementType: "produkcja",
-                                qty: roundToStepDown(
-                                    qtyAllocation.allocatedAmount * goodRatio,
-                                    materialStep
-                                ),
-                            },
-                            {
-                                movementType: "brak",
-                                qty: roundToStepDown(
-                                    qtyAllocation.allocatedAmount * scrapRatio,
-                                    materialStep
-                                ),
-                            },
-                        ];
-
-                        internalMovements.forEach((movement) => {
-                            if (!movement.qty) return;
-
-                            materialLogs.push(
-                                materialLogDto({
-                                    task: qtyAllocation.task,
-                                    employee: selectedEmployees[0] ?? null,
-                                    process: selectedProcess,
-                                    material,
-
-                                    workDate:
-                                        selectedEmployees[0]?.time?.date ??
-                                        machineTime?.date ??
-                                        null,
-
-                                    structureId: processesState.structureId,
-                                    productionTaskId: null,
-
-                                    isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                    isPlan: false,
-                                    isActive: true,
-
-                                    movementType: movement.movementType,
-                                    qty: movement.qty,
-
-                                    remarks: getTaskRemarks(qtyAllocation.task),
-                                })
-                            );
-                        });
-                    });
-                }
-
-                // 3B. ODPAD MATERIAŁOWY: row.wasteQty dzielone tylko po factorze
-                // bez dzielenia na pracowników
-                const wasteQty = Number(row.wasteQty || 0);
-
-                if (wasteQty) {
-                    const wasteAllocations = allocateAmountByRatioWithStep(
-                        wasteQty,
-                        allocations,
-                        materialStep
-                    );
-
-                    wasteAllocations.forEach((qtyAllocation) => {
-                        if (!qtyAllocation.allocatedAmount) return;
-
-                        materialLogs.push(
-                            materialLogDto({
-                                task: qtyAllocation.task,
-                                employee: selectedEmployees[0] ?? null,
-                                process: selectedProcess,
-                                material,
-
-                                workDate:
-                                    selectedEmployees[0]?.time?.date ??
-                                    machineTime?.date ??
-                                    null,
-
-                                structureId: processesState.structureId,
-                                productionTaskId: null,
-
-                                isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                isPlan: false,
-                                isActive: true,
-
-                                movementType: "odpad",
-                                qty: qtyAllocation.allocatedAmount,
-
-                                remarks: getTaskRemarks(qtyAllocation.task),
-                            })
+                if (productionQty > 0) {
+                    /*
+                     * ETAP 1
+                     *
+                     * Cały raportowany materiał dzielimy
+                     * pomiędzy taski według dividerFactor/ratio.
+                     *
+                     * divide NIE MA tutaj znaczenia.
+                     *
+                     * INVARIANT:
+                     *
+                     * SUM(allocatedAmount) === productionQty
+                     */
+                    const taskMaterialAllocations =
+                        allocateAmountByRatioWithStep(
+                            productionQty,
+                            allocations,
+                            materialStep
                         );
-                    });
+
+                    taskMaterialAllocations.forEach(
+                        (taskAllocation) => {
+                            const task = taskAllocation.task;
+                            const taskMaterialQty =
+                                taskAllocation.allocatedAmount;
+
+                            if (!taskMaterialQty) {
+                                return;
+                            }
+
+                            /*
+                             * ==================================
+                             * divide = FALSE
+                             * ==================================
+                             *
+                             * Np. kartony.
+                             *
+                             * Nie interesuje nas good/scrap.
+                             * Cały materiał przypisany do
+                             * zamówienia idzie na produkcję.
+                             */
+                            if (!divideGoodScrap) {
+                                pushMaterialLog({
+                                    task,
+                                    movementType: "produkcja",
+                                    qty: taskMaterialQty,
+                                });
+
+                                return;
+                            }
+
+
+                            /*
+                             * ==================================
+                             * divide = TRUE
+                             * ==================================
+                             *
+                             * Dopiero tutaj patrzymy na
+                             * good/scrap danego zamówienia.
+                             */
+                            const {
+                                goodRatio,
+                                scrapRatio,
+                            } = getGoodScrapRatios(task);
+
+                            /*
+                             * ETAP 2
+                             *
+                             * Ilość materiału JUŻ przypisaną
+                             * do taska dzielimy good/scrap.
+                             *
+                             * Ten podział również respektuje
+                             * materialStep i nie może zgubić
+                             * ani jednej jednostki.
+                             *
+                             * INVARIANT:
+                             *
+                             * goodQty + scrapQty
+                             * === taskMaterialQty
+                             */
+                            const [
+                                goodQty,
+                                scrapQty,
+                            ] = splitAmountPreservingTotal(
+                                taskMaterialQty,
+                                [
+                                    goodRatio,
+                                    scrapRatio,
+                                ],
+                                materialStep
+                            );
+
+                            pushMaterialLog({
+                                task,
+                                movementType: "produkcja",
+                                qty: goodQty,
+                            });
+
+                            pushMaterialLog({
+                                task,
+                                movementType: "brak",
+                                qty: scrapQty,
+                            });
+                        }
+                    );
                 }
-            } else {
-                const materialMovements = [
-                    {
-                        movementType: "produkcja",
-                        qty: Number(row.qty || 0),
-                    },
-                    {
-                        movementType: "odpad",
-                        qty: Number(row.wasteQty || 0),
-                    },
-                ];
 
-                materialMovements.forEach((movement) => {
-                    if (!movement.qty) return;
 
-                    const qtyAllocations = allocateAmountByRatioWithStep(
+                /*
+                 * ==========================================
+                 * ODPAD MATERIAŁOWY
+                 * ==========================================
+                 *
+                 * wasteQty jest niezależne od good/scrap.
+                 *
+                 * Zawsze tylko:
+                 *
+                 * wasteQty
+                 *     ↓
+                 * taski według allocations
+                 *     ↓
+                 * "odpad"
+                 */
+                const wasteQty =
+                    Number(row.wasteQty || 0);
+
+                if (wasteQty > 0) {
+                    const wasteAllocations =
+                        allocateAmountByRatioWithStep(
+                            wasteQty,
+                            allocations,
+                            materialStep
+                        );
+
+                    wasteAllocations.forEach(
+                        (taskAllocation) => {
+                            pushMaterialLog({
+                                task: taskAllocation.task,
+                                movementType: "odpad",
+                                qty:
+                                    taskAllocation.allocatedAmount,
+                            });
+                        }
+                    );
+                }
+
+                return;
+            }
+
+
+            /*
+             * ==========================================
+             * PROCES NIEPRODUKCYJNY
+             * ==========================================
+             *
+             * Tutaj nie mamy good/scrap.
+             *
+             * Nadal:
+             *
+             * - dzielimy materiał pomiędzy taski,
+             * - respektujemy step,
+             * - nie dzielimy na pracowników.
+             */
+            const movements = [
+                {
+                    movementType: "produkcja",
+                    qty: Number(row.qty || 0),
+                },
+                {
+                    movementType: "odpad",
+                    qty: Number(row.wasteQty || 0),
+                },
+            ];
+
+            movements.forEach((movement) => {
+                if (movement.qty <= 0) {
+                    return;
+                }
+
+                const taskMaterialAllocations =
+                    allocateAmountByRatioWithStep(
                         movement.qty,
                         allocations,
                         materialStep
                     );
 
-                    qtyAllocations.forEach((qtyAllocation) => {
-                        const employeeAllocations = allocateAmountAcrossPeopleWithStep(
-                            qtyAllocation.allocatedAmount,
-                            selectedEmployees,
-                            materialStep
-                        );
-
-                        employeeAllocations.forEach((employeeAllocation) => {
-                            if (!employeeAllocation.allocatedAmount) return;
-
-                            materialLogs.push(
-                                materialLogDto({
-                                    task: qtyAllocation.task,
-                                    employee: employeeAllocation.employee,
-                                    process: selectedProcess,
-                                    material,
-
-                                    workDate:
-                                        employeeAllocation.employee?.time?.date ??
-                                        machineTime?.date ??
-                                        null,
-
-                                    structureId: processesState.structureId,
-                                    productionTaskId: null,
-
-                                    isRepair: isRework || getTaskIsRework(qtyAllocation.task),
-                                    isPlan: false,
-                                    isActive: true,
-
-                                    movementType: movement.movementType,
-                                    qty: employeeAllocation.allocatedAmount,
-
-                                    remarks: getTaskRemarks(qtyAllocation.task),
-                                })
-                            );
+                taskMaterialAllocations.forEach(
+                    (taskAllocation) => {
+                        pushMaterialLog({
+                            task: taskAllocation.task,
+                            movementType:
+                                movement.movementType,
+                            qty:
+                                taskAllocation.allocatedAmount,
                         });
-                    });
-                });
-            }
+                    }
+                );
+            });
         });
-
         // 4. OUTPUTS
         selectedTasks.forEach((task) => {
             const quantityGood = Number(task?.report?.quantityGood || 0);
@@ -394,8 +502,8 @@ export function logDraftVo({
         return {
             meta: {
                 valid: false,
-                errors: 
-                   validation.errors,
+                errors:
+                    validation.errors,
                 requiresTasks,
                 requiresQuantity,
                 requiresRemarks,

@@ -168,10 +168,13 @@ const TimeForm = ({
     };
 
     const handleEnd = (v) => {
+        const startValid = parseHHMM(start) !== null;
+        const endValid = parseHHMM(v) !== null;
+
         const nextDuration =
-            start.length === 4 && v.length === 4
+            startValid && endValid
                 ? calcDuration(start, v)
-                : duration;
+                : "";
 
         emit({
             end: v,

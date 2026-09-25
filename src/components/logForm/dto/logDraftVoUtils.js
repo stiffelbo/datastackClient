@@ -108,49 +108,148 @@ export function roundToStepDown(value, step) {
     return round4(units * normalizedStep);
 }
 
-export function allocateAmountByRatioWithStep(amount, allocations = [], step = 0.01) {
-    const totalAmount = Number(amount || 0);
-    const safeAllocations = safeArray(allocations);
+export function allocateAmountsByRatioWithStep(
+    total,
+    ratios = [],
+    step = 0.01
+) {
+    const safeTotal = Number(total || 0);
+    const safeStep = Number(step || 0.01);
+    const safeRatios = safeArray(ratios).map((ratio) =>
+        Math.max(0, Number(ratio || 0))
+    );
 
-    if (!safeAllocations.length) return [];
-    if (!totalAmount) {
-        return safeAllocations.map((allocation) => ({
-            ...allocation,
-            allocatedAmount: 0,
-        }));
+    if (!safeRatios.length) {
+        return [];
     }
 
-    const result = [];
-    let distributed = 0;
+    if (safeTotal <= 0) {
+        return safeRatios.map(() => 0);
+    }
 
-    safeAllocations.forEach((allocation, index) => {
-        const rawAmount = totalAmount * Number(allocation.ratio || 0);
+    if (!Number.isFinite(safeStep) || safeStep <= 0) {
+        throw new Error(`Niepoprawny step materiału: ${step}`);
+    }
 
-        if (index === 0) {
-            result.push({
-                ...allocation,
-                allocatedAmount: 0,
-            });
-            return;
-        }
+    const ratioSum = safeRatios.reduce(
+        (sum, ratio) => sum + ratio,
+        0
+    );
 
-        const roundedAmount = roundToStepDown(rawAmount, step);
-        distributed += roundedAmount;
+    if (ratioSum <= 0) {
+        return safeRatios.map(() => 0);
+    }
 
-        result.push({
-            ...allocation,
-            allocatedAmount: roundedAmount,
+    /*
+     * WAŻNE:
+     *
+     * Ilość raportowana musi być zgodna ze step.
+     *
+     * step = 1
+     * total = 400
+     * => 400 jednostek
+     *
+     * step = 0.1
+     * total = 12.5
+     * => 125 jednostek
+     */
+    const rawTotalUnits = safeTotal / safeStep;
+    const totalUnits = Math.round(rawTotalUnits);
+
+    /*
+     * Nie pozwalamy helperowi po cichu zmienić ilości.
+     *
+     * Np. total=5.5 i step=1 nie może nagle
+     * zostać potraktowane jako 6.
+     */
+    if (Math.abs(rawTotalUnits - totalUnits) > 1e-8) {
+        throw new Error(
+            `Ilość ${safeTotal} nie jest zgodna ze step ${safeStep}.`
+        );
+    }
+
+    const normalizedRatios = safeRatios.map(
+        (ratio) => ratio / ratioSum
+    );
+
+    const rawUnits = normalizedRatios.map(
+        (ratio) => totalUnits * ratio
+    );
+
+    /*
+     * Najpierw bierzemy pełne jednostki.
+     */
+    const allocatedUnits = rawUnits.map((units) =>
+        Math.floor(units)
+    );
+
+    /*
+     * Następnie MUSIMY rozdać wszystkie pozostałe jednostki.
+     */
+    let unitsLeft =
+        totalUnits -
+        allocatedUnits.reduce((sum, units) => sum + units, 0);
+
+    /*
+     * Largest remainder method:
+     * dodatkowe jednostki dostają alokacje,
+     * które straciły najwięcej przez floor().
+     */
+    const remainderOrder = rawUnits
+        .map((units, index) => ({
+            index,
+            remainder: units - Math.floor(units),
+        }))
+        .sort((a, b) => {
+            if (b.remainder !== a.remainder) {
+                return b.remainder - a.remainder;
+            }
+
+            // stabilny tie-break
+            return a.index - b.index;
         });
-    });
 
-    const firstAmount = round4(totalAmount - distributed);
+    let cursor = 0;
 
-    result[0] = {
-        ...safeAllocations[0],
-        allocatedAmount: firstAmount,
-    };
+    while (unitsLeft > 0) {
+        const target =
+            remainderOrder[cursor % remainderOrder.length];
 
-    return result;
+        allocatedUnits[target.index] += 1;
+
+        unitsLeft -= 1;
+        cursor += 1;
+    }
+
+    return allocatedUnits.map((units) =>
+        round4(units * safeStep)
+    );
+}
+
+export function allocateAmountByRatioWithStep(
+    amount,
+    allocations = [],
+    step = 0.01
+) {
+    const safeAllocations = safeArray(allocations);
+
+    if (!safeAllocations.length) {
+        return [];
+    }
+
+    const allocatedAmounts =
+        allocateAmountsByRatioWithStep(
+            amount,
+            safeAllocations.map(
+                (allocation) => allocation.ratio
+            ),
+            step
+        );
+
+    return safeAllocations.map((allocation, index) => ({
+        ...allocation,
+        allocatedAmount: allocatedAmounts[index],
+    }));
 }
 
 export function allocateIntegerAcrossPeople(total, items = []) {
@@ -460,4 +559,36 @@ export function buildValidation({
         valid: errors.length === 0,
         errors,
     };
+}
+
+export function splitAmountPreservingTotal(
+    total,
+    ratios,
+    step = 0.01
+) {
+    const safeTotal = Number(total || 0);
+    const safeStep = Number(step || 0.01);
+
+    if (!safeTotal || !ratios.length) {
+        return ratios.map(() => 0);
+    }
+
+    let remaining = safeTotal;
+
+    return ratios.map((ratio, index) => {
+        const isLast = index === ratios.length - 1;
+
+        if (isLast) {
+            return round4(remaining);
+        }
+
+        const amount = roundToStepDown(
+            safeTotal * Number(ratio || 0),
+            safeStep
+        );
+
+        remaining = round4(remaining - amount);
+
+        return amount;
+    });
 }
