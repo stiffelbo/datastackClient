@@ -380,7 +380,7 @@ function toFormData(payload) {
 };
 
 
-export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null }) {
+export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null, reload = false }) {
 
     const { getEntityData, setEntityData } = use(EntityContext);
 
@@ -600,7 +600,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         const isExpired = cachedTimestamp && (Date.now() - cachedTimestamp > ONE_HOUR);
 
         // 3. Conditionally fire the network refresh request
-        if (cachedRows.length === 0 || isExpired) {
+        if (reload || cachedRows.length === 0 || isExpired) {
             refresh().catch(e => console.error(e));
         } else {
             // Data is present and still fresh! Reset any error states from previous runs.

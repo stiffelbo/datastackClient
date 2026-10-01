@@ -35,11 +35,20 @@ export const createFilter = (field, type = 'string') => {
     return newFilter;
 };
 
-export const getUniqueOptions = (data, field) => {
+export const getUniqueOptions = (data, column) => {
     const set = new Set();
+
     data.forEach(row => {
-        if (row[field] !== undefined && row[field] !== null) set.add(row[field]);
+        const values = resolveColumnValues(
+            row[column.field],
+            column
+        );
+
+        values.forEach(value => {
+            set.add(value);
+        });
     });
+
     return Array.from(set).sort();
 };
 
@@ -56,7 +65,7 @@ export const rawValToBoolean = (val) => {
 /**
  * Zastosuj jeden filtr do wartości
  */
-export const applyFilterToValue = (rawValue, filter, type) => {
+export const applyFilterToValue = (rawValue, filter, type, column = {}) => {
     const { op, value } = filter;
 
     const isEmpty = rawValue === null || rawValue === undefined || rawValue === '';
@@ -86,8 +95,30 @@ export const applyFilterToValue = (rawValue, filter, type) => {
 
         if (op === 'multiSelect') {
             const { include = [], exclude = [] } = value || {};
-            if (include.length && !include.includes(rawValue)) return false;
-            if (exclude.length && exclude.includes(rawValue)) return false;
+
+            const values = resolveColumnValues(
+                rawValue,
+                column
+            );
+
+            const normalizedValues = values.map(String);
+
+            const hasIncluded = include.some(item =>
+                normalizedValues.includes(String(item))
+            );
+
+            const hasExcluded = exclude.some(item =>
+                normalizedValues.includes(String(item))
+            );
+
+            if (include.length && !hasIncluded) {
+                return false;
+            }
+
+            if (exclude.length && hasExcluded) {
+                return false;
+            }
+
             return true;
         }
 
@@ -274,7 +305,7 @@ export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selecte
                 if (!filters.length) continue;
 
                 const rawValue = row[col.field];
-                if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string'))) {
+                if (!filters.every(f => applyFilterToValue(rawValue, f, col.type || 'string', col))) {
                     return false;
                 }
             }
@@ -285,6 +316,25 @@ export const applyFilters = ({ data = [], columnsSchema = {}, omit = [], selecte
         return [];
     }
 
+};
+
+export const resolveColumnValues = (rawValue, column) => {
+    if (rawValue === null || rawValue === undefined || rawValue === '') {
+        return [];
+    }
+
+    if (column?.delimiter) {
+        return String(rawValue)
+            .split(column.delimiter)
+            .map(value => value.trim())
+            .filter(Boolean);
+    }
+
+    if (Array.isArray(rawValue)) {
+        return rawValue;
+    }
+
+    return [rawValue];
 };
 
 

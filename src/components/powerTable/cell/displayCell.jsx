@@ -5,6 +5,7 @@ import {
   getCellSx,
   getCellInnerSx,
 } from "./cellLayout";
+import TableImage from "./TableImage";
 
 const normalize = (x) => {
   if (x === null || x === undefined || x === "") return null;
@@ -434,6 +435,21 @@ const DisplayCell = ({
       >
         {href}
       </a>
+    );
+  }
+  if (column.formatterKey === "img") {
+
+    return (
+      <TableCell
+        title={title}
+        onClick={handleClick}
+        onDoubleClick={onDoubleClick}
+        sx={baseCellSx}
+      >
+        <Box sx={baseInnerSx}>
+          <TableImage src={displayValue} />
+        </Box>
+      </TableCell>
     );
   }
 

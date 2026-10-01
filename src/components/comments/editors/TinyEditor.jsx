@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import { MentionsUtility } from './mentionsUtility';
 
 import { Button, Box, Chip, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 //Components
+import { MentionsUtility } from './mentionsUtility';
 import MentionsOptions from './MentionsOptions';
 
 const TinyEditor = ({

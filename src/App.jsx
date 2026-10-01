@@ -27,6 +27,7 @@ import ProcessesUsers from './pages/processesUsers/ProcessesUsers';
 import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
 import ProductDefinitions from './pages/productDefinitions/ProductDefinitions';
+import Product from './pages/product/Product';
 import Numismatics from './pages/numismatics/Numismatics';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
@@ -51,7 +52,6 @@ import Sys from './pages/sys/Sys';
 import CostsParser from './pages/costsParser/CostsParser';
 
 //DevOnly
-import Comments from './pages/_dev/Comments';
 import JiraIssueSingle from './pages/jiraIssue/JiraIssueSingle';
 import ToolsTypes from './pages/toolsTypes/ToolsTypes';
 import Production from './pages/production/Production';
@@ -151,6 +151,10 @@ const App = () => (
         <Route path="productdefinitions/:id" element={<ProductDefinitions />} />
         <Route path="productdefinitions" element={<ProductDefinitions />} />
 
+        <Route path="product/:id/:tab" element={<Product />} />
+        <Route path="product/:id" element={<Product />} />
+        <Route path="product" element={<Product />} />
+
         <Route path="numismatics/:id/:tab" element={<Numismatics />} />
         <Route path="numismatics/:id" element={<Numismatics />} />
         <Route path="numismatics" element={<Numismatics />} />
@@ -181,7 +185,6 @@ const App = () => (
 
         <Route path="userdashboard" element={<UserDashboard />} />
         <Route path="userlogform" element={<UserLogForm />} />
-        <Route path="_dev" element={<Comments />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -4,6 +4,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 
 import FormTemplate from '../../components/powerTable/form/formTemplate';
+import MakeUser from './MakeUser';
 
 const EmployeeDetails = ({id, row, entity, rwd, dashboard}) => {
 
@@ -27,7 +28,8 @@ const EmployeeDetails = ({id, row, entity, rwd, dashboard}) => {
             schema={entity.schema.editForm.schema}    
             onSubmit={(data) => entity.updateFD(id, data)}    
             onCancel={onCancel}
-        />  
+        /> 
+        <MakeUser data={row} entity={entity}/> 
     </Box>
 }
 

@@ -6,22 +6,51 @@ import { amber } from '@mui/material/colors';
 import { getUniqueOptions, applyFilters } from './utils';
 
 const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) => {
-  const preFiltered = applyFilters({data, columnsSchema, omit: [id]});
-  const opts = getUniqueOptions(preFiltered, field);
+  const preFiltered = applyFilters({ data, columnsSchema, omit: [id] });
+  const column =
+    columnsSchema?.columns?.find(
+      col => col.field === field
+    ) ?? {};
+  const opts = getUniqueOptions(
+    preFiltered,
+    column
+  );
   const { include = [], exclude = [] } = value || {};
 
   const handleChange = (option, mode) => {
-    const newVal = { include: [...include], exclude: [...exclude] };
+    let newInclude = [...include];
+    let newExclude = [...exclude];
+
     if (mode === 'include') {
-      newVal.include = include.includes(option)
-        ? include.filter(o => o !== option)
-        : [...include, option];
-    } else {
-      newVal.exclude = exclude.includes(option)
-        ? exclude.filter(o => o !== option)
-        : [...exclude, option];
+      const isActive = include.includes(option);
+
+      if (isActive) {
+        // + aktywny -> wracamy do neutralnego
+        newInclude = newInclude.filter(o => o !== option);
+      } else {
+        // + włączony -> wyłączamy -
+        newInclude = [...newInclude, option];
+        newExclude = newExclude.filter(o => o !== option);
+      }
     }
-    onChange(newVal);
+
+    if (mode === 'exclude') {
+      const isActive = exclude.includes(option);
+
+      if (isActive) {
+        // - aktywny -> wracamy do neutralnego
+        newExclude = newExclude.filter(o => o !== option);
+      } else {
+        // - włączony -> wyłączamy +
+        newExclude = [...newExclude, option];
+        newInclude = newInclude.filter(o => o !== option);
+      }
+    }
+
+    onChange({
+      include: newInclude,
+      exclude: newExclude,
+    });
   };
 
   const color = (include.length > 0 || exclude.length > 0) ? amber[100] : 'white';
@@ -29,7 +58,7 @@ const MultiSelectFilter = ({ field, data, value, onChange, id, columnsSchema }) 
   // 🔹 Grupowanie opcji
   const includedOpts = opts.filter(o => include.includes(o));
   const excludedOpts = opts.filter(o => exclude.includes(o) && !include.includes(o));
-  const neutralOpts  = opts.filter(o => !include.includes(o) && !exclude.includes(o));
+  const neutralOpts = opts.filter(o => !include.includes(o) && !exclude.includes(o));
 
   const groupedOpts = [
     ...(includedOpts.length ? [{ label: '✅ Uwzględnione', items: includedOpts }] : []),
