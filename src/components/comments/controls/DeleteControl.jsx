@@ -6,17 +6,13 @@ import {
     Tooltip,
 } from '@mui/material';
 
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import PushPinIcon from '@mui/icons-material/PushPin';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 
 
-const PinControl = ({
-    pinned = false,
+const DeleteControl = ({
+    canDelete = false,
 
-    canPin = false,
-    canUnpin = false,
-
-    onChange,
+    onClick,
 
     disabled = false,
     loading = false,
@@ -24,23 +20,11 @@ const PinControl = ({
     size = 'small',
 }) => {
 
-    const canChange = pinned
-        ? canUnpin
-        : canPin;
-
     const isDisabled =
         disabled ||
         loading ||
-        !canChange ||
-        typeof onChange !== 'function';
-
-    const label = pinned
-        ? 'Odepnij'
-        : 'Przypnij';
-
-    const color = pinned
-        ? 'warning'
-        : 'default';
+        !canDelete ||
+        typeof onClick !== 'function';
 
     const handleClick = (event) => {
         event.stopPropagation();
@@ -48,28 +32,27 @@ const PinControl = ({
         if (isDisabled) {
             return;
         }
-        onChange(!pinned);
+
+        onClick();
     };
 
     return (
-        <Tooltip title={isDisabled ? '' : label}>
+        <Tooltip title={isDisabled ? '' : 'Usuń'}>
             <span>
                 <IconButton
                     size={size}
                     disabled={isDisabled}
                     onClick={handleClick}
-                    aria-label={label}
-                    color={color}
+                    aria-label="Usuń"
+                    color="error"
                 >
                     {loading ? (
                         <CircularProgress
                             size={16}
                             thickness={5}
                         />
-                    ) : pinned ? (
-                        <PushPinIcon fontSize="inherit" />
                     ) : (
-                        <PushPinOutlinedIcon fontSize="inherit" />
+                        <DeleteOutlineIcon fontSize="inherit" />
                     )}
                 </IconButton>
             </span>
@@ -77,4 +60,4 @@ const PinControl = ({
     );
 };
 
-export default PinControl;
+export default DeleteControl;

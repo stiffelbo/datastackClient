@@ -20,11 +20,9 @@ import CommentEditor from '../editors/CommentEditor';
 
 const FileItem = ({
     file,
-    onPin,
-    onCreateFileComment,
+    actions,
     mentionOptions = [],
-    layout,
-    ...props
+    layout
 }) => {
 
     const comments = file.comments ?? [];
@@ -32,8 +30,6 @@ const FileItem = ({
     const isCommentEditorOpen =
         layout?.isFileCommentEditor &&
         layout?.target?.id === file.id;
-
-
         
     return (
         <Paper
@@ -118,14 +114,13 @@ const FileItem = ({
                             pinned={file.is_pinned}
                             canPin={file.rls?.can_pin}
                             canUnpin={file.rls?.can_unpin}
-                            onChange={(pinned) => onPin?.(file, pinned)}
+                            onChange={(pinned) => actions.files.pin(file, pinned)}
                         />
                     </Box>
                 </Box>
 
                 <FilePreview
-                    file={file}
-                    {...props}
+                    file={file}   
                 />
 
                 {comments.length > 0 && (
@@ -143,7 +138,8 @@ const FileItem = ({
                                 key={`file_comment:${comment.id}`}
                                 comment={comment}
                                 layout={layout}
-                                {...props}
+                                actions={actions}
+                                mentionOptions={mentionOptions}
                             />
                         ))}
                     </Stack>
@@ -163,7 +159,7 @@ const FileItem = ({
                             mentionOptions={mentionOptions}
 
                             onSubmit={async (data) => {
-                                await onCreateFileComment?.(file, data);
+                                await actions.fileComments.create?.(file, data);
                                 layout.closeEditor();
                             }}
 

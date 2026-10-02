@@ -11,20 +11,18 @@ import {
 const ActivityItem = ({
     item,
     layout,
-    onCreateFileComment,
-    onPinn,
-    ...props
+    actions,
+    mentionOptions
 }) => {
-
-    switch (item.type) {
+    switch (item.item_type) {
 
         case ACTIVITY_TYPES.COMMENT:
             return (
                 <CommentItem
                     comment={item}
                     layout={layout}
-                    onPinn={onPinn}
-                    {...props}
+                    actions={actions}
+                    mentionOptions={mentionOptions}
                 />
             );
 
@@ -33,9 +31,8 @@ const ActivityItem = ({
                 <FileItem
                     file={item}
                     layout={layout}
-                    onCreateFileComment={onCreateFileComment}
-                    onPinn={onPinn}
-                    {...props}
+                    actions={actions}
+                    mentionOptions={mentionOptions}
                 />
             );
 

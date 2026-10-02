@@ -6,17 +6,13 @@ import {
     Tooltip,
 } from '@mui/material';
 
-import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import PushPinIcon from '@mui/icons-material/PushPin';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 
 
-const PinControl = ({
-    pinned = false,
+const EditControl = ({
+    canEdit = false,
 
-    canPin = false,
-    canUnpin = false,
-
-    onChange,
+    onClick,
 
     disabled = false,
     loading = false,
@@ -24,23 +20,11 @@ const PinControl = ({
     size = 'small',
 }) => {
 
-    const canChange = pinned
-        ? canUnpin
-        : canPin;
-
     const isDisabled =
         disabled ||
         loading ||
-        !canChange ||
-        typeof onChange !== 'function';
-
-    const label = pinned
-        ? 'Odepnij'
-        : 'Przypnij';
-
-    const color = pinned
-        ? 'warning'
-        : 'default';
+        !canEdit ||
+        typeof onClick !== 'function';
 
     const handleClick = (event) => {
         event.stopPropagation();
@@ -48,28 +32,26 @@ const PinControl = ({
         if (isDisabled) {
             return;
         }
-        onChange(!pinned);
+
+        onClick();
     };
 
     return (
-        <Tooltip title={isDisabled ? '' : label}>
+        <Tooltip title={isDisabled ? '' : 'Edytuj'}>
             <span>
                 <IconButton
                     size={size}
                     disabled={isDisabled}
                     onClick={handleClick}
-                    aria-label={label}
-                    color={color}
+                    aria-label="Edytuj"
                 >
                     {loading ? (
                         <CircularProgress
                             size={16}
                             thickness={5}
                         />
-                    ) : pinned ? (
-                        <PushPinIcon fontSize="inherit" />
                     ) : (
-                        <PushPinOutlinedIcon fontSize="inherit" />
+                        <EditOutlinedIcon fontSize="inherit" />
                     )}
                 </IconButton>
             </span>
@@ -77,4 +59,4 @@ const PinControl = ({
     );
 };
 
-export default PinControl;
+export default EditControl;

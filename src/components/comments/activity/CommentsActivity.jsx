@@ -14,8 +14,8 @@ const CommentsActivity = ({
     data = [],
     loading = false,
     layout,
-    onCreateFileComment,
-    onPinn
+    actions,
+    mentionOptions = []
 }) => {
 
     if (loading) {
@@ -59,8 +59,9 @@ const CommentsActivity = ({
                     key={`${item.type}:${item.id}`}
                     item={item}
                     layout={layout}
-                    onCreateFileComment={onCreateFileComment}
-                    onPinn={onPinn}
+                    actions={actions}
+                    mentionOptions={mentionOptions}
+                    source={'roll'}
                 />
             ))}
         </Stack>

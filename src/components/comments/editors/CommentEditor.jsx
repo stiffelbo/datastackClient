@@ -10,7 +10,7 @@ import TinyEditor from './TinyEditor';
 const CommentEditor = ({
     value,
     mentionOptions = [],
-
+    mode = 'create',
     loading = false,
 
     onChange,
@@ -28,6 +28,7 @@ const CommentEditor = ({
             }}
         >
             <TinyEditor
+                mode={mode}
                 initialContent={value}
                 initialFormState={null}
                 mentionOptions={mentionOptions}

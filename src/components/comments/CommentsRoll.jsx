@@ -21,10 +21,7 @@ const CommentsRoll = ({
     mentionOptions = [],
     filesOptions = [],
 
-    onCreateComment,
-    onCreateFile,
-    onCreateFileComment,
-    onPinn,
+    actions,
 
     ...activityProps
 }) => {
@@ -39,8 +36,6 @@ const CommentsRoll = ({
     const handleImageDelete = (data)=>{
         console.log(data);
     }
-
-
 
     return (
         <Box
@@ -68,18 +63,19 @@ const CommentsRoll = ({
                     data={data}
                     loading={loading}
                     layout={layout}
-                    onCreateFileComment={onCreateFileComment}
-                    onPinn={onPinn}
+                    actions={actions}
+                    mentionOptions={mentionOptions}
                 />
             </Box>
 
             {layout.isCommentEditor && (
                 <CommentEditor
+                    mode="create"
                     value={null}
                     loading={false}
                     mentionOptions={mentionOptions}
                     onSubmit={data => {
-                        onCreateComment(data);
+                        actions.comments.create(data);
                         layout.closeEditor();
                     }}
                     onCancel={layout.closeEditor}
@@ -92,7 +88,7 @@ const CommentsRoll = ({
             {layout.isFileEditor && (
                 <FileEditor
                     onSubmit={data => {
-                        onCreateFile(data);
+                        actions.files.create(data);
                         layout.closeEditor();
                     }}
                     onCancel={layout.closeEditor}

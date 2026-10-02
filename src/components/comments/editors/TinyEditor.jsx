@@ -13,6 +13,7 @@ const TinyEditor = ({
   initialContent = '',
   initialFormState,
   mentionOptions = [],
+  submitLabel = 'Dodaj Komentarz',
   onSave,
   onContentChange,
   onCancel,
