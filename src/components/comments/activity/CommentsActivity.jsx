@@ -15,7 +15,9 @@ const CommentsActivity = ({
     loading = false,
     layout,
     actions,
-    mentionOptions = []
+    mentionOptions = [],
+    filesStatusesOptions=[],
+    technologsOptions=[]
 }) => {
 
     if (loading) {
@@ -61,7 +63,8 @@ const CommentsActivity = ({
                     layout={layout}
                     actions={actions}
                     mentionOptions={mentionOptions}
-                    source={'roll'}
+                    filesStatusesOptions={filesStatusesOptions}
+                    technologsOptions={technologsOptions}
                 />
             ))}
         </Stack>

@@ -51,6 +51,15 @@ export const createProductActivityActions = ({
                     })
                 );
             },
+
+            delete: async (id) => {
+                return refresh(
+                    await activityEntity.remove(id, {
+                        action : 'remove_comment',
+                        product_id: product.id
+                    })
+                );
+            }
         },
 
 
@@ -90,9 +99,9 @@ export const createProductActivityActions = ({
                 );
             },
 
-            changeStatus: async (file, statusId) => {
+            status: async (file, statusId) => {
                 return refresh(
-                    await activityEntity.update({
+                    await activityEntity.update(file.id,{
                         product_id: product.id,
                         action: 'file_status',
                         file_id: file.id,
@@ -100,6 +109,15 @@ export const createProductActivityActions = ({
                     })
                 );
             },
+
+            delete: async (id) => {
+                return refresh(
+                    await activityEntity.remove(id, {
+                        action : 'remove_file',
+                        product_id: product.id,
+                    })
+                );
+            }
         },
 
 
@@ -132,6 +150,15 @@ export const createProductActivityActions = ({
                     await activityEntity.update(comment.id, payload)
                 );
             },
+
+            delete: async (id) => {
+                return refresh(
+                    await activityEntity.remove(id, {
+                        action : 'remove_file_comment',
+                        product_id: product.id
+                    })
+                );
+            }
         },
     };
 };

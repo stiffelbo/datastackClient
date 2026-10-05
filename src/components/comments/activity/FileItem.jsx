@@ -15,14 +15,17 @@ import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined';
 import FilePreview from './FilePreview';
 import CommentItem from './CommentItem';
 import PinControl from '../controls/PinControl';
+import DeleteControl from '../controls/DeleteControl';
+import FileStatusControl from '../controls/FileStatusControl';
 import CommentEditor from '../editors/CommentEditor';
 
 
 const FileItem = ({
     file,
     actions,
+    layout,
     mentionOptions = [],
-    layout
+    filesStatusesOptions=[],
 }) => {
 
     const comments = file.comments ?? [];
@@ -30,6 +33,12 @@ const FileItem = ({
     const isCommentEditorOpen =
         layout?.isFileCommentEditor &&
         layout?.target?.id === file.id;
+
+
+    
+    const handleDelete = () => {
+        actions?.files?.delete?.(file.id);
+    };
         
     return (
         <Paper
@@ -99,6 +108,11 @@ const FileItem = ({
                             flexShrink: 0,
                         }}
                     >
+                        <FileStatusControl
+                            file={file}
+                            statuses={filesStatusesOptions}
+                            onChange={actions?.files?.status}
+                        />
                         {file.rls?.can_reply && (
                             <Tooltip title="Dodaj komentarz">
                                 <IconButton
@@ -109,6 +123,11 @@ const FileItem = ({
                                 </IconButton>
                             </Tooltip>
                         )}
+
+                        <DeleteControl
+                            canDelete={file.rls?.can_delete}
+                            onClick={handleDelete}
+                        />
 
                         <PinControl
                             pinned={file.is_pinned}

@@ -12,6 +12,7 @@ export const ACTIVITY_TYPES = {
     COMMENT: 'comment',
     FILE: 'file',
     FILE_COMMENT: 'file_comment',
+    LOG: 'log',
 };
 /**
  * RLS / capabilities są w całości wyliczane przez backend.
@@ -105,9 +106,27 @@ export const ActivityCommentSchema = ActivityBaseSchema.extend({
     content: CommentContentSchema,
 
     is_file: z.literal(false),
+    is_log: z.literal(false),
 
     is_pinned: z.boolean(),
     pinned_at: z.string().nullable(),
+
+    parent_id: z.null().optional(),
+});
+
+ /*
+ * Log jest immutable.
+ */
+export const ActivityLogSchema = ActivityBaseSchema.extend({
+    type: z.literal(ACTIVITY_TYPES.LOG),
+
+    content: CommentContentSchema,
+
+    is_file: z.literal(false),
+    is_log: z.literal(true),
+
+    is_pinned: z.literal(false),
+    pinned_at: z.null(),
 
     parent_id: z.null().optional(),
 });
@@ -172,6 +191,7 @@ export const ActivityFileSchema = ActivityBaseSchema.extend({
 export const ActivityItemSchema = z.discriminatedUnion('type', [
     ActivityCommentSchema,
     ActivityFileSchema,
+    ActivityLogSchema,
 ]);
 
 

@@ -9,24 +9,29 @@ import {
 
 import useCommentsLayout from './useCommentsLayout';
 
+import useCommentsFilters from './useCommentsFilters';
+
 import CommentsActivity from './activity/CommentsActivity';
 import FileEditor from './editors/FileEditor';
 import CommentEditor from './editors/CommentEditor';
 import CommentsControls from './controls/CommentsControls';
+import CommentsFilters from './controls/CommentsFilters';
 
 const CommentsRoll = ({
+    entityName = 'ProductComments',
     data = [],
     loading = false,
 
     mentionOptions = [],
     filesOptions = [],
-
+    filesStatusesOptions = [],
     actions,
 
     ...activityProps
 }) => {
 
     const layout = useCommentsLayout();
+    const commentsFilters = useCommentsFilters(data);
     const handleChange = (data)=>{
         console.log(data);
     }
@@ -59,12 +64,17 @@ const CommentsRoll = ({
                     pb: 7,
                 }}
             >
+                <CommentsFilters
+                    filters={commentsFilters.filters}
+                    onChange={commentsFilters.updateFilters}
+                />
                 <CommentsActivity
-                    data={data}
+                    data={commentsFilters.data}
                     loading={loading}
                     layout={layout}
                     actions={actions}
                     mentionOptions={mentionOptions}
+                    filesStatusesOptions={filesStatusesOptions}
                 />
             </Box>
 

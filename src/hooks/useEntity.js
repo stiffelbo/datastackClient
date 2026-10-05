@@ -875,7 +875,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         }
     }, [resolveEndpoint, http, setLoading, setError, toast]);
 
-    const remove = useCallback(async (id) => {
+    const remove = useCallback(async (id, data = {}) => {
         const url = resolveEndpoint('delete');
         if (!url) {
             toast.warning('Usuwanie wyłączone dla tej encji.');
@@ -893,7 +893,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         setLoading(true);
         try {
             // Preferuj POST JSON (spójnie z innymi endpointami)
-            const res = await http.post(url, { id });
+            const res = await http.post(url, {id, ...data});
             const ok = !!(res?.ok ?? true);
             const deleted = !!(res?.deleted ?? false);
 

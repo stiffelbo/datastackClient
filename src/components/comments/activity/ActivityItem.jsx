@@ -2,6 +2,7 @@ import React from 'react';
 
 import CommentItem from './CommentItem';
 import FileItem from './FileItem';
+import LogItem from './LogItem';
 
 import {
     ACTIVITY_TYPES,
@@ -12,7 +13,8 @@ const ActivityItem = ({
     item,
     layout,
     actions,
-    mentionOptions
+    mentionOptions,
+    filesStatusesOptions=[],
 }) => {
     switch (item.item_type) {
 
@@ -33,6 +35,14 @@ const ActivityItem = ({
                     layout={layout}
                     actions={actions}
                     mentionOptions={mentionOptions}
+                    filesStatusesOptions={filesStatusesOptions}
+                />
+            );
+
+        case ACTIVITY_TYPES.LOG:
+            return (
+                <LogItem
+                    log={item}
                 />
             );
 

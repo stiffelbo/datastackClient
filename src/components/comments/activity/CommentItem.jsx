@@ -38,11 +38,11 @@ const CommentItem = ({
 
     const handleDelete = () => {
         if (isFileComment) {
-            actions?.fileComments?.delete?.(comment);
+            actions?.fileComments?.delete?.(comment.id);
             return;
         }
 
-        actions?.comments?.delete?.(comment);
+        actions?.comments?.delete?.(comment.id);
     };
 
     const handleUpdate = async (data) => {
