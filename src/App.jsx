@@ -28,6 +28,7 @@ import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
 import ProductDefinitions from './pages/productDefinitions/ProductDefinitions';
 import Product from './pages/product/Product';
+import ProductOrder from './pages/productOrder/ProductOrder';
 import Numismatics from './pages/numismatics/Numismatics';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
@@ -44,6 +45,19 @@ import ItAssetsTypes from './pages/itAssetsTypes/ItAssetsTypes';
 import ItAssets from './pages/itAssets/ItAssets';
 import ItAssetsShifts from './pages/itAssetsShifts/ItAssetsShifts';
 import RCPEmployees from './pages/rcpEmployees/RCPEmployees';
+
+import OnGoingProduction from './pages/projects/onGoingReport';
+import ProductOrderTools from './pages/productOrder/ProductOrderTools';
+
+//WH
+import WhDefinitions from './pages/whDefinitions/WhDefinitions';
+import WhMaterialIndex from './pages/whMaterialIndex/WhMaterialIndex';
+import WhShipping from './pages/whShipping/WhShipping';
+import WhShippingItems from './pages/whShippingItems/WhShippingItems';
+import WhShifts from './pages/WhShifts/WhShifts';
+import WhShiftItems from './pages/WhShiftItems/WhShiftItems';
+import WhDocuments from './pages/WhDocuments/WhDocuments';
+import Incoming from './pages/whShipping/Incoming/Incoming';
 
 import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
@@ -71,6 +85,12 @@ const App = () => (
       >
         <Route index element={<Home />} />
                 
+        <Route path="ongoingproduction" element={<OnGoingProduction />} />
+        
+        <Route path="productordertools/:id/:tab" element={<ProductOrderTools />} />
+        <Route path="productordertools/:id" element={<ProductOrderTools />} />
+        <Route path="productordertools" element={<ProductOrderTools />} />
+        
         <Route path="sys" element={<Sys />} />
         <Route path="synq" element={<SynqWithJira />} />
         <Route path="costsparser" element={<CostsParser />} />
@@ -90,7 +110,10 @@ const App = () => (
         <Route path="jiraissueresourcesusagelog/:id" element={<JiraIssueResourceUsageLog />} />
         <Route path="jiraissueresourcesusagelog" element={<JiraIssueResourceUsageLog />} />
 
+        <Route path="jiraissueoperationlog/:id/:tab" element={<JiraIssueOperationLog />} />
+        <Route path="jiraissueoperationlog/:id" element={<JiraIssueOperationLog />} />
         <Route path="jiraissueoperationlog" element={<JiraIssueOperationLog />} />
+       
         <Route path="jiraissueproductionoutputlog" element={<JiraIssueProductionOutputLog />} />
         <Route path="jiraissueproductiontasks" element={<JiraIssueProductionTasks />} />
         <Route path="deptcosts" element={<Costs />} />
@@ -151,6 +174,10 @@ const App = () => (
         <Route path="productdefinitions/:id" element={<ProductDefinitions />} />
         <Route path="productdefinitions" element={<ProductDefinitions />} />
 
+        <Route path="productorder/:id/:tab" element={<ProductOrder />} />
+        <Route path="productorder/:id" element={<ProductOrder />} />
+        <Route path="productorder" element={<ProductOrder />} />
+
         <Route path="product/:id/:tab" element={<Product />} />
         <Route path="product/:id" element={<Product />} />
         <Route path="product" element={<Product />} />
@@ -182,6 +209,19 @@ const App = () => (
         <Route path="itassets/:id/:tab" element={<ItAssets />} />
         <Route path="itassets/:id/" element={<ItAssets />} />
         <Route path="itassets" element={<ItAssets />} />
+
+        <Route path="whdefinitions" element={<WhDefinitions />} />
+        <Route path="whmaterialindex" element={<WhMaterialIndex />} />
+
+        <Route path="whshipping/:id/:tab" element={<WhShipping />} />
+        <Route path="whshipping/:id/" element={<WhShipping />} />
+        <Route path="whshipping" element={<WhShipping />} />
+        
+        <Route path="whshippingitems" element={<WhShippingItems />} />
+        <Route path="whshifts" element={<WhShifts />} />
+        <Route path="whshiftitems" element={<WhShiftItems />} />
+        <Route path="whdocuments" element={<WhDocuments />} />
+        <Route path="whincoming" element={<Incoming />} />
 
         <Route path="userdashboard" element={<UserDashboard />} />
         <Route path="userlogform" element={<UserLogForm />} />

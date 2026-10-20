@@ -46,6 +46,7 @@ const PowerTable = ({
   //Form Schemas
   addFormSchema = { label: '', schema: [] },
   addFormInitialValues = {},
+
   bulkEditFormSchema = { label: '', schema: [] },
   importSchema = null,
   //Crud Callbacks
@@ -88,15 +89,61 @@ const PowerTable = ({
 
   const actionsApi = useRowAction({ onSelect, selected, onDelete, onBulkEdit, onBulkDelete });
   const autoColumns = useAutoColumns({ data, dev: devColumnsLookup, enableEdit: !!onEdit, strictSchema: strictSchema });
-  
-  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion, enableEdit : !!onEdit });
-  
+
+  const columnsSchema = useColumns({ autoColumns, devSchema: columnSchema, presets, entityName, columnActions: actionsApi.columnActions, schemaVersion, enableEdit: !!onEdit });
+
   const editing = useTableEditing(onEdit);
 
   const [modalState, setModalState] = useState({ open: false, view: null });
 
   const openModal = (view) => setModalState({ open: true, view });
   const closeModal = () => setModalState({ open: false, view: null });
+
+  const selectedItem = selected != null
+    ? data.find(item => item.id === selected)
+    : null;
+
+  const effectiveAddFormInitialValues = () => {
+    const initialValues = { ...addFormInitialValues };
+
+    const fields = addFormSchema?.schema ?? [];
+
+    // Pola plikowe zawsze zaczynają jako puste
+    fields.forEach(field => {
+      if (field.type === 'file') {
+        initialValues[field.field ?? field.name] =
+          field.multiple ? [] : null;
+      }
+    });
+
+    if (!selectedItem) {
+      return initialValues;
+    }
+
+    fields
+      .filter(field =>
+        field.copyFromSelected === true &&
+        field.type !== 'file'
+      )
+      .forEach(field => {
+        const fieldName = field.field ?? field.name;
+
+        if (
+          fieldName &&
+          Object.prototype.hasOwnProperty.call(
+            selectedItem,
+            fieldName
+          )
+        ) {
+          initialValues[fieldName] = selectedItem[fieldName];
+        }
+      });
+
+    return initialValues;
+  };
+
+
+  const initialAddFormValues = effectiveAddFormInitialValues();
 
   const renderModalContent = () => {
     switch (modalState.view) {
@@ -115,7 +162,7 @@ const PowerTable = ({
             open={modalState.open}
             onClose={closeModal}
             addFormSchema={addFormSchema}
-            initialValues={addFormInitialValues}
+            initialValues={initialAddFormValues}
             onPost={onPost}
             error={error}
             clearError={clearError}

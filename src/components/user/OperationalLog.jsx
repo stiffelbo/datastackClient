@@ -7,9 +7,10 @@ import useEntity from '../../hooks/useEntity';
 import PowerTable from '../powerTable/powerTable';
 import RenderLink from '../../pages/jiraIssue/RenderLink';
 
-const OperationLog = ({entityName, endpoint, height = null, issue = {}, label = ""}) => {
+const OperationLog = ({entityName, endpoint, height = null, issue = {}, query = {}, label = ""}) => {
 
-    const entity = useEntity({ entityName, endpoint, query: {issue_id : issue.id}, schemaQuery : {issue_id : issue.id}});
+    const effectiveQuery = {...query, issue_id : issue.id};
+    const entity = useEntity({ entityName, endpoint, query: effectiveQuery, schemaQuery : {issue_id : issue.id}});
 
     const issueId = issue?.id;
 

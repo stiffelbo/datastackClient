@@ -3,6 +3,7 @@ import React, {useCallback, useEffect, useState} from "react";
 
 import http from "../../../http";
 import useEntity from "../../../hooks/useEntity";
+import {useDashboard} from "../../../context/DashboardContext";
 
 // MUI imports
 import {
@@ -34,13 +35,14 @@ const Bilans = ({data, rwd}) => {
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [mode, setMode] = useState(VIEW_MODE.SUMMARY);
 
     const entity = useEntity({
         entityName: "JiraIssueCosts",
         schemaOnly: "true",
         endpoint: "/jira_issue_costs/",
     });
+
+    const {viewMode, setViewMode} = useDashboard('JiraIssueBilans');
 
     const fetchBilans = useCallback(async (id) => {
         if (!id) {
@@ -81,6 +83,12 @@ const Bilans = ({data, rwd}) => {
     useEffect(() => {
         fetchBilans(data?.id);
     }, [data?.id, fetchBilans]);
+
+    useEffect(() => {
+        if(viewMode === 'table') { //taki jest defaultwy viewMode w kontekście dashboardu, więc przy pierwszym wejściu na stronę ustawiamy go na summary
+            setViewMode(VIEW_MODE.SUMMARY);
+        }
+    }, [setViewMode]);
 
     let showDetails = false;
 
@@ -133,12 +141,12 @@ const Bilans = ({data, rwd}) => {
                         startIcon={<AssessmentRoundedIcon/>}
                         size="small"
                         variant={
-                            mode === VIEW_MODE.SUMMARY
+                            viewMode === VIEW_MODE.SUMMARY
                                 ? "contained"
                                 : "outlined"
                         }
                         onClick={() => {
-                            setMode(VIEW_MODE.SUMMARY);
+                            setViewMode(VIEW_MODE.SUMMARY);
                         }}
                     >
                         Karta bilansowa
@@ -148,12 +156,12 @@ const Bilans = ({data, rwd}) => {
                         startIcon={<TableRowsRoundedIcon/>}
                         size="small"
                         variant={
-                            mode === VIEW_MODE.COSTS
+                            viewMode === VIEW_MODE.COSTS
                                 ? "contained"
                                 : "outlined"
                         }
                         onClick={() => {
-                            setMode(VIEW_MODE.COSTS);
+                            setViewMode(VIEW_MODE.COSTS);
                         }}
                     >
                         Tabela kosztów
@@ -268,7 +276,7 @@ const Bilans = ({data, rwd}) => {
             return renderEmptyState();
         }
 
-        if (mode === VIEW_MODE.COSTS) {
+        if (viewMode === VIEW_MODE.COSTS) {
             return renderCostsTable();
         }
 

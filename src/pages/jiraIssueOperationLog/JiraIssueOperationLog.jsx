@@ -6,6 +6,7 @@ import useEntity from '../../hooks/useEntity';
 // Comp
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 import RenderLink from '../jiraIssue/RenderLink';
+import JiraIssueOperationLogPage from './JiraIssueOperationLogPage';
 
 const entityName = 'JiraIssueOperationLog';
 const endpoint = '/jira_issue_operation_log/';
@@ -29,7 +30,7 @@ const Dashboard = () => {
 
     return (
         <BaseEntityDashboard
-            renderPage={null}
+            renderPage={(props)=> <JiraIssueOperationLogPage key={entityName} entity={entity} entityName={entityName} {...props}/>}
             entity={entity}
             entityName={entityName}
             basePath={basePath}

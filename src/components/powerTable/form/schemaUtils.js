@@ -88,6 +88,7 @@ export const normalizeField = (field = {}) => {
     selectProps: field.selectProps || {},
 
     helperText: field.helperText ?? "",
+    copyFromSelected: Boolean(field.copyFromSelected),
   };
 
   return normalized;

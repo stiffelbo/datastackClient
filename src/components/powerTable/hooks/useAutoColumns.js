@@ -106,6 +106,8 @@ const inferInput = (type) => {
       return 'time';
     case 'date':
       return 'date';
+    case 'datetime':
+      return 'datetime';
     case 'fk':
       return 'select';
     default:

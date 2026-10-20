@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 // Hooks
 import useEntity from '../../hooks/useEntity';
@@ -15,7 +15,7 @@ const endpoint = "/product/";
 const Dashboard = () => {
     const entity = useEntity({ entityName, endpoint });
 
-    const columns = useMemo(() => {
+    const columns = () => {
         return (entity?.schema?.columns ?? [])
             .filter(Boolean)
             .map(column => {
@@ -26,6 +26,7 @@ const Dashboard = () => {
                 return {
                     ...column,
                     delimiter: ',',
+                    editable : false,
                     renderCell: params => (
                         <ProductTags
                             value={params.value}
@@ -41,23 +42,16 @@ const Dashboard = () => {
                     ),
                 };
             });
-    }, [
-        entity?.schema?.columns,
-        entity?.schema?.options?.tags,
-        entity.update,
-    ]);
+    }
 
-    const dashboardEntity = useMemo(() => ({
+    const dashboardEntity = {
         ...entity,
 
         schema: {
             ...entity.schema,
-            columns,
+            columns: columns(),
         },
-    }), [
-        entity,
-        columns,
-    ]);
+    }
 
     return (
         <BaseEntityDashboard

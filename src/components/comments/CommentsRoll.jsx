@@ -1,11 +1,14 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 
 import {
     Box,
     CircularProgress,
     Stack,
     Typography,
+    Dialog, DialogContent, DialogTitle, IconButton
 } from '@mui/material';
+
+import CloseIcon from '@mui/icons-material/Close';
 
 import useCommentsLayout from './useCommentsLayout';
 
@@ -32,19 +35,20 @@ const CommentsRoll = ({
 
     const layout = useCommentsLayout();
     const commentsFilters = useCommentsFilters(data);
-    const handleChange = (data)=>{
+    const handleChange = (data) => {
         console.log(data);
     }
-    const handleImageUpload = (data)=>{
+    const handleImageUpload = (data) => {
         console.log(data);
     }
-    const handleImageDelete = (data)=>{
+    const handleImageDelete = (data) => {
         console.log(data);
     }
 
     return (
         <Box
             sx={{
+                position: 'relative',
                 width: '100%',
                 height: '100%',
                 minHeight: 0,
@@ -61,7 +65,7 @@ const CommentsRoll = ({
 
                     // żeby floating controls nie przykrywały
                     // ostatniego elementu rolki
-                    pb: 7,
+                    pb: 2,
                 }}
             >
                 <CommentsFilters
@@ -78,7 +82,9 @@ const CommentsRoll = ({
                 />
             </Box>
 
+
             {layout.isCommentEditor && (
+
                 <CommentEditor
                     mode="create"
                     value={null}
@@ -93,6 +99,7 @@ const CommentsRoll = ({
                     onImageUpload={handleImageUpload}
                     onImageDelete={handleImageDelete}
                 />
+
             )}
 
             {layout.isFileEditor && (

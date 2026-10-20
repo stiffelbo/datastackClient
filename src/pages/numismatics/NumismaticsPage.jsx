@@ -4,6 +4,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
 import NumismaticsDetails from './NumismaticsDetails';
+import NumismaticProducts from './NumismaticProducts';
 
 const NumismaticsPage = ({
   entityName,
@@ -21,9 +22,15 @@ const NumismaticsPage = ({
   const tabs = [
     {
       key: 'details',
-      label: 'Szczegóły',
+      label: 'Edycja',
       pageKey: 'numismatics_details', // klucz z rejestru stron
       component: <NumismaticsDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'products',
+      label: 'Designy',
+      pageKey: 'numismatics_products', // klucz z rejestru stron
+      component: <NumismaticProducts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
   ];
 

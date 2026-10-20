@@ -49,7 +49,6 @@ const EntityQueryFiltersConfigurator = ({
         }
         
         const filter = createEntityFilter(field);
-        console.log('add filter', field,filter );
 
         onChange([
             ...normalizedFilters,

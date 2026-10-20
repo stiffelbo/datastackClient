@@ -61,6 +61,7 @@ const FileEditor = ({
                 <Button
                     component="label"
                     variant="outlined"
+                    color="success"
                     disabled={loading}
                 >
                     {file?.name || 'Wybierz plik'}
@@ -117,6 +118,7 @@ const FileEditor = ({
                     <Button
                         type="submit"
                         variant="contained"
+                        color="success"
                         disabled={!canSubmit}
                     >
                         {loading

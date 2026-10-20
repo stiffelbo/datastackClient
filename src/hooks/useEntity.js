@@ -19,6 +19,7 @@ import { EntityContext } from '../context/EntityContext';
 const defaultEndpoints = {
     getEntitySchema: 'getEntitySchema.php',
     get: 'get.php',
+    getChanges: 'getChanges.php',
 };
 
 /* --- UI schema domyślny --- */
@@ -182,7 +183,6 @@ export function processResolvedFields(schema, rows) {
 const selectInputs = new Set(['select', 'select-object', 'select-multiple']);
 
 function organizeSchema(input = defaultSchema) {
-
     const optionWarnings = [];
 
     const warnOption = (scope, field, value) => {
@@ -201,6 +201,10 @@ function organizeSchema(input = defaultSchema) {
         bulkEditForm: { ...(defaultSchema.bulkEditForm || {}), ...(input.bulkEditForm || {}) },
         bulkCopyForm: { ...(defaultSchema.bulkCopyForm || {}), ...(input.bulkCopyForm || {}) },
     };
+
+    if(input?.dataGrid?.columns){
+        schema.columns = [...input.dataGrid.columns];
+    }
 
     const rawOptionsDict = schema.options && typeof schema.options === "object"
         ? schema.options
@@ -333,7 +337,6 @@ function organizeSchema(input = defaultSchema) {
     return schema;
 }
 
-
 function toFormData(payload) {
     const formData = new FormData();
 
@@ -380,7 +383,7 @@ function toFormData(payload) {
 };
 
 
-export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null, reload = false }) {
+export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null, reload = true }) {
 
     const { getEntityData, setEntityData } = use(EntityContext);
 
@@ -545,7 +548,14 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             const res = await http.get(url, { params });
 
             const data = res.data ?? [];
-            let final = Array.isArray(data) ? processResolvedFields(activeSchema, data) : [];
+
+            const normalizedData = Array.isArray(data)
+                ? data
+                : data !== null && typeof data === 'object'
+                    ? [data]
+                    : [];
+
+            let final = processResolvedFields(activeSchema, normalizedData);
 
             if (typeof processRows === 'function') {
                 try {
@@ -893,7 +903,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         setLoading(true);
         try {
             // Preferuj POST JSON (spójnie z innymi endpointami)
-            const res = await http.post(url, {id, ...data});
+            const res = await http.post(url, { id, ...data });
             const ok = !!(res?.ok ?? true);
             const deleted = !!(res?.deleted ?? false);
 

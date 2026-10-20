@@ -270,8 +270,6 @@ const prepareScheduleSection = ({
 }) => {
     const dates = info?.dates ?? {};
 
-    console.log(dates, project);
-
     const projectStart = firstValue(
         project.received
     );

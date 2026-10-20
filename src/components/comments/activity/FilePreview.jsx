@@ -10,10 +10,9 @@ import {
 const FilePreview = ({
     file,
 }) => {
-
-    const mime = file.content?.mime ?? '';
+    const mime = file.content?.mime ?? 'unknown/unknown';
     const isImage = mime.startsWith('image/');
-
+    
     if (isImage) {
         return (
             <Box>

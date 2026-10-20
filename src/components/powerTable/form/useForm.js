@@ -52,6 +52,12 @@ export const useForm = ({
   const schemaKey = stableJson(schema);
   const dataKey = stableJson(data);
 
+  useEffect(() => {
+    setFormState(buildInitialFormState({ mode, data, schema }));
+    setErrors({});
+    setIsChanged(false);
+  }, [mode, dataKey, schemaKey]);
+
   const schemaMap = useMemo(() => {
     const map = {};
     (Array.isArray(schema) ? schema : []).forEach((f) => {
@@ -144,7 +150,11 @@ export const useForm = ({
       }
     }
 
-    onSubmit(sendFormData ? prepareFormData(finalData) : finalData);
+    onSubmit(
+      sendFormData
+        ? prepareFormData(finalData, schema)
+        : finalData
+    );
     setIsChanged(false);
 
     return true;

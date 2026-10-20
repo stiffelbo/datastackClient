@@ -1,5 +1,5 @@
 // FormTemplate.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import PropTypes from 'prop-types';
 import {
   Box,
@@ -130,7 +130,7 @@ const FormTemplate = ({
   mode = "add",
   addons = {},
 }) => {
-
+  const formInstanceId = useId();
   const normalizedSchema = normalizeSchema(schema);
 
   const {
@@ -152,7 +152,7 @@ const FormTemplate = ({
     sendFormData,
     addons,
   });
-
+  
   const [fileInputKeys, setFileInputKeys] = useState({});
 
   useEffect(() => {
@@ -469,7 +469,7 @@ const FormTemplate = ({
               ? [currentValue]
               : [];
 
-          const inputId = `file-${field.name}`;
+          const inputId = `${formInstanceId}-file-${field.name}`;
           const inputKey = `${field.name}-${fileInputKeys[field.name] || 0}`;
 
           return (

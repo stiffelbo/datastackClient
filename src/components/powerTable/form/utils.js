@@ -51,6 +51,23 @@ export const createInitialStateFromSchema = (data = {}, schema = []) => {
     const hasOwn = Object.prototype.hasOwnProperty.call(data, f.name);
     const incoming = hasOwn ? data[f.name] : undefined;
 
+
+    if (f.type === 'file') {
+      const multiple = !!f.multiple || !!f.inputProps?.multiple;
+
+      if (multiple) {
+        initial[f.name] = Array.isArray(incoming)
+          ? incoming.filter(item => item instanceof File)
+          : [];
+      } else {
+        initial[f.name] = incoming instanceof File
+          ? incoming
+          : null;
+      }
+
+      return;
+    }
+
     if (incoming !== undefined) {
       initial[f.name] = incoming;
       return;
@@ -192,11 +209,41 @@ export const formatFieldValue = (field = {}, value) => {
   }
 };
 
-export const prepareFormData = (state) => {
+export const prepareFormData = (state, schema) => {
+
+  console.log('FORM STATE FILES:', {
+    obverse: state.obverse_image,
+    obverseIsFile: state.obverse_image instanceof File,
+    reverse: state.reverse_image,
+    reverseIsFile: state.reverse_image instanceof File,
+  });
+
   const formData = new FormData();
+
+  const fileFields = new Set(
+    schema
+      .filter(field => field.type === 'file')
+      .map(field => field.name)
+  );
 
   Object.keys(state).forEach((k) => {
     const v = state[k];
+
+    if (fileFields.has(k)) {
+      const files = Array.isArray(v) ? v : [v];
+
+      files
+        .filter(file => file instanceof File)
+        .forEach(file => {
+          formData.append(
+            Array.isArray(v) ? `${k}[]` : k,
+            file,
+            file.name
+          );
+        });
+
+      return;
+    }
 
     if (v instanceof File || v instanceof Blob) {
       formData.append(k, v);

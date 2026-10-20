@@ -4,6 +4,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 //Pages
 import ProductDetails from './ProductDetails';
+import ProductOrders from './ProductOrders';
 
 const ProductPage = ({
   entityName,
@@ -24,6 +25,12 @@ const ProductPage = ({
       label: 'Szczegóły',
       pageKey: 'product', // klucz z rejestru stron
       component: <ProductDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'orders',
+      label: 'Zamówienia',
+      pageKey: 'orders', // klucz z rejestru stron
+      component: <ProductOrders id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
   ];
 

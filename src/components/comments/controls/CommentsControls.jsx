@@ -1,14 +1,14 @@
+
 import React from 'react';
 
 import {
     Box,
-    IconButton,
+    Button,
     Tooltip,
 } from '@mui/material';
 
 import AddCommentOutlinedIcon from '@mui/icons-material/AddCommentOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
-
 
 const CommentsControls = ({
     onAddComment,
@@ -19,31 +19,49 @@ const CommentsControls = ({
 
     disabled = false,
 }) => {
+    const buttonSx = {
+        textTransform: 'none',
+        fontWeight: 600,
+        borderRadius: 2,
+        px: 2,
+        py: 0.8,
+        whiteSpace: 'nowrap',
+        boxShadow: 3,
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            boxShadow: 6,
+            transform: 'translateY(-2px)',
+        },
+        '&:disabled': {
+            boxShadow: 'none',
+            transform: 'none',
+        },
+    };
 
     return (
         <Box
             sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.5,
-
+                gap: 1,
                 p: 0.5,
-
                 pointerEvents: 'auto',
             }}
         >
             {canAddComment && (
                 <Tooltip title="Dodaj komentarz">
                     <span>
-                        <IconButton
+                        <Button
+                            variant="contained"
                             size="small"
                             color="primary"
+                            startIcon={<AddCommentOutlinedIcon />}
                             disabled={disabled}
                             onClick={onAddComment}
-                            aria-label="Dodaj komentarz"
+                            sx={buttonSx}
                         >
-                            <AddCommentOutlinedIcon />
-                        </IconButton>
+                            Dodaj komentarz
+                        </Button>
                     </span>
                 </Tooltip>
             )}
@@ -51,15 +69,17 @@ const CommentsControls = ({
             {canAddFile && (
                 <Tooltip title="Dodaj plik">
                     <span>
-                        <IconButton
+                        <Button
+                            variant="contained"
                             size="small"
-                            color="primary"
+                            color="success"
+                            startIcon={<UploadFileOutlinedIcon />}
                             disabled={disabled}
                             onClick={onAddFile}
-                            aria-label="Dodaj plik"
+                            sx={buttonSx}
                         >
-                            <UploadFileOutlinedIcon />
-                        </IconButton>
+                            Dodaj plik
+                        </Button>
                     </span>
                 </Tooltip>
             )}
