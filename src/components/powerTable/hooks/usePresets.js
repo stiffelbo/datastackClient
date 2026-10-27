@@ -264,6 +264,7 @@ function usePresets({
 
   return {
     env,
+    entityName,
     activeName,
     effective,
     persistedActive,

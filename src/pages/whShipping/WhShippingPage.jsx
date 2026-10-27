@@ -2,6 +2,8 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
 import WhShippingDetails from './WhShippingDetails';
+import WhShippingItems from './WhShippingItems';
+import WhShippingDocuments from './WhShippingDocuments';
 
 const WhShippingPage = ({
     entityName,
@@ -24,6 +26,18 @@ const WhShippingPage = ({
             pageKey: 'wh_shipping_details', // klucz z rejestru stron
             component: <WhShippingDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
         },
+        {
+            key: 'items',
+            label: 'Pozycje Przesyłkowe',
+            pageKey: 'wh_shipping_items', // klucz z rejestru stron
+            component: <WhShippingItems id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+        },
+        {
+            key: 'documents',
+            label: 'Dokumenty',
+            pageKey: 'wh_shipping_documents', // klucz z rejestru stron
+            component: <WhShippingDocuments id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+        },
     ];
 
     return (
@@ -36,7 +50,7 @@ const WhShippingPage = ({
             tabs={tabs}
             tab={tab}
             setTab={setTab}
-            headerFields={['name', 'category']}
+            headerFields={['title']}
         />
     );
 };

@@ -19,8 +19,8 @@ import {
     normalizeDateTimeLocalInputValue,
 } from "../powerTable/form/utils";
 
-export const createRenderInput = (form) => {
-    return (name, overrides = {}, sx = {}) => {
+export const createRenderInput = (form, globSX = {}) => {
+    return (name, overrides = {}, sx = {...globSX}) => {
         const field = form.getField(name);
         if (!field) return null;
         const merged = { ...field, ...overrides };

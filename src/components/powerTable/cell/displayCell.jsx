@@ -6,6 +6,7 @@ import {
   getCellInnerSx,
 } from "./cellLayout";
 import TableImage from "./TableImage";
+import DSLink  from "./DSLink";
 
 const normalize = (x) => {
   if (x === null || x === undefined || x === "") return null;
@@ -448,6 +449,21 @@ const DisplayCell = ({
       >
         <Box sx={baseInnerSx}>
           <TableImage src={displayValue} />
+        </Box>
+      </TableCell>
+    );
+  }
+  if (column.formatterKey === "DSLink") {
+
+    return (
+      <TableCell
+        title={title}
+        onClick={handleClick}
+        onDoubleClick={onDoubleClick}
+        sx={baseCellSx}
+      >
+        <Box sx={baseInnerSx}>
+          <DSLink value={displayValue}/>
         </Box>
       </TableCell>
     );

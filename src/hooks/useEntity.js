@@ -34,6 +34,7 @@ const defaultSchema = {
     endpoints: {},
     relations: {},
     options: {},      // { [fieldName]: Option[] }
+    relatedItems: {},      // { [fieldName]: Item[] }
     importSchema: [],
     heightSpan: 85,
     access: {},

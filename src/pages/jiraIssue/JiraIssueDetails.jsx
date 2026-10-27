@@ -15,6 +15,7 @@ import {
     ListSubheader,
     Button,
     IconButton,
+    Tooltip
 } from "@mui/material";
 
 import ClearIcon from "@mui/icons-material/Clear";
@@ -124,7 +125,7 @@ const JiraIssueDetails = ({ id, row, rwd, entity, dashboard }) => {
         return <JiraDescription value={form.formState[name]} emptyText="Brak Treści" />
     }
 
-    const renderInput = createRenderInput(form);
+    const renderInput = createRenderInput(form, {mb: 2});
 
     // zamiast getField(schema, name)
     const field = form.getField(name);
@@ -166,7 +167,9 @@ const JiraIssueDetails = ({ id, row, rwd, entity, dashboard }) => {
                             })}
                             {renderReadonly("product_group")}
                             {renderInput("is_order")}
+                            {renderInput("is_claim")}
                         </Row>
+                        {row['is_claim'] ? <Tooltip title="Wpisz sygnature taska reklamowanego. Ingerencja w drzewo tasków tylko w DS, dont worry.">{renderInput("jira_parent_key")}</Tooltip> : ''}
                         {renderInput("jira_issue_groups_id")}
                         {renderInput("contractor_id")}
                         {renderInput("structure_id")}

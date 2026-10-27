@@ -207,17 +207,20 @@ const App = () => (
         <Route path="itassestsshifts" element={<ItAssetsShifts />} />
 
         <Route path="itassets/:id/:tab" element={<ItAssets />} />
-        <Route path="itassets/:id/" element={<ItAssets />} />
+        <Route path="itassets/:id" element={<ItAssets />} />
         <Route path="itassets" element={<ItAssets />} />
 
         <Route path="whdefinitions" element={<WhDefinitions />} />
         <Route path="whmaterialindex" element={<WhMaterialIndex />} />
 
         <Route path="whshipping/:id/:tab" element={<WhShipping />} />
-        <Route path="whshipping/:id/" element={<WhShipping />} />
+        <Route path="whshipping/:id" element={<WhShipping />} />
         <Route path="whshipping" element={<WhShipping />} />
         
+        <Route path="whshippingitems/:id/:tab" element={<WhShippingItems />} />
+        <Route path="whshippingitems/:id" element={<WhShippingItems />} />
         <Route path="whshippingitems" element={<WhShippingItems />} />
+        
         <Route path="whshifts" element={<WhShifts />} />
         <Route path="whshiftitems" element={<WhShiftItems />} />
         <Route path="whdocuments" element={<WhDocuments />} />

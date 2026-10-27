@@ -1,9 +1,9 @@
 
-import React, {useCallback, useEffect, useState} from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import http from "../../../http";
 import useEntity from "../../../hooks/useEntity";
-import {useDashboard} from "../../../context/DashboardContext";
+import { useDashboard } from "../../../context/DashboardContext";
 
 // MUI imports
 import {
@@ -15,10 +15,12 @@ import {
     Paper,
     Stack,
     Typography,
+    Link    
 } from "@mui/material";
 
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import TableRowsRoundedIcon from "@mui/icons-material/TableRowsRounded";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 // Components
 import PowerTable from "../../../components/powerTable/powerTable";
@@ -31,7 +33,7 @@ const VIEW_MODE = {
 };
 
 
-const Bilans = ({data, rwd}) => {
+const Bilans = ({ data, rwd }) => {
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -42,7 +44,7 @@ const Bilans = ({data, rwd}) => {
         endpoint: "/jira_issue_costs/",
     });
 
-    const {viewMode, setViewMode} = useDashboard('JiraIssueBilans');
+    const { viewMode, setViewMode } = useDashboard('JiraIssueBilans');
 
     const fetchBilans = useCallback(async (id) => {
         if (!id) {
@@ -85,7 +87,7 @@ const Bilans = ({data, rwd}) => {
     }, [data?.id, fetchBilans]);
 
     useEffect(() => {
-        if(viewMode === 'table') { //taki jest defaultwy viewMode w kontekście dashboardu, więc przy pierwszym wejściu na stronę ustawiamy go na summary
+        if (viewMode === 'table') { //taki jest defaultwy viewMode w kontekście dashboardu, więc przy pierwszym wejściu na stronę ustawiamy go na summary
             setViewMode(VIEW_MODE.SUMMARY);
         }
     }, [setViewMode]);
@@ -116,13 +118,30 @@ const Bilans = ({data, rwd}) => {
                 }}
                 justifyContent="space-between"
             >
-                <Box sx={{px: 1}}>
+                <Box sx={{ px: 1 }}>
                     <Typography
                         variant="h6"
                         fontWeight={700}
                     >
                         Rozliczenie projektu
                     </Typography>
+
+                    <Link
+                        href="http://192.168.1.135/datastack/pages/kpi/projectsCosts/index.php"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        underline="hover"
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                        }}
+                    >
+                        Dokumentacja
+                        <OpenInNewIcon sx={{ fontSize: 15 }} />
+                    </Link>
 
                     <Typography
                         variant="body2"
@@ -138,7 +157,7 @@ const Bilans = ({data, rwd}) => {
                     size="small"
                 >
                     <Button
-                        startIcon={<AssessmentRoundedIcon/>}
+                        startIcon={<AssessmentRoundedIcon />}
                         size="small"
                         variant={
                             viewMode === VIEW_MODE.SUMMARY
@@ -153,7 +172,7 @@ const Bilans = ({data, rwd}) => {
                     </Button>
 
                     {showDetails && <Button
-                        startIcon={<TableRowsRoundedIcon/>}
+                        startIcon={<TableRowsRoundedIcon />}
                         size="small"
                         variant={
                             viewMode === VIEW_MODE.COSTS
@@ -185,7 +204,7 @@ const Bilans = ({data, rwd}) => {
                 spacing={2}
                 alignItems="center"
             >
-                <CircularProgress size={32}/>
+                <CircularProgress size={32} />
 
                 <Typography
                     variant="body2"
@@ -232,12 +251,12 @@ const Bilans = ({data, rwd}) => {
                 pr: 0.5,
             }}
         >
-            <BilansSummary data={report}/>
+            <BilansSummary data={report} />
         </Box>
     );
 
     const renderCostsTable = () => {
-        if(!showDetails) {
+        if (!showDetails) {
             return (
                 <Alert severity="info">
                     Brak dostepu do szczegółowych pozycji kosztowych.

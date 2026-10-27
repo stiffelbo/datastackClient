@@ -33,6 +33,7 @@ const PresetsList = ({ presets }) => {
     saveAs,
     dirty,
     effective,
+    entityName
   } = presets || {};
 
   const [newName, setNewName] = useState('');
@@ -260,6 +261,7 @@ const PresetsList = ({ presets }) => {
           </List>
         )}
       </Box>
+      <Typography variant='caption'>{entityName}</Typography>
     </Stack>
   );
 };

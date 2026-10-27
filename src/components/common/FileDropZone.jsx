@@ -8,8 +8,10 @@ import {
     Paper,
 } from '@mui/material';
 
+import { uid } from '../../utils/uid';
+
 const createFileItem = (file) => ({
-    id: crypto.randomUUID(),
+    id: uid(8),
     file,
     type: null,
     title: file.name,

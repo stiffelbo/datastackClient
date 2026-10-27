@@ -122,6 +122,16 @@ export const valueFormatters = {
 
     return safeUrl;
   },
+  DSLink : (value) => {
+    if (!value) return '';
+
+    const url = String(value).trim();
+
+    // prosta ochrona – tylko http/https
+    const safeUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+
+    return safeUrl;
+  },
   img: (value) => {
     if (!value) return '';
 

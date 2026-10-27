@@ -71,17 +71,16 @@ const PowerTable = ({
   enableExport = true,
   showSidebar = true,
 }) => {
-
   const devColumnsLookup = {};
   if (Array.isArray(columnSchema)) {
     columnSchema.forEach(col => devColumnsLookup[col.field] = col);
   }
-
+  
   const defaultTableConfig = {
     rowHeight,
     fontSize: '13px'
   };
-
+  
   const presets = usePresets({ entityName, enablePresets, treeConfig, tableConfig: defaultTableConfig });
   const viewConfig = presets.viewConfig;
   const tableView = viewConfig.table;
@@ -100,7 +99,7 @@ const PowerTable = ({
   const closeModal = () => setModalState({ open: false, view: null });
 
   const selectedItem = selected != null
-    ? data.find(item => item.id === selected)
+    ? data?.find(item => item.id === selected)
     : null;
 
   const effectiveAddFormInitialValues = () => {
