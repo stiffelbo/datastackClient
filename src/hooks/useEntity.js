@@ -52,8 +52,9 @@ export function normalizeSelectOptions(options = []) {
                 label: item.label ?? item.val ?? String(value ?? ""),
                 title: item.title ?? null,
                 disabled: Boolean(item.disabled ?? false),
-                group: item.group == null ? "" : String(item.group),
-                description: item.description == null ? "" : String(item.description),
+                group: String(item.group ?? item.groupLabel ?? ""),
+                description: String(item.description ?? ""),
+                params: normalizeParams(item.params),
             };
         }
 
@@ -64,8 +65,37 @@ export function normalizeSelectOptions(options = []) {
             disabled: false,
             group: "",
             description: "",
+            params: {},
         };
     });
+}
+
+function normalizeParams(params) {
+    if (params === null || params === undefined) {
+        return {};
+    }
+
+    if (Array.isArray(params)) {
+        return params;
+    }
+
+    if (typeof params === "object") {
+        return params;
+    }
+
+    if (typeof params === "string") {
+        try {
+            const parsed = JSON.parse(params);
+
+            return parsed !== null && typeof parsed === "object"
+                ? parsed
+                : {};
+        } catch {
+            return {};
+        }
+    }
+
+    return {};
 }
 
 function addResolvedColumns(schema) {

@@ -5,7 +5,7 @@ import { Box } from '@mui/material';
 
 import FormTemplate from '../../components/powerTable/form/formTemplate';
 
-const WhShippingItemDetails = ({id, row, entity, rwd, dashboard}) => {
+const WhInventoryOperationDetails = ({id, row, entity, rwd, dashboard}) => {
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
@@ -24,4 +24,4 @@ const WhShippingItemDetails = ({id, row, entity, rwd, dashboard}) => {
     </Box>
 }
 
-export default WhShippingItemDetails;
+export default WhInventoryOperationDetails;

@@ -12,6 +12,7 @@ const VirtualizedTreeBody = ({
   editing,
   actionsApi,
   rowVirtualizer,
+  getRowStyles
 }) => {
   const rowHeight =
     Number(settings?.rowHeight) || 45;
@@ -159,7 +160,7 @@ const VirtualizedTreeBody = ({
             }
 
             parent="tree"
-
+            getRowStyles={getRowStyles}
             /*
              * PowerTableRow musi przekazać sx
              * do swojego głównego TableRow.

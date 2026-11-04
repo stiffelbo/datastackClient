@@ -159,6 +159,8 @@ const buildColumn = ({ key, value, devCol = {}, enableEdit }) => {
     /* 📘 Identyfikacja */
     field: key,
     fieldGroup: devCol?.fieldGroup ?? '',
+    reference: devCol?.reference ?? null,
+    tab: devCol?.tab ?? null,
     headerName: devCol?.headerName ?? prettifyHeader(key),
 
     /* 📗 Typy danych i renderowania */

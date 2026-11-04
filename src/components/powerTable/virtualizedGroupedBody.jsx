@@ -27,6 +27,7 @@ const VirtualizedGroupedBody = ({
   rowVirtualizer,
   actionsApi,
   editing,
+  getRowStyles
 }) => {
   const rowHeight = Number(settings?.rowHeight) || 45;
   const fontSize = settings?.fontSize || '0.8rem';
@@ -336,7 +337,7 @@ const VirtualizedGroupedBody = ({
             actionsApi={actionsApi}
             parent="grouprow"
             editing={editing}
-
+            getRowStyles={getRowStyles}
             /*
              * NOWE:
              * PowerTableRow musi przyjąć sx

@@ -5,18 +5,18 @@ import useEntity from '../../hooks/useEntity';
 
 // Components
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
-import WhShippingItemPage from './WhShippingItemPage';
+import WhInventoryOperationPage from './WhInventoryOperationPage';
 
-const entityName = "WhShippingItems";
-const basePath = "/whshippingitems";
-const endpoint = "/wh_shipping_items/";
+const entityName = "WhInventoryOperations";
+const basePath = "/whinventoryoperations";
+const endpoint = "/wh_inventory_operations/";
 
 const Dashboard = () => {
     const dashboardEntity = useEntity({ entityName, endpoint });
 
     return (
         <BaseEntityDashboard
-            renderPage={(props) => <WhShippingItemPage entity={dashboardEntity} entityName={entityName} {...props} />}
+            renderPage={(props) => <WhInventoryOperationPage entity={dashboardEntity} entityName={entityName} {...props} />}
             entity={dashboardEntity}
             entityName={entityName}
             basePath={basePath}

@@ -70,6 +70,9 @@ const PowerTable = ({
   enableUpload = true,
   enableExport = true,
   showSidebar = true,
+
+  //Dynamic style
+  getRowStyles = null
 }) => {
   const devColumnsLookup = {};
   if (Array.isArray(columnSchema)) {
@@ -80,7 +83,6 @@ const PowerTable = ({
     rowHeight,
     fontSize: '13px'
   };
-  
   const presets = usePresets({ entityName, enablePresets, treeConfig, tableConfig: defaultTableConfig });
   const viewConfig = presets.viewConfig;
   const tableView = viewConfig.table;
@@ -264,6 +266,7 @@ const PowerTable = ({
         settings={tableSettings}
         editing={editing}
         actionsApi={actionsApi}
+        getRowStyles={getRowStyles}
       />
     ) : isTree ? (
       <TreeTableV
@@ -276,6 +279,7 @@ const PowerTable = ({
         treeConfig={treeView}
         editing={editing}
         actionsApi={actionsApi}
+        getRowStyles={getRowStyles}
       />
     ) : (
       <FlatTable
@@ -288,6 +292,7 @@ const PowerTable = ({
         settings={tableSettings}
         editing={editing}
         actionsApi={actionsApi}
+        getRowStyles={getRowStyles}
       />
     );
 

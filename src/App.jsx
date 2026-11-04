@@ -29,7 +29,9 @@ import Machines from './pages/machines/Machines';
 import ProductDefinitions from './pages/productDefinitions/ProductDefinitions';
 import Product from './pages/product/Product';
 import ProductOrder from './pages/productOrder/ProductOrder';
+import ProductOrderProduction from './pages/productOrderProduction/ProductOrderProduction';
 import Numismatics from './pages/numismatics/Numismatics';
+import NumismaticAccessories from './pages/numismaticAccessories/NumismaticAccessories';
 import Locations from './pages/locations/Locations';
 import JiraIssue from './pages/jiraIssue/JiraIssue';
 import JiraIssueHistory from './pages/jiraIssue/JiraIssueHistory';
@@ -53,11 +55,13 @@ import ProductOrderTools from './pages/productOrder/ProductOrderTools';
 import WhDefinitions from './pages/whDefinitions/WhDefinitions';
 import WhMaterialIndex from './pages/whMaterialIndex/WhMaterialIndex';
 import WhShipping from './pages/whShipping/WhShipping';
-import WhShippingItems from './pages/whShippingItems/WhShippingItems';
+import WhStockEntries from './pages/whStockEntries/WhStockEntries';
+import WhStockRegistry from './pages/whStockRegistry/WhStockRegistry';
 import WhShifts from './pages/WhShifts/WhShifts';
-import WhShiftItems from './pages/WhShiftItems/WhShiftItems';
+import WhInventoryOperations from './pages/whInventoryOperations/WhInventoryOperations';
 import WhDocuments from './pages/WhDocuments/WhDocuments';
-import Incoming from './pages/whShipping/Incoming/Incoming';
+import Incoming from './pages/whIncoming/Incoming';
+import Outgoing from './pages/whOutgoing/Outgoing';
 
 import UserDashboard from './components/user/UserDashboard';
 import UserLogForm from './pages/users/UserLogForm';
@@ -178,10 +182,18 @@ const App = () => (
         <Route path="productorder/:id" element={<ProductOrder />} />
         <Route path="productorder" element={<ProductOrder />} />
 
+        <Route path="productorderproduction/:id/:tab" element={<ProductOrderProduction />} />
+        <Route path="productorderproduction/:id" element={<ProductOrderProduction />} />
+        <Route path="productorderproduction" element={<ProductOrderProduction />} />
+
         <Route path="product/:id/:tab" element={<Product />} />
         <Route path="product/:id" element={<Product />} />
         <Route path="product" element={<Product />} />
 
+        <Route path="numismaticaccessories/:id/:tab" element={<NumismaticAccessories />} />
+        <Route path="numismaticaccessories/:id" element={<NumismaticAccessories />} />
+        <Route path="numismaticaccessories" element={<NumismaticAccessories />} />
+        
         <Route path="numismatics/:id/:tab" element={<Numismatics />} />
         <Route path="numismatics/:id" element={<Numismatics />} />
         <Route path="numismatics" element={<Numismatics />} />
@@ -217,14 +229,22 @@ const App = () => (
         <Route path="whshipping/:id" element={<WhShipping />} />
         <Route path="whshipping" element={<WhShipping />} />
         
-        <Route path="whshippingitems/:id/:tab" element={<WhShippingItems />} />
-        <Route path="whshippingitems/:id" element={<WhShippingItems />} />
-        <Route path="whshippingitems" element={<WhShippingItems />} />
+        <Route path="whinventoryoperations/:id/:tab" element={<WhInventoryOperations />} />
+        <Route path="whinventoryoperations/:id" element={<WhInventoryOperations />} />
+        <Route path="whinventoryoperations" element={<WhInventoryOperations />} />
+
+        <Route path="whstockentries/:id/:tab" element={<WhStockEntries />} />
+        <Route path="whstockentries/:id" element={<WhStockEntries />} />
+        <Route path="whstockentries" element={<WhStockEntries />} />
+        
+        <Route path="whstockregistry/:id/:tab" element={<WhStockRegistry />} />
+        <Route path="whstockregistry/:id" element={<WhStockRegistry />} />
+        <Route path="whstockregistry" element={<WhStockRegistry />} />
         
         <Route path="whshifts" element={<WhShifts />} />
-        <Route path="whshiftitems" element={<WhShiftItems />} />
         <Route path="whdocuments" element={<WhDocuments />} />
         <Route path="whincoming" element={<Incoming />} />
+        <Route path="whoutgoing" element={<Outgoing />} />
 
         <Route path="userdashboard" element={<UserDashboard />} />
         <Route path="userlogform" element={<UserLogForm />} />

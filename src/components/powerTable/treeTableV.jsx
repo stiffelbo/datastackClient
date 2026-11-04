@@ -71,6 +71,7 @@ const TreeTableV = ({
   height = 600,
   editing,
   actionsApi = {},
+  getRowStyles
 }) => {
   const {
     idField = 'id',
@@ -490,6 +491,7 @@ const TreeTableV = ({
                 rowVirtualizer={
                   rowVirtualizer
                 }
+                getRowStyles={getRowStyles}
               />
 
               <PowerTableFooter

@@ -11,6 +11,7 @@ const VirtualizedBody = ({
   rowVirtualizer,
   editing,
   actionsApi,
+  getRowStyles
 }) => {
   const rowHeight =
     Number(settings?.rowHeight) || 45;
@@ -64,7 +65,7 @@ const VirtualizedBody = ({
             editing={editing}
             actionsApi={actionsApi}
             parent="body"
-
+            getRowStyles={getRowStyles}
             sx={{
               position: 'absolute',
 

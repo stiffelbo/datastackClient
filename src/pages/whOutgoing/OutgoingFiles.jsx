@@ -15,9 +15,9 @@ import {
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 
-import FileDropZone from '../../../components/common/FileDropZone';
+import FileDropZone from '../../components/common/FileDropZone';
 
-const IncomingFiles = ({ data = [], onChange, options = [] }) => {
+const OutgoingFiles = ({ data = [], onChange, options = [] }) => {
 
     const onRemoveFile = (id) => {
         onChange(data.filter(item => item.id !== id));
@@ -127,4 +127,4 @@ const IncomingFiles = ({ data = [], onChange, options = [] }) => {
     );
 };
 
-export default IncomingFiles;
+export default OutgoingFiles;

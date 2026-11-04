@@ -46,6 +46,7 @@ const FlatTable = ({
   height = 600,
   editing,
   actionsApi,
+  getRowStyles
 }) => {
   const [heightMap, setHeightMap] = useState({
     header: 42.5,
@@ -292,6 +293,7 @@ const FlatTable = ({
                 }
                 editing={editing}
                 actionsApi={actionsApi}
+                getRowStyles={getRowStyles}
               />
             </Table>
           </Box>

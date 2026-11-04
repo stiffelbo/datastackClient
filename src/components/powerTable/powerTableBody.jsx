@@ -12,6 +12,7 @@ const PowerTableBody = ({
   rowVirtualizer,
   editing,
   actionsApi,
+  getRowStyles
 }) => {
   if (
     settings.isVirtualized &&
@@ -26,6 +27,7 @@ const PowerTableBody = ({
         rowVirtualizer={rowVirtualizer}
         editing={editing}
         actionsApi={actionsApi}
+        getRowStyles={getRowStyles}
       />
     );
   }
@@ -49,6 +51,7 @@ const PowerTableBody = ({
           }}
           editing={editing}
           actionsApi={actionsApi}
+          getRowStyles={getRowStyles}
           parent="body"
         />
       ))}

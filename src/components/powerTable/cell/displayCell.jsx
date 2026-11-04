@@ -463,7 +463,7 @@ const DisplayCell = ({
         sx={baseCellSx}
       >
         <Box sx={baseInnerSx}>
-          <DSLink value={displayValue}/>
+          <DSLink value={value} column={column} />
         </Box>
       </TableCell>
     );

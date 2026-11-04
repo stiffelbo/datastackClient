@@ -1,6 +1,6 @@
 import http from '../../http';
 
-export const imageUploadService = async ({ id, field, value, onUpload, setLoading }) => {
+export const imageUploadService = async ({ id, field, value, onUpload, setLoading, endpoint = '/numismatics/files.php' }) => {
     const formData = new FormData();
 
     formData.append('id', String(id));
@@ -17,7 +17,7 @@ export const imageUploadService = async ({ id, field, value, onUpload, setLoadin
 
     try {
         const response = await http.post(
-            '/numismatics/files.php',
+            endpoint,
             formData
         );
 

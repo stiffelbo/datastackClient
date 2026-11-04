@@ -3219,7 +3219,7 @@ const entities = {
             {
                 name: 'append_only_history',
                 content: [
-                    'Events should be append-only and should not replace current task state fields.'
+                    'Events should be append-only and should not .js current task state fields.'
                 ]
             }
         ]

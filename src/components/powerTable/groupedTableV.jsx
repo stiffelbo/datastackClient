@@ -164,6 +164,7 @@ const GroupedTableV = ({
   settings = {},
   rowRules,
   editing,
+  getRowStyles
 }) => {
   /*
    * =====================================================
@@ -800,6 +801,7 @@ const GroupedTableV = ({
                 editing={
                   editing
                 }
+                getRowStyles={getRowStyles}
               />
             </Table>
           </Box>

@@ -5,6 +5,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import ProductOrderDetails from './ProductOrderDetails';
 import ProductDetailsWrapper from './ProductDetailsWrapper';
+import ProductOrderShift from './ProductOrderShift';
 import ProductOrderShifts from './ProductOrderShifts';
 
 const ProductOrderPage = ({
@@ -34,9 +35,15 @@ const ProductOrderPage = ({
       component: <ProductDetailsWrapper id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
     {
-      key: 'shifts',
-      label: 'Wydania na produkcje',
+      key: 'shift',
+      label: 'Wydaj na produkcje',
       pageKey: 'product_order.shift', // klucz z rejestru stron
+      component: <ProductOrderShift id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'shifts',
+      label: 'Wydania',
+      pageKey: 'product_order.shifts', // klucz z rejestru stron
       component: <ProductOrderShifts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
 

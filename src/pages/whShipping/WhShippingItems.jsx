@@ -8,7 +8,7 @@ import PowerTable from "../../components/powerTable/powerTable";
 const WhShippingItems = ({id, row, entity, rwd, dashboard}) => {
     
     const entityName = "WhShippingIDItems";
-    const endpoint = "/wh_shipping_items/"
+    const endpoint = "/wh_stock_entries/"
     const entityItems = useEntity({ entityName : `Shipping_${id}_Items`, endpoint, query: {shipping_id : id} });
 
     return (

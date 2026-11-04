@@ -1,10 +1,10 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
-import WhShippingItemDetails from './WhShippingItemDetails';
-import WhShippingItemShift from './WhShippingItemShift';
+import WhInventoryOperationDetails from './WhInventoryOperationDetails';
+import WhInventoryOperationItems from './WhInventoryOperationItems';
 
-const WhShippingItemPage = ({
+const WhInventoryOperationPage = ({
     entityName,
     entity,
     dashboard,
@@ -22,14 +22,14 @@ const WhShippingItemPage = ({
         {
             key: 'details',
             label: 'Szczegóły',
-            pageKey: 'wh_shipping_item_details', // klucz z rejestru stron
-            component: <WhShippingItemDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+            pageKey: 'wh_inventory_operation_details', // klucz z rejestru stron
+            component: <WhInventoryOperationDetails id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
         },
         {
-            key: 'shift',
-            label: 'Wydania',
-            pageKey: 'wh_shipping_item_shifts', // klucz z rejestru stron
-            component: <WhShippingItemShift id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+            key: 'items',
+            label: 'Zawartość',
+            pageKey: 'wh_inventory_operation_items', // klucz z rejestru stron
+            component: <WhInventoryOperationItems id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
         },
     ];
 
@@ -48,4 +48,4 @@ const WhShippingItemPage = ({
     );
 };
 
-export default WhShippingItemPage;
+export default WhInventoryOperationPage;

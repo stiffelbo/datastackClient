@@ -210,14 +210,6 @@ export const formatFieldValue = (field = {}, value) => {
 };
 
 export const prepareFormData = (state, schema) => {
-
-  console.log('FORM STATE FILES:', {
-    obverse: state.obverse_image,
-    obverseIsFile: state.obverse_image instanceof File,
-    reverse: state.reverse_image,
-    reverseIsFile: state.reverse_image instanceof File,
-  });
-
   const formData = new FormData();
 
   const fileFields = new Set(
