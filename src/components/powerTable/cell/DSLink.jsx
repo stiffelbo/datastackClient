@@ -9,7 +9,7 @@ const DSLink = ({ value, column }) => {
 
     const appUrl = import.meta.env.DEV
         ? import.meta.env.VITE_DEV_APP_URL
-        : import.meta.env.VITE_PROD_APP_URL;
+        : import.meta.env.VITE_PROD_STORAGE_URL;
 
     const reference = column.reference;
     const tab = column?.tab ?? null;

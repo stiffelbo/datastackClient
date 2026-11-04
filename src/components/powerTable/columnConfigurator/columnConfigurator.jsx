@@ -28,6 +28,8 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
   if (!col) return null;
   const headerNameInitial = col.headerName;
 
+  const isDSLink = col?.formatterKey === 'DSLink';
+
   return (
     <Modal open={Boolean(field)} onClose={close}>
       <Box
@@ -114,6 +116,27 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
             column={col}
             columnsSchema={columnsSchema}
           />
+
+          {isDSLink && (
+            <Box p={2}>
+              <InputTextHint
+                hints={[]}
+                defaultValue={col.reference || ''}
+                onSubmit={(val) => columnsSchema.setReference(field, val)}
+                placeholder='Referencja...'
+              sx={{ mb: 2, backgroundColor: 'background.paper' }}
+              icon={null}
+            />
+            <InputTextHint
+              hints={[]}
+              defaultValue={col.tab || ''}
+              onSubmit={(val) => columnsSchema.setTab(field, val)}
+              placeholder='Zakładka...'
+              sx={{ mb: 2, backgroundColor: 'background.paper' }}
+              icon={null}
+            />
+          </Box>)}
+
         </ConfigMenuSection>
 
         {/* --- Column Visibility --- */}
@@ -150,7 +173,7 @@ const ColumnConfigurator = ({ data = [], field, columnsSchema, close }) => {
             columnsSchema={columnsSchema}
           />
         </ConfigMenuSection>
-        <Typography variant="caption" sx={{textAlign: 'right'}}>Nazwa pola: {field}</Typography>
+        <Typography variant="caption" sx={{ textAlign: 'right' }}>Nazwa pola: {field}</Typography>
       </Box>
     </Modal>
   );

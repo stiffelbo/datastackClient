@@ -61,6 +61,8 @@ export const DEFAULT_TRACKED_KEYS = [
   'filters',
   'aggregationFn',
   'formatterKey',
+  'reference',
+  'tab',
   'formatterOptions',
   'styleFn',
   'groupBy',
@@ -129,6 +131,16 @@ const NORMALIZE = {
     const s = String(v).trim();
     return s;
   },
+  reference: (v) => {
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    return s;
+  },
+  tab: (v) => { 
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    return s;
+  },
 
   expresion: (v) => toTrimmed(v),
 };
@@ -146,6 +158,8 @@ const normalizeOne = (col, tracked = DEFAULT_TRACKED_KEYS) => {
     switch (key) {
       case 'headerName':
       case 'formatterKey':
+      case 'reference':
+      case 'tab':
       case 'expresion':
         out[key] = val != null ? String(val) : '';
         break;

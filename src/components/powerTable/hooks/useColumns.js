@@ -263,8 +263,6 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     setSortModelState(initialSort);
   }, [entityName, autoSig, devSig, savedSig, activeName, schemaVersion]);
 
-
-
   // ---- helpers ----
   const updateField = (field, changes) => {
     setColumns(prev =>
@@ -322,6 +320,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
   const setHeaderName = (field, val) => updateField(field, { headerName: val });
   // ---- group label ----
   const setGroupName = (field, val) => updateField(field, { fieldGroup: val });
+  const setReference = (field, val) => updateField(field, { reference: val });
+  const setTab = (field, val) => updateField(field, { tab: val });
 
   const getAllGroups = () => {
     const groups = new Set();
@@ -485,6 +485,8 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     setAllVisible,
 
     setHeaderName,
+    setReference,
+    setTab,
     //Field Group
     setGroupName,
     toggleGroupVisibility,
