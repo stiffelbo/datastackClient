@@ -35,7 +35,8 @@ const ProductOrderShift = ({ id, row, entity, rwd, dashboard }) => {
         schema: shiftEntity?.schema?.addForm?.schema,
     });
 
-    console.log(shiftEntity.schema);
+    const wpContext = shiftEntity?.schema?.wp ?? {};
+    const reasons = wpContext?.reasons ?? [];
 
     const renderInput = createRenderInput(form, {});
 
@@ -99,6 +100,14 @@ const ProductOrderShift = ({ id, row, entity, rwd, dashboard }) => {
         await entity.refresh();
     };
 
+    const renderReasons = () => {
+        if (reasons.length === 0) return null;
+
+        return reasons.map(reason => (
+            <p>{reason}</p>
+        ));
+    };
+
     return (
         <Box sx={{ width: '100%', height: '100%', overflow: 'auto' }}>
             <Stack spacing={2}>
@@ -122,18 +131,13 @@ const ProductOrderShift = ({ id, row, entity, rwd, dashboard }) => {
                     </Stack>
                 </Paper>
 
+                {renderReasons()}
+
                 {/* Wybór partii magazynowej */}
                 <Box>
-                    <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                    {stockEntries.length ? (<Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
                         Wybierz partię magazynową
-                    </Typography>
-
-                    {stockEntries.length === 0 && (
-                        <Alert severity="warning">
-                            Brak dostępnych partii magazynowych dla tego zamówienia.
-                        </Alert>
-                    )}
-
+                    </Typography>) : null}
                     <Stack spacing={0.75}>
                         {stockEntries.map(stock => {
                             const isSelected = String(selected) === String(stock.id);
