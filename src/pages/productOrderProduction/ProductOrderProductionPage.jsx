@@ -6,7 +6,9 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 import ProductOrderDetails from '../productOrder/ProductOrderDetails';
 import ProductDetailsWrapper from '../productOrder/ProductDetailsWrapper';
 import ProductOrderShift from '../productOrder/ProductOrderShift';
+import ProductOrderReturnShift from '../productOrder/ProductOrderReturnShift';
 import ProductOrderShifts from '../productOrder/ProductOrderShifts';
+import ProductOrderDocuments from '../productOrder/ProductOrderDocuments';
 
 const ProductOrderProductionPage = ({
   entityName,
@@ -41,10 +43,22 @@ const ProductOrderProductionPage = ({
       component: <ProductOrderShift id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
     {
+      key: 'returnshift',
+      label: 'Przyjmij z produkcji',
+      pageKey: 'product_order.returnshift', // klucz z rejestru stron
+      component: <ProductOrderReturnShift id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
       key: 'shifts',
       label: 'Wydania',
       pageKey: 'productorderproductio.shifts', // klucz z rejestru stron
       component: <ProductOrderShifts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'documents',
+      label: 'Dokumenty',
+      pageKey: 'productorderproductio.documents', // klucz z rejestru stron
+      component: <ProductOrderDocuments id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
 
   ];
