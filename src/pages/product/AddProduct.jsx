@@ -4,9 +4,10 @@ import useEntity from '../../hooks/useEntity';
 import { useForm } from '../../components/powerTable/form/useForm';
 import { createRenderInput } from '../../components/common/RenderInput';
 import FormActionsBar from '../../components/common/FormActionsBar';
-import { Alert, LinearProgress, Box } from '@mui/material';
+import { Alert, LinearProgress, Box, Divider } from '@mui/material';
 
 import ProductTags from './ProductTags';
+import WhNumismaticStock from '../whStockEntries/WhNumismaticStock';
 
 const AddProduct = ({ data = {}, productEntity, rwd }) => {
     const typeId = data?.type_id;
@@ -59,6 +60,7 @@ const AddProduct = ({ data = {}, productEntity, rwd }) => {
             disabled={!form.isValid}
             loading={entity.loading}
         />
+        <WhNumismaticStock numismatic_id={numismaticId} contractor_id={contractorId ? contractorId : form.formState.contractor_id}/>
     </Box>);
 
 }

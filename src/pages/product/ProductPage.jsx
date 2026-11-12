@@ -42,7 +42,7 @@ const ProductPage = ({
     },
     {
       key: 'adddesign',
-      label: 'Dodaj Projekt',
+      label: 'Dodaj Design',
       pageKey: 'addDesign', // klucz z rejestru stron
       component: <AddProduct data={{numismatic_id : row.numismatic_id, contractor_id: row.contractor_id, structure_id : row.structure_id, type_id: row.type_id}} productEntity={entity} rwd={rwd} dashboard={dashboard} />,
     },
