@@ -7,7 +7,7 @@ import useEntity from '../../hooks/useEntity';
 import PowerTable from '../powerTable/powerTable';
 import RenderLink from '../../pages/jiraIssue/RenderLink';
 
-const OperationLog = ({entityName, endpoint, height = null, issue = {}, query = {}, label = ""}) => {
+const OperationLog = ({entityName, endpoint, height = null, issue = {}, query = {}, label = "", onChange = null}) => {
 
     const effectiveQuery = {...query, issue_id : issue.id};
     const entity = useEntity({ entityName, endpoint, query: effectiveQuery, schemaQuery : {issue_id : issue.id}});
@@ -30,6 +30,13 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, query = 
     
     entity.schema.columns = columns;
 
+    const handleUpdateField = async ({id, field, value}) => {
+        await entity.updateField({id, field, value});
+        if(onChange){
+            onChange();
+        }
+    };
+
     return (
         <PowerTable
             entityName={entityName}
@@ -47,7 +54,7 @@ const OperationLog = ({entityName, endpoint, height = null, issue = {}, query = 
 
             onRefresh={entity.refresh}
             onPost={entity.create}
-            onEdit={entity.updateField}
+            onEdit={handleUpdateField}
             onUpload={null}
             onBulkEdit={entity.updateMany}
             onDelete={(id) => entity.remove(id)} //zapytaj najpierw czy na pewno chcesz usunąć

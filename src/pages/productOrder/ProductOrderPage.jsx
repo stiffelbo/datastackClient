@@ -5,6 +5,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import ProductOrderDetails from './ProductOrderDetails';
 import ProductDetailsWrapper from './ProductDetailsWrapper';
+import AddProductOrder from './AddProductOrder';
 import ProductOrderShift from './ProductOrderShift';
 import ProductOrderReturnShift from './ProductOrderReturnShift';
 import ProductOrderShifts from './ProductOrderShifts';
@@ -22,7 +23,7 @@ const ProductOrderPage = ({
   onChangeId,
 }) => {
   const { tab, setTab } = dashboard;
-
+    
   const tabs = [
     {
       key: 'details',
@@ -35,6 +36,12 @@ const ProductOrderPage = ({
       label: 'Design',
       pageKey: 'product_order.design', // klucz z rejestru stron
       component: <ProductDetailsWrapper id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'addOrder',
+      label: 'Reorder',
+      pageKey: 'product_order.reorder',
+      component: <AddProductOrder data={{product_id : row.product_id}} ordersEntity={entity} orderId={id} rwd={rwd}/>,
     },
     {
       key: 'shift',

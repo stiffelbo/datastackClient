@@ -4,6 +4,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 import WhStockEntriesDetails from './WhStockEntriesDetails';
 import WhStockEntriesShift from './WhStockEntriesShift';
 import WhStockEntriesShifts from './WhStockEntriesShifts';
+import WhStockProducts from './WhStockProducts';
 
 const WhStockEntriesItemPage = ({
     entityName,
@@ -37,6 +38,12 @@ const WhStockEntriesItemPage = ({
             label: 'Wydania',
             pageKey: 'wh_shipping_item_shifts', // klucz z rejestru stron
             component: <WhStockEntriesShifts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+        },
+        {
+            key: 'products',
+            label: 'Produkty',
+            pageKey: 'wh_products', // klucz z rejestru stron
+            component: <WhStockProducts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
         },
     ];
 

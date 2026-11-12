@@ -19,11 +19,16 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 import useEntity from "../../hooks/useEntity";
 
-const NumismaticProducts = ({ id, rwd }) => {
+const NumismaticProducts = ({ id, contractor_id = null,  rwd }) => {
+
+    const query = {numismatic_id: id};
+    if(contractor_id){
+        query.contractor_id = contractor_id;
+    }
     const productEntity = useEntity({
         entityName: "NumismaticProducts",
         endpoint: "/product/",
-        query: { numismatic_id: id },
+        query: query,
     });
 
     const { rows = [], loading, error } = productEntity;

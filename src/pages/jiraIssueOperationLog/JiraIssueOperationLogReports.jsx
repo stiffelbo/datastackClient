@@ -51,7 +51,7 @@ const NAV_ITEMS = [
     },
 ];
 
-const JiraIssueOperationLogReports = ({ id = null, row = {}, rwd = defaultRwd }) => {
+const JiraIssueOperationLogReports = ({ id = null, row = {}, rwd = defaultRwd, opLogEntity = null }) => {
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -97,6 +97,7 @@ const JiraIssueOperationLogReports = ({ id = null, row = {}, rwd = defaultRwd })
                 issue={{}}
                 query={{report_uid: uid}}
                 label="Wydania produkcyjne"
+                onChange={()=>opLogEntity.getOne(id)}
             />
     }
 

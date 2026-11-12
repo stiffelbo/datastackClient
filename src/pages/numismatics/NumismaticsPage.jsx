@@ -5,6 +5,7 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import NumismaticsDetails from './NumismaticsDetails';
 import NumismaticProducts from './NumismaticProducts';
+import AddProduct from '../product/AddProduct';
 
 const NumismaticsPage = ({
   entityName,
@@ -32,6 +33,12 @@ const NumismaticsPage = ({
       pageKey: 'numismatics_products', // klucz z rejestru stron
       component: <NumismaticProducts id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
+    {
+      key: 'add_product',
+      label: 'Dodaj Design',
+      pageKey: 'add_product', // klucz z rejestru stron
+      component: <AddProduct data={{ numismatic_id: id }}  rwd={rwd} productEntity={null} />,
+    }
   ];
 
   return (

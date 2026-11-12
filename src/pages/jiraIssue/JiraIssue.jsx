@@ -1,5 +1,6 @@
 import React from 'react';
 import useEntity from '../../hooks/useEntity';
+import { useParams } from "react-router-dom";
 
 import BaseEntityDashboard from '../../components/dashboard/BaseEntityDashboard';
 
@@ -12,7 +13,8 @@ const basePath = "/jiraissue";
 const endpoint = "/jira_issue/";
 
 const JiraIssue = () => {
-    const entity = useEntity({ entityName, endpoint });
+    const { id, tab } = useParams();
+    const entity = useEntity({ entityName, endpoint, initialId : id ? Number(id) : null });
  
     return (
         <BaseEntityDashboard

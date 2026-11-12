@@ -30,7 +30,7 @@ import LinkIcon from '@mui/icons-material/Link';
 
 import { useForm } from "../../components/powerTable/form/useForm";
 import { normalizeSchema } from "../../components/powerTable/form/schemaUtils";
-import validatorDefault from "../../components/powerTable/form/validator";
+import {validatorDefault} from "../../components/powerTable/form/validator";
 import {
     normalizeOptions,
     normalizeDateInputValue,

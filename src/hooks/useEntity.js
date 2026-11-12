@@ -1,427 +1,45 @@
-//TODO: entity runtime store z delta synchronization.
-
-
-// hooks/useEntity.js
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useEffect, useCallback, useRef, use } from 'react';
 import { toast } from 'react-toastify';
 import http from '../http';
 import { EntityContext } from '../context/EntityContext';
-
-/**
- * useEntity hook
- * @param {Object} params
- * @param {string} params.endpoint - base endpoint path, e.g. 'periods_structures_costs' (without leading slash)
- * @param {string} [params.entityName] - optional friendly name for messages
- * @param {Function} [params.processRows] - optional: (rows) => processedRows, called once after fetchRows
- */
-
-/* --- domyślne nazwy endpointów (tylko getEntitySchema domyślnie dostępny) --- */
-const defaultEndpoints = {
-    getEntitySchema: 'getEntitySchema.php',
-    get: 'get.php',
-    getChanges: 'getChanges.php',
-};
-
-/* --- UI schema domyślny --- */
-// default shape, for safety
-const defaultSchema = {
-    addForm: { schema: [], label: '' },
-    editForm: { schema: [], label: '' },
-    bulkEditForm: { schema: [], label: '' },
-    bulkCopyForm: { schema: [], label: '' },
-    columns: [],
-    filterableFields: [],
-    endpoints: {},
-    relations: {},
-    options: {},      // { [fieldName]: Option[] }
-    relatedItems: {},      // { [fieldName]: Item[] }
-    importSchema: [],
-    heightSpan: 85,
-    access: {},
-};
-
-export function normalizeSelectOptions(options = []) {
-    if (!Array.isArray(options)) return [];
-
-    return options.map((item) => {
-        if (item && typeof item === "object" && !Array.isArray(item)) {
-            const value = item.value ?? item.id ?? "";
-
-            return {
-                value,
-                label: item.label ?? item.val ?? String(value ?? ""),
-                title: item.title ?? null,
-                disabled: Boolean(item.disabled ?? false),
-                group: String(item.group ?? item.groupLabel ?? ""),
-                description: String(item.description ?? ""),
-                params: normalizeParams(item.params),
-            };
-        }
-
-        return {
-            value: item,
-            label: String(item ?? ""),
-            title: null,
-            disabled: false,
-            group: "",
-            description: "",
-            params: {},
-        };
-    });
-}
-
-function normalizeParams(params) {
-    if (params === null || params === undefined) {
-        return {};
-    }
-
-    if (Array.isArray(params)) {
-        return params;
-    }
-
-    if (typeof params === "object") {
-        return params;
-    }
-
-    if (typeof params === "string") {
-        try {
-            const parsed = JSON.parse(params);
-
-            return parsed !== null && typeof parsed === "object"
-                ? parsed
-                : {};
-        } catch {
-            return {};
-        }
-    }
-
-    return {};
-}
-
-function addResolvedColumns(schema) {
-    const resolve = schema?.resolve && typeof schema.resolve === "object" ? schema.resolve : null;
-    if (!resolve || !Array.isArray(schema.columns)) return schema;
-
-    // Szybki lookup istniejących kolumn (żeby nie dublować)
-    const existing = new Set(schema.columns.map(c => c?.field).filter(Boolean));
-
-    // Mapowanie: fkField -> column (żeby odziedziczyć headerName/fieldGroup/width)
-    const fkColByField = {};
-    schema.columns.forEach(c => {
-        if (c && typeof c === "object" && c.field) fkColByField[c.field] = c;
-    });
-
-    const newCols = [];
-
-    Object.keys(resolve).forEach((fkField) => {
-        const r = resolve[fkField];
-        if (!r || typeof r !== "object") return;
-
-        const as = r.as;
-        if (!as || typeof as !== "string") return;
-
-        // jeśli FK kolumna nie istnieje (np. access ją wyciął) -> nie dodajemy label
-        const fkCol = fkColByField[fkField];
-        if (!fkCol) return;
-
-        // jeśli label już istnieje -> skip
-        if (existing.has(as)) return;
-
-        // budujemy nową kolumnę label
-        newCols.push({
-            field: as,
-            headerName: (r.resolveAs && typeof r.resolveAs === "string" && r.resolveAs.trim() !== "")
-                ? r.resolveAs
-                : `${fkCol.headerName} (label)`,
-            fieldGroup: fkCol.fieldGroup ?? null,
-            type: "string",
-            input: "text",
-            editable: false,
-            width: Math.max(120, (fkCol.width ?? 120)),
-            aggregation: "",
-            formatterKey: "",
-            // pomocniczo: żeby intake processor wiedział skąd brać value
-            resolvedFrom: fkField,
-        });
-    });
-
-    if (newCols.length > 0) {
-        schema.columns = [...schema.columns, ...newCols];
-    }
-
-    return schema;
-}
-
-export function processResolvedFields(schema, rows) {
-    if (!schema || !Array.isArray(rows)) return rows;
-
-    const resolve = schema.resolve && typeof schema.resolve === "object" ? schema.resolve : null;
-    if (!resolve) return rows;
-
-    // budujemy mapę fkField -> { as, optionsMap }
-    const fkColByField = {};
-    (schema.columns || []).forEach((c) => {
-        if (c && c.field) fkColByField[c.field] = c;
-    });
-
-    const rules = [];
-    Object.keys(resolve).forEach((fkField) => {
-        const r = resolve[fkField];
-        if (!r || !r.as) return;
-
-        const fkCol = fkColByField[fkField];
-        // prefer optionsMap z kolumny FK (bo organizeSchema już to buduje)
-        const optionsMap = fkCol?.optionsMap || null;
-
-        rules.push({
-            fkField,
-            as: r.as,
-            optionsMap,
-        });
-    });
-
-    if (rules.length === 0) return rows;
-
-    return rows.map((row) => {
-        if (!row || typeof row !== "object") return row;
-
-        const out = { ...row };
-
-        for (const rule of rules) {
-            const { fkField, as, optionsMap } = rule;
-
-            // jeśli backend już zwrócił label (np. JOIN) - nie nadpisujemy
-            if (out[as] != null && out[as] !== "") continue;
-
-            const fkVal = out[fkField];
-            if (fkVal == null || fkVal === "") continue;
-
-            if (optionsMap && Object.prototype.hasOwnProperty.call(optionsMap, fkVal)) {
-                out[as] = optionsMap[fkVal];
-            }
-        }
-
-        return out;
-    });
-}
-
-/**
- * Inject options into add/bulk forms & columns based on your rules.
- * - addForm/bulkForm: if type === 'select' AND selectOptions is an empty array, fill it from options[name].
- * - columns: if input === 'select' AND editable === true, set selectOptions from options[field]
- *            (create selectOptions if it doesn't exist).
- */
-const selectInputs = new Set(['select', 'select-object', 'select-multiple']);
-
-function organizeSchema(input = defaultSchema) {
-    const optionWarnings = [];
-
-    const warnOption = (scope, field, value) => {
-        optionWarnings.push({
-            scope,
-            field,
-            value,
-        });
-    };
-
-    const schema = {
-        ...defaultSchema,
-        ...input,
-        addForm: { ...(defaultSchema.addForm || {}), ...(input.addForm || {}) },
-        editForm: { ...(defaultSchema.editForm || {}), ...(input.editForm || {}) },
-        bulkEditForm: { ...(defaultSchema.bulkEditForm || {}), ...(input.bulkEditForm || {}) },
-        bulkCopyForm: { ...(defaultSchema.bulkCopyForm || {}), ...(input.bulkCopyForm || {}) },
-    };
-
-    if(input?.dataGrid?.columns){
-        schema.columns = [...input.dataGrid.columns];
-    }
-
-    const rawOptionsDict = schema.options && typeof schema.options === "object"
-        ? schema.options
-        : {};
-
-    const optionsDict = Object.fromEntries(
-        Object.entries(rawOptionsDict).map(([key, options]) => [
-            key,
-            normalizeSelectOptions(options),
-        ])
-    );
-
-    const getDictOptions = (key, scope = 'unknown') => {
-        const opts = optionsDict?.[key];
-
-        if (opts === undefined) {
-            return null;
-        }
-
-        if (!Array.isArray(opts)) {
-            warnOption(scope, key, opts);
-            return null;
-        }
-        return opts;
-    };
-
-    function buildOptionsMap(options = []) {
-        return Object.fromEntries(
-            normalizeSelectOptions(options).map((option) => [
-                option.value,
-                option.label,
-            ])
-        );
-    }
-
-    const resolveFieldOptions = (item) => {
-        if (!item || typeof item !== 'object') return item;
-
-        const name = item.name;
-        const input = item.input ?? item.type;
-
-        if (!selectInputs.has(input) || !name) {
-            return item;
-        }
-
-        // priorytet 1: własne selectOptions z pola
-        if (Array.isArray(item.selectOptions) && item.selectOptions.length) {
-            return { ...item, selectOptions: normalizeSelectOptions(item.selectOptions) };
-        }
-
-        // priorytet 2: własne options z pola
-        if (Array.isArray(item.options)) {
-            return {
-                ...item,
-                selectOptions: normalizeSelectOptions(item.options),
-            };
-        }
-
-        // priorytet 3: słownik schema.options[name], ale tylko array
-        const dictOptions = getDictOptions(name);
-
-        if (Array.isArray(dictOptions)) {
-            return {
-                ...item,
-                selectOptions: dictOptions,
-            };
-        }
-
-        return item;
-    };
-
-    const resolveColumnOptions = (col) => {
-        if (!col || typeof col !== 'object') return col;
-
-        const field = col.field;
-        const input = col.input ?? col.type;
-
-        if (!selectInputs.has(input) || !field) {
-            return col;
-        }
-
-        let resolvedOptions = null;
-
-        // priorytet 1: własne options z kolumny
-        if (Array.isArray(col.options) && col.options.length) {
-            resolvedOptions = normalizeSelectOptions(col.options);
-        }
-
-        // priorytet 2: własne selectOptions z kolumny
-        else if (Array.isArray(col.selectOptions)) {
-            resolvedOptions = normalizeSelectOptions(col.selectOptions);
-        }
-
-        // priorytet 3: słownik
-        else {
-            resolvedOptions = getDictOptions(field);
-        }
-
-        if (!Array.isArray(resolvedOptions)) {
-            return col;
-        }
-
-        return {
-            ...col,
-            options: resolvedOptions,
-            optionsMap: buildOptionsMap(resolvedOptions),
-        };
-    };
-
-    const resolveForm = (form) => {
-        if (!Array.isArray(form?.schema)) return form;
-
-        return {
-            ...form,
-            schema: form.schema.map(resolveFieldOptions),
-        };
-    };
-
-    schema.addForm = resolveForm(schema.addForm);
-    schema.editForm = resolveForm(schema.editForm);
-    schema.bulkEditForm = resolveForm(schema.bulkEditForm);
-    schema.bulkCopyForm = resolveForm(schema.bulkCopyForm);
-
-    if (Array.isArray(schema.columns)) {
-        schema.columns = schema.columns.map(resolveColumnOptions);
-    }
-
-    addResolvedColumns(schema);
-
-    return schema;
-}
-
-function toFormData(payload) {
-    const formData = new FormData();
-
-    Object.entries(payload || {}).forEach(([key, value]) => {
-        if (value instanceof File || value instanceof Blob) {
-            formData.append(key, value);
-            return;
-        }
-
-        if (Array.isArray(value)) {
-            value.forEach((item) => {
-                if (item instanceof File || item instanceof Blob) {
-                    formData.append(`${key}[]`, item);
-                } else if (item instanceof Date) {
-                    formData.append(`${key}[]`, item.toISOString());
-                } else if (typeof item === 'object' && item !== null) {
-                    formData.append(`${key}[]`, JSON.stringify(item));
-                } else {
-                    formData.append(`${key}[]`, item != null ? String(item) : '');
-                }
-            });
-            return;
-        }
-
-        if (value instanceof Date) {
-            formData.append(key, value.toISOString());
-            return;
-        }
-
-        if (typeof value === 'boolean') {
-            formData.append(key, value ? '1' : '0');
-            return;
-        }
-
-        if (typeof value === 'object' && value !== null) {
-            formData.append(key, JSON.stringify(value));
-            return;
-        }
-
-        formData.append(key, value != null ? String(value) : '');
-    });
-
-    return formData;
-};
-
-
-export default function useEntity({ endpoint, entityName = '', query = null, schemaQuery = null, readOnly = false, schemaOnly = false, processRows = null, itemId = null, reload = true }) {
-
+import {
+    defaultSchema,
+    defaultEndpoints,
+    organizeSchema,
+    processResolvedFields,
+    toFormData,
+    mergeEntityChanges
+} from './useEntityUtils';
+
+const EntityLoadAction = Object.freeze({
+    INIT: 'INIT',
+    SELECT: 'SELECT',
+    REFRESH: 'REFRESH',
+    FULL: 'FULL',
+    SCHEMA: 'SCHEMA',
+});
+
+const CACHE_TTL = 60 * 60 * 1000;
+
+export default function useEntity({
+    endpoint,
+    entityName = '',
+    query = null,
+    schemaQuery = null,
+    readOnly = false,
+    schemaOnly = false,
+    processRows = null,
+    itemId = null,
+    initialId = null,
+    reload = true,
+    cacheHardKey = null,
+}) {
     const { getEntityData, setEntityData } = use(EntityContext);
 
     // Generowanie unikalnego klucza cache (upewnij się, że masz do niego dostęp w tym miejscu)
     const queryKey = JSON.stringify(query || {});
     const schemaQueryKey = JSON.stringify(schemaQuery || {});
-    const cacheKey = `${entityName}_${endpoint}_${itemId || ''}_${queryKey}_${schemaQueryKey}`;
+    const cacheKey = cacheHardKey ? cacheHardKey : `${entityName}_${endpoint}_${itemId || ''}_${queryKey}_${schemaQueryKey}`;
 
     // 1. ODCZYT AKTUALNYCH WARTOŚCI Z KONTEKSTU (Odpowiednik zmiennych stanowych)
     const entityState = getEntityData(cacheKey);
@@ -438,7 +56,6 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
             return {
                 ...prev,
                 rows: nextRows,
-                timestamp: Date.now() // Automatycznie aktualizujemy timestamp przy każdej zmianie danych!
             };
         });
     }, [cacheKey, setEntityData]);
@@ -509,6 +126,16 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         return `${endpoint.replace(/\/+$/, '')}/${file}`;
     }, [endpoint, schema, defaultEndpoints]);
 
+    const resolveChangesEndpoint = useCallback((activeSchema = schema) => {
+        const file = activeSchema?.endpoints?.getChanges;
+
+        if (typeof file !== 'string' || !file.trim()) return null;
+
+        if (/^(\/|https?:\/\/)/i.test(file)) return file;
+
+        return `${endpoint.replace(/\/+$/, '')}/${file}`;
+    }, [endpoint, schema]);
+
     // fetch schema (getEntitySchema endpoint)
     const fetchSchema = useCallback(async () => {
         setLoading(true);
@@ -552,33 +179,27 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
 
     // fetch rows (uses 'get' endpoint if provided). Optionally process rows via provided processRows fn.
     const fetchRows = useCallback(async (schemaOverride = null) => {
-
         if (schemaOnly) return [];
 
         setLoading(true);
+
         try {
-            let params = {};
-
-            if (query && typeof query === 'object') {
-                params = { ...params, ...query };
-            }
-
+            const activeSchema = schemaOverride || schema;
             const url = resolveEndpoint('get');
 
-            if (!url) {
-                setRows([]);
-                return ['no url'];
-            }
-            const activeSchema = schemaOverride || schema;
+            if (!url) return [];
 
+            const params = { ...(query || {}) };
 
             if (activeSchema?.mapper?.itemField && itemId != null) {
                 params[activeSchema.mapper.itemField] = itemId;
             }
 
+            const requestStartedAt = Date.now();
             const res = await http.get(url, { params });
+            const payload = res?.data ?? res;
 
-            const data = res.data ?? [];
+            const data = payload?.data ?? payload ?? [];
 
             const normalizedData = Array.isArray(data)
                 ? data
@@ -596,125 +217,317 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
                 }
             }
 
-            setRows(final);
+            const fallbackCursor = new Date(requestStartedAt - 60000).toISOString();
+            const syncCursor = payload?.syncCursor || fallbackCursor;
+
+            setEntityData(cacheKey, prev => ({
+                ...prev,
+                rows: final,
+                syncCursor,
+                initialized: true,
+                lastFetchedAt: Date.now(),
+                timestamp: Date.now(),
+            }));
+
             setError(null);
             return final;
+
         } catch (err) {
             console.error('fetchRows error', err);
             toast.error('Błąd pobierania danych encji');
             setError(err);
-            setRows([]);
-            return [];
+
+            // Nie czyścimy istniejącego cache po błędzie.
+            return getEntityData(cacheKey).rows ?? [];
+
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, processRows, query, schema, schemaOnly]);
+    }, [
+        schemaOnly,
+        schema,
+        resolveEndpoint,
+        queryKey,
+        itemId,
+        processRows,
+        cacheKey,
+        setEntityData,
+        getEntityData
+    ]);
 
-    // refresh: fetch schema then rows
-    const refresh = useCallback(async () => {
-        try {
-            setLoading(true);
+    const fetchChanges = useCallback(async (schemaOverride = null) => {
+        if (schemaOnly) return [];
 
-            const freshSchema = await fetchSchema();
-            if (!schemaOnly) {
-                const resultRows = await fetchRows(freshSchema);
-            }
+        const current = getEntityData(cacheKey);
+        const activeSchema = schemaOverride || current.schema || schema;
+        const url = resolveChangesEndpoint(activeSchema);
 
-            setError(null);
-        } catch (err) {
-            console.error('refresh error', err);
-            setError(err);
-        } finally {
-            setLoading(false);
-        }
-    }, [fetchSchema, fetchRows, schemaOnly]);
-
-
-    useEffect(() => {
-        // 1. Get a snapshot of the current item state from cache
-        const currentCache = getEntityData(cacheKey);
-        const cachedRows = currentCache.rows ?? [];
-        const cachedTimestamp = currentCache.timestamp;
-
-        // 2. Define our 1-hour Time-To-Live threshold (in milliseconds)
-        const ONE_HOUR = 60 * 60 * 1000;
-        const isExpired = cachedTimestamp && (Date.now() - cachedTimestamp > ONE_HOUR);
-
-        // 3. Conditionally fire the network refresh request
-        if (reload || cachedRows.length === 0 || isExpired) {
-            refresh().catch(e => console.error(e));
-        } else {
-            // Data is present and still fresh! Reset any error states from previous runs.
-            setError(null);
-        }
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cacheKey]);
-
-    // ---------------- CRUD guards & implementations ----------------
-    // Each operation checks resolveEndpoint(name) — if null -> disabled.
-    const getOne = useCallback(async (id) => {
-        if (id === undefined || id === null || id === '') {
-            console.warn('getOne called without id');
-            return null;
+        // Brak obsługi delty lub brak poprawnej synchronizacji początkowej.
+        if (!url || !current.initialized || !current.syncCursor) {
+            return fetchRows(activeSchema);
         }
 
         setLoading(true);
+
         try {
-            // try resolve endpoint via schema/entity config
-            let url = null;
-            try {
-                url = resolveEndpoint('getOne');
-            } catch (e) {
-                url = null;
+            const params = {
+                ...(query || {}),
+                since: current.syncCursor
+            };
+
+            if (activeSchema?.mapper?.itemField && itemId != null) {
+                params[activeSchema.mapper.itemField] = itemId;
             }
 
-            // fallback: try to guess conventional endpoint
-            if (!url) {
-                const base = (endpoint || '').replace(/\/+$/, '');
-                url = `${base}/getOne.php`;
+            const res = await http.get(url, { params });
+            const payload = res?.data ?? res;
+
+            if (
+                !payload ||
+                !Array.isArray(payload.upsert) ||
+                !Array.isArray(payload.remove) ||
+                !payload.syncCursor
+            ) {
+                throw new Error('Nieprawidłowy format odpowiedzi getChanges.php');
             }
 
-            // attach id as query param safely (if url already has ?, append with &)
-            const sep = url.includes('?') ? '&' : '?';
-            const finalUrl = `${url}${sep}id=${encodeURIComponent(id)}`;
+            let upsert = processResolvedFields(activeSchema, payload.upsert);
 
-            const res = await http.get(finalUrl);
-            // backend might return { data: { ... } } or { ... }
-            const payload = res?.data ?? null;
-            let item = payload?.data ?? payload ?? null;
-
-            // enrich resolved labels
-            if (item && typeof item === 'object') {
-                const enriched = processResolvedFields(schema, [item]);
-                item = Array.isArray(enriched) && enriched[0] ? enriched[0] : item;
+            if (typeof processRows === 'function') {
+                try {
+                    upsert = processRows(upsert) ?? upsert;
+                } catch (procErr) {
+                    console.warn('processRows error', procErr);
+                }
             }
 
-            if (item && typeof item === 'object') {
-                // merge/replace in rows cache: if exists replace, else prepend
-                setRows(prev => {
-                    if (!Array.isArray(prev)) return [item];
-                    const idx = prev.findIndex(r => String(r.id) === String(item.id));
-                    if (idx === -1) {
-                        // prepend (most recent)
-                        return [item, ...prev];
-                    } else {
-                        const copy = [...prev];
-                        copy[idx] = item;
-                        return copy;
-                    }
-                });
+            if (!Array.isArray(upsert)) {
+                throw new Error('processRows musi zwracać tablicę rekordów.');
             }
 
-            return item;
+            const fetchedAt = Date.now();
+
+            setEntityData(cacheKey, prev => ({
+                ...prev,
+                rows: mergeEntityChanges(prev.rows ?? [], upsert, payload.remove),
+                syncCursor: payload.syncCursor,
+                initialized: true,
+                lastFetchedAt: fetchedAt,
+                timestamp: fetchedAt
+            }));
+
+            setError(null);
+
+            return {
+                upsert,
+                remove: payload.remove,
+                syncCursor: payload.syncCursor
+            };
+
         } catch (err) {
-            console.error('getOne error', err);
-            toast.error('Błąd pobierania rekordu');
+            console.error('fetchChanges error', err);
+            toast.error('Błąd synchronizacji danych encji');
+            setError(err);
+
+            // Zachowujemy dane i kursor, żeby można było ponowić synchronizację.
             return null;
+
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, endpoint, setRows, setLoading]);
+    }, [
+        schemaOnly,
+        schema,
+        resolveChangesEndpoint,
+        fetchRows,
+        queryKey,
+        itemId,
+        processRows,
+        cacheKey,
+        getEntityData,
+        setEntityData
+    ]);
+
+    // ---------------- CRUD guards & implementations ----------------
+    // Each operation checks resolveEndpoint(name) — if null -> disabled.
+
+    const getOne = useCallback(async (id, schemaOverride = null, markInitial = false) => {
+        if (id === undefined || id === null || id === '') return null;
+
+        setLoading(true);
+
+        try {
+            const activeSchema = schemaOverride || schema;
+            const url = resolveEndpoint('getOne');
+
+            if (!url) {
+                throw new Error('Endpoint getOne nie jest dostępny.');
+            }
+
+            const res = await http.get(url, { params: { id } });
+            const payload = res?.data ?? res;
+            let item = payload?.data ?? payload ?? null;
+
+            if (!item || typeof item !== 'object' || Array.isArray(item)) {
+                throw new Error('Nieprawidłowa odpowiedź getOne.');
+            }
+
+            const enriched = processResolvedFields(activeSchema, [item]);
+            item = enriched?.[0] ?? item;
+
+            setEntityData(cacheKey, prev => {
+                const rows = prev.rows ?? [];
+                const index = rows.findIndex(r => String(r.id) === String(item.id));
+
+                const nextRows = index === -1
+                    ? [item, ...rows]
+                    : rows.map(r => String(r.id) === String(item.id) ? item : r);
+
+                return {
+                    ...prev,
+                    rows: nextRows,
+                    ...(markInitial ? {
+                        initialItemId: id,
+                        initialItemLoaded: true,
+                    } : {}),
+                };
+            });
+
+            setError(null);
+            return item;
+
+        } catch (err) {
+            console.error('getOne error', err);
+            setError(err);
+
+            if (markInitial) {
+                setEntityData(cacheKey, prev => ({
+                    ...prev,
+                    initialItemId: id,
+                    initialItemLoaded: false,
+                }));
+            }
+
+            return null;
+
+        } finally {
+            setLoading(false);
+        }
+    }, [resolveEndpoint, schema, cacheKey, setEntityData]);
+
+
+
+    const refresh = () => {
+        return dispatchLoad(EntityLoadAction.REFRESH);
+    };
+
+    const refreshFull = () => {
+        return dispatchLoad(EntityLoadAction.FULL);
+    };
+
+    const dispatchLoad = useCallback(async (action, id = initialId) => {
+        const current = getEntityData(cacheKey);
+
+        const isExpired = current.timestamp != null &&
+            Date.now() - current.timestamp > CACHE_TTL;
+
+        const hasSchema = current.schemaVersion > 0 && !!current.schema;
+
+        const hasRow = id != null && (current.rows ?? []).some(
+            row => String(row.id) === String(id)
+        );
+
+        const getSchema = async (force = false) => {
+            if (!force && hasSchema) return current.schema;
+            return await fetchSchema();
+        };
+
+        if (action === EntityLoadAction.SCHEMA) {
+            return await getSchema(true);
+        }
+
+        const activeSchema = await getSchema();
+
+        if (!activeSchema) return null;
+        if (schemaOnly) return activeSchema;
+
+        switch (action) {
+            case EntityLoadAction.INIT: {
+                // Wejście bezpośrednio do rekordu
+                if (id != null) {
+                    if (hasRow && !isExpired) return null;
+                    return await getOne(id, activeSchema, true);
+                }
+
+                // Wejście do listy
+                if (current.initialized && !isExpired) return null;
+
+                return await fetchRows(activeSchema);
+            }
+
+            case EntityLoadAction.SELECT: {
+                if (id == null) return null;
+
+                // Wybór rekordu z istniejącej tabeli
+                if (hasRow) return null;
+
+                return await getOne(id, activeSchema, true);
+            }
+
+            case EntityLoadAction.REFRESH: {
+                // Odświeżenie pojedynczego rekordu
+                if (id != null) {
+                    return await getOne(id, activeSchema, true);
+                }
+
+                // Odświeżenie kolekcji przez deltę
+                const latest = getEntityData(cacheKey);
+
+                if (
+                    latest.initialized &&
+                    latest.syncCursor &&
+                    resolveChangesEndpoint(activeSchema)
+                ) {
+                    return await fetchChanges(activeSchema);
+                }
+
+                return await fetchRows(activeSchema);
+            }
+
+            case EntityLoadAction.FULL: {
+                return await fetchRows(activeSchema);
+            }
+
+            default:
+                return null;
+        }
+    }, [
+        cacheKey,
+        initialId,
+        schemaOnly,
+        getEntityData,
+        fetchSchema,
+        getOne,
+        fetchRows,
+        fetchChanges,
+        resolveChangesEndpoint,
+    ]);
+
+    useEffect(() => {
+        const current = getEntityData(cacheKey);
+
+        if (schemaOnly) {
+            if (!current.schemaVersion || reload) {
+                dispatchLoad(EntityLoadAction.SCHEMA);
+            }
+            return;
+        }
+
+        // Zmiana URL nie oznacza automatycznego odświeżania kolekcji.
+        dispatchLoad(EntityLoadAction.INIT, initialId);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cacheKey, initialId, schemaOnly]);
 
     const create = useCallback(async (data) => {
         const url = resolveEndpoint('create');
@@ -1123,6 +936,7 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         rows,
         allowed,
         schema,
+        heightSpan: schema.heightSpan ? schema.heightSpan : defaultSchema.heightSpan,
         schemaVersion,
 
         // handlers (return null for handlers that are disabled)
@@ -1138,10 +952,17 @@ export default function useEntity({ endpoint, entityName = '', query = null, sch
         upload: resolveEndpoint('upload') ? upload : null,
         uploadImg: resolveEndpoint('uploadImg') ? uploadImg : null,
         getOne: resolveEndpoint('getOne') ? getOne : null,
-        // misc
+        // Synchronizacja
         refresh,
+        refreshFull,
         fetchSchema,
         fetchRows,
-        heightSpan: schema.heightSpan ? schema.heightSpan : defaultSchema.heightSpan
+        fetchChanges,
+
+        // Metadane synchronizacji
+        syncCursor: entityState.syncCursor,
+        initialized: entityState.initialized,
+        lastFetchedAt: entityState.lastFetchedAt,
+
     };
 }

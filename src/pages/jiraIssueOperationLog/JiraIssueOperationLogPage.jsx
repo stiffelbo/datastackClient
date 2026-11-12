@@ -22,7 +22,7 @@ const JiraIssueOperationLogPage = ({
       key: 'reports',
       label: 'Raporty powiązane',
       pageKey: 'jiraissueoperationlog.relatedreports', // klucz z rejestru stron
-      component: <JiraIssueOperationLogReports id={id} row={row} rwd={rwd} />
+      component: <JiraIssueOperationLogReports id={id} row={row} rwd={rwd} opLogEntity={entity} />
     },
   ];
 

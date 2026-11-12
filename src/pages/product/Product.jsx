@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { useParams } from "react-router-dom";
 // Hooks
 import useEntity from '../../hooks/useEntity';
 
@@ -13,8 +13,9 @@ const basePath = "/product";
 const endpoint = "/product/";
 
 const Dashboard = () => {
-    const entity = useEntity({ entityName, endpoint });
-
+    const { id, tab } = useParams();
+    const entity = useEntity({ entityName, endpoint, initialId : id ? Number(id) : null });
+    
     const columns = () => {
         return (entity?.schema?.columns ?? [])
             .filter(Boolean)
@@ -71,6 +72,7 @@ const Dashboard = () => {
                     idField: 'id',
                     rootValue: null,
                 },
+                addFormSchema : null
             }}
         />
     );

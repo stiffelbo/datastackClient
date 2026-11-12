@@ -34,7 +34,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import RemoveIcon from '@mui/icons-material/Remove';
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
-import validatorDefault from './validator'; // ./validator.js
+import {validatorDefault} from './validator'; // ./validator.js
 import { Row, Col } from '../grid/flexGrid'; // Twój flex grid
 import BulkPreview from './bulkPreview';
 

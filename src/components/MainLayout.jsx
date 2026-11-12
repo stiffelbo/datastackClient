@@ -14,6 +14,7 @@ import MainNav from './MainNav';
 import Logo from '../assets/logoDSsmall.svg';
 
 import UserDropdown from './user/UserDropdown';
+import BoardLink from '../pages/board/BoardLink';
 
 const MainLayout = () => {
 
@@ -28,7 +29,7 @@ const MainLayout = () => {
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           {/* Logo i nawigacja */}
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box
               component={RouterLink}
               to="//"
@@ -47,6 +48,8 @@ const MainLayout = () => {
                 
               />
             </Box>
+            <BoardLink />
+
             <MainNav pages={pages} />
           </Box>
 

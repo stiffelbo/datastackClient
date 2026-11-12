@@ -4,6 +4,7 @@ import { Box, Tabs, Tab, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '../../context/AuthContext';
 import { useRwd } from '../../context/RwdContext';
+import BoardControl from '../common/BoardControl';
 
 import { getPageHeader } from './getPageHeader';
 
@@ -43,10 +44,11 @@ const BaseEntityPage = ({
   tab,
   setTab,
   heightSpan = basePageHeightSpan,
-  headerFields = []
+  headerFields = [],
+  board = true
 }) => {
   const rwd = useRwd();
-  
+
   if (!tabs.length) {
     return (
       <Box sx={{ p: 2 }}>
@@ -78,7 +80,7 @@ const BaseEntityPage = ({
   const pageHeader = getPageHeader(row, headerFields);
 
   return (
-    <Box sx={{ height, display: 'flex', flexDirection: 'column'}}>
+    <Box sx={{ height, display: 'flex', flexDirection: 'column' }}>
       {/* HEADER */}
       <Box
         sx={{
@@ -93,6 +95,15 @@ const BaseEntityPage = ({
         <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
           {entityName} #{id} - <Typography variant="caption">{pageHeader}</Typography>
         </Typography>
+
+        {board && id != null && (
+          <BoardControl
+            key={`${board === true ? entityName : board}:${id}`}
+            reference={board === true ? entityName.toLowerCase() : board}
+            refId={id}
+            tab={tab}
+          />
+        )}
 
         {onChangeId && (
           <>

@@ -11,7 +11,6 @@ import PowerTable from '../../components/powerTable/powerTable';
 import FormTemplate from '../../components/powerTable/form/formTemplate';
 
 import ProductForm from './ProductForm';
-import ProductTags from './ProductTags';
 import ProductContent from './ProductContent';
 import ProductActivityThread from './ProductActivityThread';
 import NumismaticInfo from '../numismatics/NumismaticsInfo';

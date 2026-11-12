@@ -1,7 +1,7 @@
 // useForm.js
 import { useEffect, useState, useMemo, useCallback } from "react";
 
-import validatorDefault from "./validator";
+import { validatorDefault } from "./validator";
 
 import {
   bulkFormState,
@@ -44,33 +44,13 @@ export const useForm = ({
     buildInitialFormState({ mode, data, schema })
   );
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState(() => validateFn(schema, formState) || {});
   const [isChanged, setIsChanged] = useState(false);
 
   const isValid = Object.keys(errors || {}).length === 0;
 
   const schemaKey = stableJson(schema);
   const dataKey = stableJson(data);
-
-  useEffect(() => {
-    setFormState(buildInitialFormState({ mode, data, schema }));
-    setErrors({});
-    setIsChanged(false);
-  }, [mode, dataKey, schemaKey]);
-
-  const schemaMap = useMemo(() => {
-    const map = {};
-    (Array.isArray(schema) ? schema : []).forEach((f) => {
-      if (f?.name) map[f.name] = f;
-    });
-    return map;
-  }, [schema]);
-
-  useEffect(() => {
-    setFormState(buildInitialFormState({ mode, data, schema }));
-    setErrors({});
-    setIsChanged(false);
-  }, [mode, dataKey, schemaKey]);
 
   const runValidation = (state) => {
     try {
@@ -84,26 +64,32 @@ export const useForm = ({
     }
   };
 
-  const setField = (key, value, opts = { runValidate: true, raw: false }) => {
-    setFormState((prev) => {
-      const candidate = { ...prev, [key]: value };
-      const next = opts.raw ? candidate : applyCompute(candidate, schema);
+  useEffect(() => {
+    setFormState(buildInitialFormState({ mode, data, schema }));
+    setErrors(validateFn(schema, formState) || {});
+    setIsChanged(false);
+  }, [mode, dataKey, schemaKey]);
 
-      if (opts.runValidate) {
-        runValidation(next);
-      }
+  useEffect(() => {
+    runValidation(formState);
+  }, [formState]);
 
-      if (typeof onChange === "function") {
-        try {
-          onChange(next);
-        } catch (err) {
-          console.error("onChange callback error", err);
-        }
-      }
-
-      setIsChanged(true);
-      return next;
+  const schemaMap = useMemo(() => {
+    const map = {};
+    (Array.isArray(schema) ? schema : []).forEach((f) => {
+      if (f?.name) map[f.name] = f;
     });
+    return map;
+  }, [schema]);
+
+
+  const setField = (key, value, opts = { runValidate: true, raw: false }) => {
+    setFormState(prev => {
+      const candidate = { ...prev, [key]: value };
+      return opts.raw ? candidate : applyCompute(candidate, schema);
+    });
+
+    setIsChanged(true);
   };
 
   const reset = () => {

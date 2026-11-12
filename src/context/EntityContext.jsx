@@ -1,32 +1,46 @@
-import { createContext, useState, useCallback } from 'react';
+
+import { createContext, useState, useCallback, useMemo, useRef } from 'react';
 
 export const EntityContext = createContext(null);
+
+const createDefaultEntityState = () => ({
+    timestamp: null,
+    syncCursor: null,
+    initialized: false,
+    lastFetchedAt: null,
+
+    // Schemat encji
+    schema: null,
+    allowed: false,
+    schemaVersion: 0,
+
+    // Dane encji
+    rows: [],
+
+    // Priorytetowe pobieranie pojedynczego rekordu
+    initialItemId: null,
+    initialItemLoaded: false,
+});
 
 // Helper function to recursively estimate deep object memory usage in bytes
 function calculateByteSize(obj) {
     if (obj === null || obj === undefined) return 0;
-    
+
     switch (typeof obj) {
         case 'number':
-            // JavaScript numbers are 64-bit floating point (8 bytes)
             return 8;
         case 'string':
-            // JavaScript strings use UTF-16 characters (2 bytes per character)
             return obj.length * 2;
         case 'boolean':
-            // Booleans typically take 4 bytes internally in V8
             return 4;
         case 'object': {
             if (Array.isArray(obj)) {
-                // Return size of all items in array
                 return obj.reduce((acc, item) => acc + calculateByteSize(item), 0);
             }
-            
-            // It's a standard object or dictionary map
+
             let bytes = 0;
             for (const key in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    // Include both the key string size and the value size
                     bytes += key.length * 2 + calculateByteSize(obj[key]);
                 }
             }
@@ -37,7 +51,6 @@ function calculateByteSize(obj) {
     }
 }
 
-// Converts raw bytes into a scannable, human-friendly string
 function formatBytes(bytes) {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -48,28 +61,22 @@ function formatBytes(bytes) {
 
 export function EntityProvider({ children }) {
     const [cache, setCache] = useState({});
+    const cacheRef = useRef(cache);
+    cacheRef.current = cache;
 
     const getEntityData = useCallback((key) => {
-        return cache[key] || {
-            timestamp: null,
-            schema: null,
-            allowed: false,
-            schemaVersion: 0,
-            rows: []
-        };
-    }, [cache]);
+        return cacheRef.current[key] || createDefaultEntityState();
+    }, []);
 
     const setEntityData = useCallback((key, updater) => {
         setCache((prev) => {
-            const current = prev[key] || {
-                timestamp: null,
-                schema: null,
-                allowed: false,
-                schemaVersion: 0,
-                rows: []
-            };
+            const current = prev[key] || createDefaultEntityState();
             const next = typeof updater === 'function' ? updater(current) : updater;
-            return { ...prev, [key]: { ...current, ...next } };
+
+            return {
+                ...prev,
+                [key]: { ...current, ...next }
+            };
         });
     }, []);
 
@@ -83,30 +90,36 @@ export function EntityProvider({ children }) {
 
     const clearAllCache = useCallback(() => setCache({}), []);
 
-    // NEW: Function to estimate either a specific entity cache size or the total context size
     const getMemoryUsage = useCallback((targetKey = null) => {
         if (targetKey) {
             const targetData = cache[targetKey];
             if (!targetData) return { bytes: 0, human: '0 Bytes' };
+
             const bytes = calculateByteSize(targetData);
             return { bytes, human: formatBytes(bytes) };
         }
-        
-        // Total allocation of entire context cache
+
         const totalBytes = calculateByteSize(cache);
+
         return {
             bytes: totalBytes,
             human: formatBytes(totalBytes)
         };
     }, [cache]);
 
-    const value = {
+    const value = useMemo(() => ({
         getEntityData,
         setEntityData,
         clearEntityCache,
         clearAllCache,
-        getMemoryUsage // Exposed cleanly to the client hooks
-    };
+        getMemoryUsage
+    }), [
+        getEntityData,
+        setEntityData,
+        clearEntityCache,
+        clearAllCache,
+        getMemoryUsage
+    ]);
 
     return (
         <EntityContext value={value}>

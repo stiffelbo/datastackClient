@@ -5,6 +5,8 @@ import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 //Pages
 import ProductDetails from './ProductDetails';
 import ProductOrders from './ProductOrders';
+import AddProductOrder from '../productOrder/AddProductOrder';
+import AddProduct from './AddProduct';
 
 const ProductPage = ({
   entityName,
@@ -31,6 +33,18 @@ const ProductPage = ({
       label: 'Zamówienia',
       pageKey: 'orders', // klucz z rejestru stron
       component: <ProductOrders id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'addorder',
+      label: 'Dodaj Zamówienie',
+      pageKey: 'addOrder', // klucz z rejestru stron
+      component: <AddProductOrder data={{product_id : id, contractor_id: row.contractor_id}} rwd={rwd} dashboard={dashboard} />,
+    },
+    {
+      key: 'adddesign',
+      label: 'Dodaj Projekt',
+      pageKey: 'addDesign', // klucz z rejestru stron
+      component: <AddProduct data={{numismatic_id : row.numismatic_id, contractor_id: row.contractor_id, structure_id : row.structure_id, type_id: row.type_id}} productEntity={entity} rwd={rwd} dashboard={dashboard} />,
     },
   ];
 

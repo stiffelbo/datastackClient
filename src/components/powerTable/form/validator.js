@@ -87,14 +87,14 @@ const isValidEmail = (value) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 };
 
-const validator = (schema = [], formState = {}) => {
+export const validatorDefault = (schema = [], formState = {}) => {
   const errors = {};
 
   schema.forEach((field) => {
     if (!field?.name) return;
 
     const val = formState[field.name];
-    const rules = field.validation || {};
+    const rules = { ...field.validation, required: field.required ?? field.validation?.required ?? false };
     const fieldErrors = [];
 
     // required
@@ -196,5 +196,3 @@ const validator = (schema = [], formState = {}) => {
 
   return errors;
 };
-
-export default validator;

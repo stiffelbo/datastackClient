@@ -21,6 +21,7 @@ import DepartmentsCosts from './pages/departmentsCosts/DepartmentsCosts';
 import Periods from './pages/periods/Periods';
 import Contractor from './pages/contractor/Contractor';
 import Processes from './pages/processes/Processes';
+import Tools from './pages/tools/Tools';
 import ProcessesMachines from './pages/processesMachines/ProcessesMachines';
 import ProcessesResources from './pages/processesResources/ProcessesResources';
 import ProcessesUsers from './pages/processesUsers/ProcessesUsers';
@@ -73,6 +74,7 @@ import CostsParser from './pages/costsParser/CostsParser';
 import JiraIssueSingle from './pages/jiraIssue/JiraIssueSingle';
 import ToolsTypes from './pages/toolsTypes/ToolsTypes';
 import Production from './pages/production/Production';
+import Board from './pages/board/Board';
 
 const App = () => (
     <Routes>
@@ -90,6 +92,7 @@ const App = () => (
         <Route index element={<Home />} />
                 
         <Route path="ongoingproduction" element={<OnGoingProduction />} />
+        <Route path="board" element={<Board />} />
         
         <Route path="productordertools/:id/:tab" element={<ProductOrderTools />} />
         <Route path="productordertools/:id" element={<ProductOrderTools />} />
@@ -197,6 +200,10 @@ const App = () => (
         <Route path="numismatics/:id/:tab" element={<Numismatics />} />
         <Route path="numismatics/:id" element={<Numismatics />} />
         <Route path="numismatics" element={<Numismatics />} />
+
+        <Route path="tools/:id/:tab" element={<Tools />} />
+        <Route path="tools/:id" element={<Tools />} />
+        <Route path="tools" element={<Tools />} />
 
         <Route path="machines/:id/:tab" element={<Machines />} />
         <Route path="machines/:id" element={<Machines />} />

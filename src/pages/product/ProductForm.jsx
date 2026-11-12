@@ -21,7 +21,7 @@ import TollOutlinedIcon from '@mui/icons-material/TollOutlined';
 import { useForm } from "../../components/powerTable/form/useForm";
 import { normalizeSchema } from "../../components/powerTable/form/schemaUtils";
 import { copyToClipboard } from "../../utils/copyToClipboard";
-import validatorDefault from "../../components/powerTable/form/validator";
+import {validatorDefault} from "../../components/powerTable/form/validator";
 import {
     normalizeOptions,
     normalizeDateInputValue,
