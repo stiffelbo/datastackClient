@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-
+import { useParams } from "react-router-dom";
 //Hooks
 import useEntity from '../../hooks/useEntity';
 
@@ -12,8 +12,8 @@ const basePath = "/numismatics";
 const endpoint = "/numismatics/";
 
 const Dashboard = () => {
-    
-    const entity = useEntity({ entityName, endpoint });
+    const { id, tab } = useParams();
+    const entity = useEntity({ entityName, endpoint, initialId : id ? Number(id) : null });
     return (
         <BaseEntityDashboard
             renderPage={(props) => <NumismaticsPage entity={entity} entityName={entityName} {...props} />}

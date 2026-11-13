@@ -22,6 +22,22 @@ const Board = () => {
     });
 
     entity.schema.columns = columns;
+
+     const getRowStyles = (row) => {
+        const priority = !!row.priority;
+        const active = !!row.is_active;
+
+        if (priority) {
+            return { backgroundColor: 'rgba(243, 33, 82, 0.06)' };
+        }
+
+        if (active) {
+            return { backgroundColor: 'rgba(76, 132, 175, 0.07)' };
+        }
+
+        return {};
+    };
+
     return (
         <BaseEntityDashboard
             renderPage={null}
@@ -30,7 +46,8 @@ const Board = () => {
             basePath={basePath}
             refreshId={true}
             listProps={{
-                addFormSchema: null
+                addFormSchema: null,
+                getRowStyles: getRowStyles,
             }}
         />
     );

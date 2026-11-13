@@ -1,247 +1,309 @@
-import React from "react";
+
+import React, { useMemo, useState } from "react";
 
 import {
     Box,
+    Paper,
+    Stack,
     Typography,
-    CircularProgress,
-    TextField,
-    MenuItem,
-    FormControl,
-    FormControlLabel,
-    FormHelperText,
-    InputLabel,
-    Select,
-    Switch,
-    ListSubheader,
-    Button,
+    Divider,
+    Collapse,
     IconButton,
-    Grid,
-    Divider
+    CircularProgress,
 } from "@mui/material";
 
-import ClearIcon from "@mui/icons-material/Clear";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import RemoveIcon from "@mui/icons-material/Remove";
-
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import LinkIcon from '@mui/icons-material/Link';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
+import FactoryOutlinedIcon from "@mui/icons-material/FactoryOutlined";
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutline";
+import PaymentsOutlinedIcon from "@mui/icons-material/PaymentsOutlined";
+import NotesOutlinedIcon from "@mui/icons-material/NotesOutlined";
 
 import { useForm } from "../../components/powerTable/form/useForm";
 import { normalizeSchema } from "../../components/powerTable/form/schemaUtils";
-import {validatorDefault} from "../../components/powerTable/form/validator";
-import {
-    normalizeOptions,
-    normalizeDateInputValue,
-    normalizeDateTimeLocalInputValue,
-} from "../../components/powerTable/form/utils";
-
-import Row from "../../components/common/Row";
-import Col from "../../components/common/Col";
+import { validatorDefault } from "../../components/powerTable/form/validator";
 import { createRenderInput } from "../../components/common/RenderInput";
 
-import CollapsibleSection from "../../components/common/CollapsibleSection";
-
-import SectionCard from "../../components/common/SectionCard";
-import ReadonlyField from "../../components/common/ReadonlyField";
 import FormActionsBar from "../../components/common/FormActionsBar";
-import JiraDescription from "../../components/common/jiraDescription/JiraDescription";
+import ProductOrderHeader from "./ProductOrderHeader";
+import ProductionCardPrint from "./ProductionCardPrint";
 
-const renderLoading = () => (
-    <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <CircularProgress />
-    </Box>
-);
+// ---------------------------------------------------------
+// Layout
+// ---------------------------------------------------------
+
+const grid = columns => ({
+    display: "grid",
+    gridTemplateColumns: {
+        xs: "minmax(0, 1fr)",
+        sm: `repeat(${Math.min(columns, 2)}, minmax(0, 1fr))`,
+        lg: `repeat(${columns}, minmax(0, 1fr))`,
+    },
+    gap: 1.25,
+    alignItems: "start",
+});
+
+const fieldSx = {
+    minWidth: 0,
+    "& .MuiInputBase-root": {
+        fontSize: 12.5,
+    },
+    "& .MuiInputLabel-root": {
+        fontSize: 12.5,
+    },
+};
+
+const Section = ({
+    title,
+    icon: Icon,
+    children,
+    collapsible = false,
+    defaultOpen = true,
+}) => {
+    const [open, setOpen] = useState(defaultOpen);
+
+    return (
+        <Paper
+            variant="outlined"
+            sx={{
+                borderRadius: 1.5,
+                overflow: "hidden",
+            }}
+        >
+            <Box
+                onClick={collapsible ? () => setOpen(v => !v) : undefined}
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    cursor: collapsible ? "pointer" : "default",
+                    "&:hover": collapsible ? {
+                        bgcolor: "action.hover",
+                    } : {},
+                }}
+            >
+                <Icon sx={{ fontSize: 17, color: "text.secondary" }} />
+
+                <Typography
+                    variant="subtitle2"
+                    sx={{ fontSize: 12.5, fontWeight: 700 }}
+                >
+                    {title}
+                </Typography>
+
+                <Box sx={{ flex: 1 }} />
+
+                {collapsible && (
+                    <IconButton
+                        size="small"
+                        sx={{
+                            p: 0.25,
+                            transform: open ? "rotate(180deg)" : "none",
+                            transition: "transform 150ms",
+                        }}
+                    >
+                        <ExpandMoreIcon fontSize="small" />
+                    </IconButton>
+                )}
+            </Box>
+
+            <Collapse in={open} unmountOnExit={false}>
+                <Divider />
+                <Box sx={{ p: 1.5 }}>
+                    {children}
+                </Box>
+            </Collapse>
+        </Paper>
+    );
+};
+
+// ---------------------------------------------------------
+// ProductOrderEditForm
+// ---------------------------------------------------------
 
 const ProductOrderEditForm = ({ id, row, rwd, entity, dashboard }) => {
-    const schema = normalizeSchema(entity.schema.editForm.schema);
-    const mainAccess = entity.schema.access || {};
-    const access = mainAccess.page || {}
-
-    const onCancel = () => {
-        dashboard.setCurrentId(null);
-        dashboard.setTab(null);
-    };
+    const schema = useMemo(
+        () => normalizeSchema(entity.schema.editForm.schema),
+        [entity.schema.editForm.schema]
+    );
 
     const form = useForm({
         data: row,
         schema,
         mode: "edit",
         validator: validatorDefault,
-        onSubmit: (data) => entity.update(id, data),
+        onSubmit: data => entity.update(id, data),
         sendFormData: false,
         addons: null,
     });
 
-
-    if (entity.loading) {
-        return renderLoading();
-    }
-
     const renderInput = createRenderInput(form);
 
+    const onCancel = () => {
+        dashboard.setCurrentId(null);
+        dashboard.setTab(null);
+    };
+
+    const handleSubmit = () => {
+        if (!form.isValid || !form.isChanged || entity.loading) return;
+        entity.update(id, form.formState);
+    };
+
+    if (entity.loading && !row) {
+        return (
+            <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+                <CircularProgress size={24} />
+            </Box>
+        );
+    }
+
     return (
-        <Box sx={{ width: "100%", minWidth: '100%'}}>
+        <Box
+            sx={{
+                width: "100%",
+                minWidth: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
+            }}
+        >
 
-            {/* ZLECENIE */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Zlecenie
-            </Typography>
+            {/* PRODUKT */}
+            <ProductOrderHeader
+                id={id}
+                data={row}
+                onNumberChange={val => entity.updateField({id: id,field: 'order_number', value: val})}
+            />
 
-            {/* Aktywność / typ / numer zlecenia / RO */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "0.25fr 1fr 1fr 1fr",
-                gap: 2,
-                alignItems: "start",
-                mb: 2,
-            }}>
-                {renderInput("is_active")}
-                {renderInput("order_type_id")}
-                {renderInput("order_number")}
-                {renderInput("customer_order_number")}
+            {/* ZAMÓWIENIE + ILOŚCI */}
+            <Box
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                        xs: "1fr",
+                        lg: "1.4fr 1fr",
+                    },
+                    gap: 1.25,
+                    alignItems: "start",
+                }}
+            >
+                <Section title="Dane zamówienia" icon={Inventory2OutlinedIcon}>
+                    <Box sx={grid(2)}>
+                        {renderInput("order_type_id", {}, fieldSx)}
+                        {renderInput("contractor_id", {}, fieldSx)}
+                        {renderInput("customer_order_number", {}, fieldSx)}
+                        {renderInput("packing_method_id", {}, fieldSx)}
+                        {renderInput("structure_id", {}, fieldSx)}
+                        {renderInput("status_id", {}, fieldSx)}
+                    </Box>
+
+                    <Divider sx={{ my: 1.25 }} />
+
+                    <Box sx={grid(2)}>
+                        {renderInput("is_active", {}, fieldSx)}
+                        {renderInput("is_gmi", {}, fieldSx)}
+                    </Box>
+                </Section>
+
+                <Section title="Nakład i realizacja" icon={FactoryOutlinedIcon}>
+                    <Box sx={grid(2)}>
+                        {renderInput("qty_ordered", {}, fieldSx)}
+                        {renderInput("qty_to_do", {}, fieldSx)}
+                        {renderInput("qty_done", {}, fieldSx)}
+                        {renderInput("qty_dispatched", {}, fieldSx)}
+                        {renderInput("qty_invoiced", {}, fieldSx)}
+                    </Box>
+
+                    <Divider sx={{ my: 1.25 }} />
+
+                    <Stack direction="row" spacing={3}>
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">
+                                Wydano na produkcję
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                                {Number(row?.qty_issued || 0).toLocaleString("pl-PL")} szt.
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            <Typography variant="caption" color="text.secondary">
+                                Przyjęto z produkcji
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                                {Number(row?.qty_received || 0).toLocaleString("pl-PL")} szt.
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </Section>
             </Box>
 
-            {/* Produkt / klient / zamówienie klienta */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "1.5fr 1fr 1fr",
-                gap: 2,
-                alignItems: "start",
-                mb: 2,
-            }}>
-                {renderInput("contractor_id")}
-                {renderInput("structure_id")}
-                {renderInput("is_gmi")}
-            </Box>
+            {/* TERMINY */}
+            <Section title="Terminy realizacji" icon={CalendarMonthOutlinedIcon}>
+                <Box sx={{...grid(4), mb: 2}}>
+                    {renderInput("coin_received_date", {}, fieldSx)}
+                    {renderInput("deadline", {}, fieldSx)}
+                    {renderInput("production_date", {}, fieldSx)}
+                    {renderInput("dispatch_date", {}, fieldSx)}
+                </Box>
+                <Box sx={grid(4)}>
+                    {renderInput("production_request_date", {}, fieldSx)}
+                    {renderInput("entrance_control_date", {}, fieldSx)}
+                    {renderInput("production_start_date", {}, fieldSx)}
+                    {renderInput("production_completion_date", {}, fieldSx)}
+                </Box>
+            </Section>
 
-            <Divider sx={{ my: 3 }} />
-
-            {/* NAKŁAD I REALIZACJA */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Nakład i realizacja
-            </Typography>
-
-            {/* Ilości */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "start",
-                mb: 2,
-            }}>
-                {renderInput("qty_ordered")}
-                {renderInput("qty_to_do")}
-                {renderInput("qty_done")}
-                {renderInput("qty_dispatched")}
-            </Box>
-
-            {/* Pakowanie / ostatni proces */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                alignItems: "start",
-                mb: 3,
-            }}>
-                {renderInput("packing_method_id")}
-                {renderInput("last_process_id")}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* KLUCZOWE TERMINY */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Terminy realizacji
-            </Typography>
-
-            {/* Tak jak w Gemie: otrzymanie / deadline / produkcja / wysyłka */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "start",
-                mb: 3,
-            }}>
-                {renderInput("coin_received_date")}
-                {renderInput("deadline")}
-                {renderInput("production_date")}
-                {renderInput("dispatch_date")}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* PRZEBIEG PRODUKCJI */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Przebieg produkcji
-            </Typography>
-
-            {/* Przygotowanie produkcji */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "start",
-                mb: 2,
-            }}>
-                {renderInput("production_request_date")}
-                {renderInput("production_card_printed_at")}
-                {renderInput("entrance_control_date")}
-            </Box>
-
-            {/* Realizacja produkcji */}
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 2,
-                alignItems: "start",
-                mb: 3,
-            }}>
-                {renderInput("production_start_date")}
-                {renderInput("production_completion_date")}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* ODPOWIEDZIALNOŚĆ I STATUS */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Odpowiedzialność i status
-            </Typography>
-
-            <Box sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: 2,
-                alignItems: "start",
-                mb: 3,
-            }}>
-                {renderInput("reporter_id")}
-                {renderInput("assignee_id")}
-                {renderInput("status_id")}
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
+            {/* ODPOWIEDZIALNOŚĆ */}
+            <Section
+                title="Odpowiedzialność"
+                icon={PeopleOutlineIcon}
+                collapsible
+                defaultOpen={true}
+            >
+                <Box sx={grid(3)}>
+                    {renderInput("reporter_id", {}, fieldSx)}
+                    {renderInput("assignee_id", {}, fieldSx)}
+                </Box>
+            </Section>
 
             {/* UWAGI */}
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                Uwagi
-            </Typography>
-
-            <Box sx={{ mb: 3 }}>
-                {renderInput("notes", { rows: 4 })}
-            </Box>
+            <Section
+                title="Uwagi i informacje dodatkowe"
+                icon={NotesOutlinedIcon}
+                collapsible
+                defaultOpen={true}
+            >
+                <Stack spacing={1.25}>
+                    {renderInput("notes", { rows: 3 }, fieldSx)}
+                </Stack>
+            </Section>
 
             {/* AKCJE */}
-            <FormActionsBar
-                onSubmit={form.submit}
-                onCancel={onCancel}
-                disabled={!form.isValid || !form.isChanged || entity.loading}
-                loading={entity.loading}
-            />
+            <Paper
+                variant="outlined"
+                sx={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 5,
+                    bgcolor: "background.paper",
+                    borderRadius: 1.5,
+                    p: 1,
+                }}
+            >
+                <FormActionsBar
+                    onSubmit={handleSubmit}
+                    onCancel={onCancel}
+                    disabled={!form.isValid || !form.isChanged || entity.loading}
+                    loading={entity.loading}
+                />
+            </Paper>
 
         </Box>
     );
-}
+};
 
 export default ProductOrderEditForm;

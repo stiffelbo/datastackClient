@@ -38,7 +38,7 @@ const JiraIssueOperationLogPage = ({
       setTab={setTab}
       rwd={rwd}
       heightSpan={entity.heightSpan}
-      headerFields={[]}
+      headerFields={['processName','employeeName','task','taskName']}
     />
   );
 };

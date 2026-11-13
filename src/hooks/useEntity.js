@@ -415,7 +415,6 @@ export default function useEntity({
         );
 
         const getSchema = async (force = false) => {
-            if (!force && hasSchema) return current.schema;
             return await fetchSchema();
         };
 

@@ -9,10 +9,13 @@ import {
     InputLabel,
     Select,
     ListSubheader,
+    Tooltip,
+    IconButton
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import RemoveIcon from "@mui/icons-material/Remove";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
     normalizeOptions,
     normalizeDateInputValue,
@@ -20,17 +23,50 @@ import {
 } from "../powerTable/form/utils";
 
 export const createRenderInput = (form, globSX = {}) => {
-    return (name, overrides = {}, sx = {...globSX}) => {
+    return (name, overrides = {}, sx = { ...globSX }) => {
         const field = form.getField(name);
         if (!field) return null;
         const merged = { ...field, ...overrides };
+        const description = merged.description;
+
+        const withDescription = (input) => {
+            if (!description) return input;
+
+            return (
+                <Box sx={{ position: "relative", minWidth: 0 }}>
+                    {input}
+
+                    <Tooltip title={description} arrow placement="top">
+                        <IconButton
+                            size="small"
+                            tabIndex={0}
+                            aria-label={`Informacje o polu: ${merged.label || name}`}
+                            sx={{
+                                position: "absolute",
+                                right: 1,
+                                top: -9,
+                                p: 0.25,
+                                bgcolor: "background.paper",
+                                color: "text.disabled",
+                                "&:hover": {
+                                    color: "primary.main",
+                                    bgcolor: "background.paper",
+                                },
+                            }}
+                        >
+                            <InfoOutlinedIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+            );
+        };
         const value = form.formState[name];
         const errorsText = form.getErrorText(name);
 
         switch (merged.type) {
             case "date":
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <TextField
                             lang="pl"
                             fullWidth
@@ -50,8 +86,8 @@ export const createRenderInput = (form, globSX = {}) => {
 
             case "datetime":
             case "datetime-local":
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <TextField
                             fullWidth
                             size="small"
@@ -68,8 +104,8 @@ export const createRenderInput = (form, globSX = {}) => {
                 );
 
             case "number":
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <TextField
                             fullWidth
                             size="small"
@@ -111,8 +147,8 @@ export const createRenderInput = (form, globSX = {}) => {
                     return acc;
                 }, {});
 
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
                             <InputLabel id={`${field.name}-label`}>
                                 {field.label}
@@ -176,8 +212,8 @@ export const createRenderInput = (form, globSX = {}) => {
             }
 
             case "textarea":
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <TextField
                             fullWidth
                             multiline
@@ -225,8 +261,8 @@ export const createRenderInput = (form, globSX = {}) => {
 
                 const itemStyle = { display: "flex", alignItems: "center", gap: 1 };
 
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <FormControl fullWidth error={!!errorsText} disabled={field.disabled}>
                             <InputLabel id={`${field.name}-label`}>{field.label}</InputLabel>
 
@@ -279,8 +315,8 @@ export const createRenderInput = (form, globSX = {}) => {
             }
 
             default:
-                return (
-                    <Box fullWidth sx={{...sx}}>
+                return withDescription(
+                    <Box fullWidth sx={{ ...sx }}>
                         <TextField
                             fullWidth
                             size="small"
