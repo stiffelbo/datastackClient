@@ -13,7 +13,7 @@ const BoardLink = () => {
     const entity = useEntity({
         endpoint: "board",
         entityName: "Board",
-        reload: true,
+        reload: false,
         cacheHardKey : 'Board'
     });
 
@@ -23,16 +23,6 @@ const BoardLink = () => {
         () => rows.filter(r => +r.is_active === 1).length,
         [rows]
     );
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (!document.hidden) {
-                entity.refresh();
-            }
-        }, POLLING_INTERVAL);
-
-        return () => clearInterval(interval);
-    }, [entity.refresh]);
 
     return (
         <Tooltip title={`Moja tablica (${activeRows} aktywnych)`}>

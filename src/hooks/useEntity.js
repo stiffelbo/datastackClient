@@ -13,13 +13,9 @@ import {
 
 const EntityLoadAction = Object.freeze({
     INIT: 'INIT',
-    SELECT: 'SELECT',
     REFRESH: 'REFRESH',
-    FULL: 'FULL',
     SCHEMA: 'SCHEMA',
 });
-
-const CACHE_TTL = 60 * 60 * 1000;
 
 export default function useEntity({
     endpoint,
@@ -31,9 +27,10 @@ export default function useEntity({
     processRows = null,
     itemId = null,
     initialId = null,
-    reload = true,
+    reload = null,
     cacheHardKey = null,
 }) {
+    const initialIdRef = useRef(initialId);
     const { getEntityData, setEntityData } = use(EntityContext);
 
     // Generowanie unikalnego klucza cache (upewnij się, że masz do niego dostęp w tym miejscu)
@@ -99,32 +96,22 @@ export default function useEntity({
     // Resolve endpoint: returns a full URL/string or null if disabled / not present.
     // NOTE: we do NOT fallback to `${endpoint}/${name}` — endpoint must be provided by backend or defaults.
 
-    const resolveEndpoint = useCallback((name) => {
-        // priority:
-        // 1) if schema.endpoints explicitly hasOwnProperty(name) => honor it (even if null)
-        if (schema && schema.endpoints && Object.prototype.hasOwnProperty.call(schema.endpoints, name)) {
-            const file = schema.endpoints[name];
-            if (file === null) return null; // explicitly disabled
-            if (!file) return null; // missing -> treat as disabled
-            if (/^\/|^https?:\/\//.test(file)) return file;
-            return `${endpoint.replace(/\/+$/, '')}/${file}`;
-        }
+    const resolveEndpoint = useCallback((name, activeSchema = schema) => {
+        const endpoints = activeSchema?.endpoints;
 
-        // 2) then check entityEndpoints (merged state)
-        if (defaultEndpoints && Object.prototype.hasOwnProperty.call(defaultEndpoints, name)) {
-            const file = defaultEndpoints[name];
-            if (file === null) return null;
+        if (endpoints && Object.prototype.hasOwnProperty.call(endpoints, name)) {
+            const file = endpoints[name];
             if (!file) return null;
-            if (/^\/|^https?:\/\//.test(file)) return file;
+            if (/^(\/|https?:\/\/)/i.test(file)) return file;
             return `${endpoint.replace(/\/+$/, '')}/${file}`;
         }
 
-        // 3) finally fallback to defaultEndpoints (only getEntitySchema likely)
-        const file = defaultEndpoints[name];
+        const file = defaultEndpoints?.[name];
         if (!file) return null;
-        if (/^\/|^https?:\/\//.test(file)) return file;
+        if (/^(\/|https?:\/\/)/i.test(file)) return file;
+
         return `${endpoint.replace(/\/+$/, '')}/${file}`;
-    }, [endpoint, schema, defaultEndpoints]);
+    }, [endpoint, schema]);
 
     const resolveChangesEndpoint = useCallback((activeSchema = schema) => {
         const file = activeSchema?.endpoints?.getChanges;
@@ -185,7 +172,7 @@ export default function useEntity({
 
         try {
             const activeSchema = schemaOverride || schema;
-            const url = resolveEndpoint('get');
+            const url = resolveEndpoint('get', activeSchema);
 
             if (!url) return [];
 
@@ -358,8 +345,7 @@ export default function useEntity({
 
         try {
             const activeSchema = schemaOverride || schema;
-            const url = resolveEndpoint('getOne');
-
+            const url = resolveEndpoint('getOne', activeSchema);
             if (!url) {
                 throw new Error('Endpoint getOne nie jest dostępny.');
             }
@@ -416,22 +402,13 @@ export default function useEntity({
     }, [resolveEndpoint, schema, cacheKey, setEntityData]);
 
 
-
-    const refresh = () => {
-        return dispatchLoad(EntityLoadAction.REFRESH);
-    };
-
-    const refreshFull = () => {
-        return dispatchLoad(EntityLoadAction.FULL);
-    };
-
-    const dispatchLoad = useCallback(async (action, id = initialId) => {
+    const dispatchLoad = useCallback(async (action, id = initialIdRef.current) => {
         const current = getEntityData(cacheKey);
 
-        const isExpired = current.timestamp != null &&
-            Date.now() - current.timestamp > CACHE_TTL;
-
         const hasSchema = current.schemaVersion > 0 && !!current.schema;
+        const hasCollection = current.initialized === true;
+        const hasQuery = query != null && Object.keys(query).length > 0;
+        const shouldReload = reload ?? hasQuery;
 
         const hasRow = id != null && (current.rows ?? []).some(
             row => String(row.id) === String(id)
@@ -442,95 +419,97 @@ export default function useEntity({
             return await fetchSchema();
         };
 
+        // Wymuszone pobranie schematu
         if (action === EntityLoadAction.SCHEMA) {
             return await getSchema(true);
         }
 
         const activeSchema = await getSchema();
-
         if (!activeSchema) return null;
+
+        // Encja używana wyłącznie do schematu
         if (schemaOnly) return activeSchema;
 
-        switch (action) {
-            case EntityLoadAction.INIT: {
-                // Wejście bezpośrednio do rekordu
-                if (id != null) {
-                    if (hasRow && !isExpired) return null;
-                    return await getOne(id, activeSchema, true);
-                }
+        // Ręczne odświeżenie zawsze pobiera pełną kolekcję
+        if (action === EntityLoadAction.REFRESH) {
+            return await fetchRows(activeSchema);
+        }
 
-                // Wejście do listy
-                if (current.initialized && !isExpired) return null;
+        if (action !== EntityLoadAction.INIT) return null;
 
+        // Encja zależna z query
+        if (hasQuery) {
+            if (!hasCollection || shouldReload) {
                 return await fetchRows(activeSchema);
             }
 
-            case EntityLoadAction.SELECT: {
-                if (id == null) return null;
+            return null;
+        }
 
-                // Wybór rekordu z istniejącej tabeli
-                if (hasRow) return null;
-
+        // Wejście bezpośrednio na rekord
+        if (id != null) {
+            if (!hasRow) {
                 return await getOne(id, activeSchema, true);
             }
 
-            case EntityLoadAction.REFRESH: {
-                // Odświeżenie pojedynczego rekordu
-                if (id != null) {
-                    return await getOne(id, activeSchema, true);
-                }
-
-                // Odświeżenie kolekcji przez deltę
-                const latest = getEntityData(cacheKey);
-
-                if (
-                    latest.initialized &&
-                    latest.syncCursor &&
-                    resolveChangesEndpoint(activeSchema)
-                ) {
+            // Mamy pełną kolekcję i kursor — synchronizujemy
+            if (hasCollection && current.syncCursor) {
+                if (resolveChangesEndpoint(activeSchema)) {
                     return await fetchChanges(activeSchema);
                 }
-
-                return await fetchRows(activeSchema);
             }
 
-            case EntityLoadAction.FULL: {
-                return await fetchRows(activeSchema);
-            }
-
-            default:
-                return null;
+            // Nie pobieramy automatycznie całej kolekcji
+            return null;
         }
+
+        // Pierwsze wejście do listy
+        if (!hasCollection) {
+            return await fetchRows(activeSchema);
+        }
+
+        // Ponowne wejście — synchronizacja przyrostowa
+        if (current.syncCursor && resolveChangesEndpoint(activeSchema)) {
+            return await fetchChanges(activeSchema);
+        }
+
+        // Brak możliwości synchronizacji — pełne pobranie
+        return await fetchRows(activeSchema);
+
     }, [
         cacheKey,
-        initialId,
+        queryKey,
+        reload,
         schemaOnly,
         getEntityData,
         fetchSchema,
-        getOne,
         fetchRows,
         fetchChanges,
+        getOne,
         resolveChangesEndpoint,
     ]);
 
-    useEffect(() => {
-        const current = getEntityData(cacheKey);
+    const refresh = useCallback(() => {
+        return dispatchLoad(EntityLoadAction.REFRESH);
+    }, [dispatchLoad]);
 
+    const refreshFull = refresh;
+
+    useEffect(() => {
         if (schemaOnly) {
-            if (!current.schemaVersion || reload) {
+            const current = getEntityData(cacheKey);
+
+            if (!current.schemaVersion) {
                 dispatchLoad(EntityLoadAction.SCHEMA);
             }
+
             return;
         }
-        if(reload){
-            dispatchLoad(EntityLoadAction.REFRESH)
-        }
 
-        // Zmiana URL nie oznacza automatycznego odświeżania kolekcji.
-        dispatchLoad(EntityLoadAction.INIT, initialId);
+        dispatchLoad(EntityLoadAction.INIT, initialIdRef.current);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cacheKey, initialId, schemaOnly, reload]);
+    }, [cacheKey, schemaOnly, reload]);
 
     const create = useCallback(async (data) => {
         const url = resolveEndpoint('create');

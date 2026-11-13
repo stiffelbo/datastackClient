@@ -17,35 +17,17 @@ import NumismaticInfo from '../numismatics/NumismaticsInfo';
 
 
 
-const ProductDetails = ({ id, row, entity, rwd, dashboard }) => {
-    const [productData, setProducData] = useState({});
-    const [loading, setLoading] = useState(false);
-
+const ProductDetails = ({ id, row, entity, rwd, dashboard }) => {;
     const onCancel = () => {
         dashboard.setCurrentId(null);
         dashboard.setTab(null);
     }
-
-    const fetchData = async (id) => {
-        setLoading(true);
-
-        const resp = await http.get('product/getOne.php?id=' + id, {});
-
-        setProducData(resp);
-        setLoading(false);
-    }
-
-    useEffect(() => {
-        fetchData(id);
-    }, [id]);
 
     const entityName = "ProductActivity";
     const basePath = "/product_activity";
     const endpoint = "/product_activity/";
 
     const activityEntity = useEntity({ entityName: entityName, endpoint: endpoint, schemaQuery: { id: id }, query: { id: id }, itemId: id, reload: true });
-
-
 
     return (
         <Stack

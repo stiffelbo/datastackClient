@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { useParams } from "react-router-dom";
 // Hooks
 import useEntity from '../../hooks/useEntity';
 
@@ -12,7 +12,8 @@ const basePath = "/productorder";
 const endpoint = "/product_order/";
 
 const Dashboard = () => {
-    const dashboardEntity = useEntity({ entityName, endpoint });
+    const { id, tab } = useParams();
+    const dashboardEntity = useEntity({ entityName, endpoint, initialId : id ? Number(id) : null, cacheHardKey: 'ProductOrderDash' });
 
     return (
         <BaseEntityDashboard

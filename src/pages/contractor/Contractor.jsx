@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-
+import { useParams } from "react-router-dom";
 //Hooks
 import useEntity from '../../hooks/useEntity';
 
@@ -12,8 +12,8 @@ const basePath = "/contractor";
 const endpoint = "/contractor/";
 
 const Contractor = () => {
-    
-    const entity = useEntity({ endpoint });
+    const { id, tab } = useParams();
+    const entity = useEntity({ endpoint, entityName, initialId : id ? Number(id) : null });
     
     return (
         <BaseEntityDashboard
