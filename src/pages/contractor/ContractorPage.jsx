@@ -3,6 +3,7 @@ import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 import ContractorDetails from './ContractorDetails';
 import ContractorIssues from './ContractorIssues';
+import WhNumismaticStock from '../whStockEntries/WhNumismaticStock';
 
 const BlankComponent = (props) => {
     return <div>
@@ -38,7 +39,12 @@ const ContractorPage = ({
       pageKey: 'contractor.issues', // klucz z rejestru stron
       component: <ContractorIssues id={id} row={row} entity={entity} rwd={rwd}/>,
     },
-    // itd...
+    {
+      key: 'stock',
+      label: 'Stock',
+      pageKey: 'contractor.stock', // klucz z rejestru stron
+      component: <WhNumismaticStock numismatic_id={null} contractor_id={id} />,
+    }
   ]
 
   return (

@@ -522,12 +522,15 @@ export default function useEntity({
             }
             return;
         }
+        if(reload){
+            dispatchLoad(EntityLoadAction.REFRESH)
+        }
 
         // Zmiana URL nie oznacza automatycznego odświeżania kolekcji.
         dispatchLoad(EntityLoadAction.INIT, initialId);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cacheKey, initialId, schemaOnly]);
+    }, [cacheKey, initialId, schemaOnly, reload]);
 
     const create = useCallback(async (data) => {
         const url = resolveEndpoint('create');
