@@ -1,309 +1,202 @@
+
 import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
-  Button,
-  Menu,
-  MenuItem,
-  Box,
-  Chip,
-  Drawer,
-  Typography,
-  IconButton,
-  useMediaQuery,
-  useTheme
+    Box, Tabs, Tab, Menu, MenuItem, Drawer,
+    Typography, IconButton, useMediaQuery, useTheme, Tooltip
 } from '@mui/material';
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import MenuIcon from '@mui/icons-material/Menu';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import { useNav } from '../context/NavContext';
-import { useRwd } from '../context/RwdContext';
 
-const MainNav = ({ pages }) => {
+const isExternal = (route) => /^https?:\/\//i.test(String(route ?? ''));
 
-  if (!pages?.length) return null;
+const MainNav = ({ pages = [] }) => {
+    const { page } = useNav();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const { page } = useNav();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [openGroup, setOpenGroup] = useState(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
-  const [anchorEls, setAnchorEls] = useState({});
-  const [mobileOpen, setMobileOpen] = useState(false);
+    const internalPages = pages.filter((p) => !isExternal(p.route));
+    const externalPages = pages.filter((p) => isExternal(p.route));
 
-  const isExternal = (route) =>
-    /^https?:\/\//i.test(String(route));
+    const groupedPages = internalPages.reduce((acc, p) => {
+        const group = p.group || 'Pozostałe';
+        if (!acc[group]) acc[group] = [];
+        acc[group].push(p);
+        return acc;
+    }, {});
 
-  const internalPages = pages.filter((p) => !isExternal(p.route));
-  const externalLinks = pages.filter((p) => isExternal(p.route));
+    if (externalPages.length) groupedPages['Strony zewnętrzne'] = externalPages;
 
-  const groupedPages = internalPages.reduce((acc, p) => {
-    const groupName = p.group || 'Pozostałe';
-    if (!acc[groupName]) acc[groupName] = [];
-    acc[groupName].push(p);
-    return acc;
-  }, {});
+    const groups = Object.entries(groupedPages).map(([name, items]) => ({
+        name,
+        items,
+        active: items.some((p) => !isExternal(p.route) && p.name === page),
+    }));
 
-  const handleOpen = (group) => (event) => {
-    setAnchorEls((prev) => ({ ...prev, [group]: event.currentTarget }));
-  };
+    const activeIndex = groups.findIndex((group) => group.active);
+    const selectedTab = activeIndex >= 0 ? activeIndex : false;
+    const activeGroup = groups.find((group) => group.name === openGroup);
 
-  const handleClose = (group) => () => {
-    setAnchorEls((prev) => ({ ...prev, [group]: null }));
-  };
+    const handleOpen = (event, group) => {
+        setAnchorEl(event.currentTarget);
+        setOpenGroup(group);
+    };
 
-  const handleMobileClose = () => {
-    setMobileOpen(false);
-  };
+    const handleClose = () => {
+        setAnchorEl(null);
+        setOpenGroup(null);
+    };
 
-  const renderNavItem = (p, onClick) => {
-    const external = isExternal(p.route);
+    const handleMobileClose = () => setMobileOpen(false);
 
-    if (external) {
-      return (
-        <MenuItem
-          key={p.name}
-          component="a"
-          href={p.route}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={onClick}
-        >
-          {p.label}
-        </MenuItem>
-      );
-    }
+
+    const renderMenuItem = (p, onClick) => {
+        const external = isExternal(p.route);
+
+        return (
+            <Tooltip key={p.name} title={p.description || ''} placement="right" arrow enterDelay={400}>
+                <MenuItem
+                    component={external ? 'a' : RouterLink}
+                    {...(external ? {
+                        href: p.route,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                    } : {
+                        to: p.route,
+                        selected: p.name === page,
+                    })}
+                    onClick={onClick}
+                    sx={{ fontSize: '0.85rem', gap: 1 }}
+                >
+                    {p.label}
+                    {external && <OpenInNewIcon sx={{ fontSize: 14, ml: 'auto', opacity: 0.5 }} />}
+                </MenuItem>
+            </Tooltip>
+        );
+    };
+
+    const renderTab = (group, index) => {
+        const single = group.items.length === 1;
+        const item = single ? group.items[0] : null;
+        const external = single && isExternal(item.route);
+
+        return (
+            <Tab
+                key={group.name}
+                value={index}
+                label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {single ? item.label : group.name}
+                        {!single && <ArrowDropDownIcon sx={{ fontSize: 17 }} />}
+                        {external && <OpenInNewIcon sx={{ fontSize: 13, opacity: 0.6 }} />}
+                    </Box>
+                }
+                {...(single ? (
+                    external ? {
+                        component: 'a',
+                        href: item.route,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                    } : {
+                        component: RouterLink,
+                        to: item.route,
+                    }
+                ) : {
+                    onClick: (event) => handleOpen(event, group.name),
+                    'aria-haspopup': 'menu',
+                    'aria-expanded': openGroup === group.name ? 'true' : undefined,
+                })}
+                sx={{
+                    minWidth: 'auto',
+                    minHeight: 40,
+                    px: 1.5,
+                    fontSize: '0.8rem',
+                    fontWeight: group.active ? 700 : 500,
+                    textTransform: 'none',
+                    color: group.active ? 'primary.main' : 'inherit',
+                    opacity: group.active ? 1 : 0.8,
+                    '&:hover': { opacity: 1 },
+                }}
+            />
+        );
+    };
+
+    const renderMobile = () => (
+        <>
+            <IconButton color="inherit" onClick={() => setMobileOpen(true)} aria-label="Otwórz nawigację">
+                <MenuIcon />
+            </IconButton>
+
+            <Drawer anchor="right" open={mobileOpen} onClose={handleMobileClose}>
+                <Box sx={{ width: 280, maxWidth: '85vw', py: 2 }} role="navigation">
+                    <Typography variant="h6" sx={{ px: 2, mb: 2, fontWeight: 700 }}>
+                        Nawigacja
+                    </Typography>
+
+                    {groups.map((group) => (
+                        <Box key={group.name} sx={{ mb: 2 }}>
+                            <Typography
+                                variant="overline"
+                                color={group.active ? 'primary.main' : 'text.secondary'}
+                                sx={{ display: 'block', px: 2, mb: 0.5, fontWeight: 700 }}
+                            >
+                                {group.name}
+                            </Typography>
+
+                            {group.items.map((p) => renderMenuItem(p, handleMobileClose))}
+                        </Box>
+                    ))}
+                </Box>
+            </Drawer>
+        </>
+    );
+
+    if (!pages.length) return null;
+    if (isMobile) return renderMobile();
 
     return (
-      <MenuItem
-        key={p.name}
-        component={RouterLink}
-        to={p.route}
-        selected={p.name === page}
-        onClick={onClick}
-      >
-        {p.label}
-      </MenuItem>
-    );
-  };
+        <Box sx={{ width: '100%', minWidth: 0, overflow: 'hidden' }}>
+            <Tabs
+                value={selectedTab}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
+                aria-label="Nawigacja główna"
+                sx={{
+                    width: '100%',
+                    minHeight: 40,
+                    color: 'inherit',
+                    '& .MuiTabs-scroller': { minWidth: 0 },
+                    '& .MuiTabs-indicator': { height: 2 },
+                    '& .MuiTabs-scrollButtons': {
+                        width: 28,
+                        flexShrink: 0,
+                        color: 'inherit',
+                        '&.Mui-disabled': { opacity: 0.15 },
+                    },
+                }}
+            >
+                {groups.map(renderTab)}
+            </Tabs>
 
-  const renderSingleButton = (p) => {
-    const external = isExternal(p.route);
-
-    if (external) {
-      return (
-        <Button
-          key={p.name}
-          color="inherit"
-          component="a"
-          href={p.route}
-          target="_blank"
-          rel="noopener noreferrer"
-          size="small"
-        >
-          {p.label}
-        </Button>
-      );
-    }
-
-    return (
-      <Button
-        key={p.name}
-        color={p.name === page ? 'primary' : 'inherit'}
-        component={RouterLink}
-        to={p.route}
-        size="small"
-      >
-        {p.label}
-      </Button>
-    );
-  };
-
-  const renderGroup = (group, items) => {
-    if (!items?.length) return null;
-
-    if (items.length === 1) {
-      return renderSingleButton(items[0]);
-    }
-
-    const hasActiveInternalPage = items.some(
-      (p) => !isExternal(p.route) && p.name === page
-    );
-
-    return (
-      <Box key={group} sx={{ display: 'inline-block', flex: '0 0 auto' }}>
-        <Button
-          onClick={handleOpen(group)}
-          color={hasActiveInternalPage ? 'primary' : 'inherit'}
-          endIcon={<ArrowDropDownIcon />}
-          size="small"
-        >
-          {group}
-        </Button>
-
-        <Menu
-          anchorEl={anchorEls[group]}
-          open={Boolean(anchorEls[group])}
-          onClose={handleClose(group)}
-        >
-          {items.map((p) => renderNavItem(p, handleClose(group)))}
-        </Menu>
-      </Box>
-    );
-  };
-
-  const renderActivePage = () => {
-    let activePageLabel = '';
-
-    if (!page) {
-      activePageLabel = 'Strona domowa';
-    } else if (page === 'userdashboard') {
-      activePageLabel = 'Panel użytkownika';
-    } else if (page === 'userlogform') {
-      activePageLabel = 'Logi użytkownika';
-    } else {
-      const activePage = pages.find((p) => p.name === page);
-      if (!activePage) return null;
-      activePageLabel = activePage.label;
-    }
-
-    return (
-      <Chip
-        key={activePageLabel}
-        label={activePageLabel}
-        size="medium"
-        variant="outlined"
-        color="primary"
-        title={`Aktualnie na stronie: ${activePageLabel}`}
-        sx={{
-          height: 32,
-          borderRadius: 999,
-          fontWeight: 600,
-          flex: '0 0 auto',
-          animation: 'dsChipIn 220ms ease-out, dsChipPulse 900ms ease-out',
-          '@keyframes dsChipIn': {
-            from: {
-              opacity: 0,
-              transform: 'translateY(2px)',
-            },
-            to: {
-              opacity: 1,
-              transform: 'translateY(0)',
-            },
-          },
-          '@keyframes dsChipPulse': {
-            '0%': {
-              boxShadow: '0 0 0 0 rgba(37,99,235,0.35)',
-            },
-            '70%': {
-              boxShadow: '0 0 0 6px rgba(37,99,235,0)',
-            },
-            '100%': {
-              boxShadow: '0 0 0 0 rgba(37,99,235,0)',
-            },
-          },
-        }}
-      />
-    );
-  };
-
-  const renderMobileGroup = (group, items) => {
-    if (!items?.length) return null;
-
-    return (
-      <Box key={group} sx={{ mb: 2 }}>
-        <Typography
-          variant="overline"
-          color="text.secondary"
-          sx={{
-            display: 'block',
-            px: 2,
-            mb: 0.5,
-            fontWeight: 700,
-          }}
-        >
-          {group}
-        </Typography>
-
-        {items.map((p) => renderNavItem(p, handleMobileClose))}
-      </Box>
-    );
-  };
-
-  if (isMobile) {
-    return (
-      <>
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1,
-            alignItems: 'center',
-            minWidth: 0,
-          }}
-        >
-          <IconButton
-            color="inherit"
-            onClick={() => setMobileOpen(true)}
-            aria-label="Otwórz nawigację"
-          >
-            <MenuIcon />
-          </IconButton>
-
-          {renderActivePage()}
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                slotProps={{ paper: { sx: { minWidth: 190, maxHeight: '75vh' } } }}
+            >
+                {activeGroup?.items.map((p) => renderMenuItem(p, handleClose))}
+            </Menu>
         </Box>
-
-        <Drawer
-          anchor="right"
-          open={mobileOpen}
-          onClose={handleMobileClose}
-        >
-          <Box
-            sx={{
-              width: 280,
-              maxWidth: '85vw',
-              py: 2,
-            }}
-            role="navigation"
-          >
-            <Box sx={{ px: 2, mb: 2 }}>
-              <Typography variant="h6" fontWeight={700}>
-                Nawigacja
-              </Typography>
-            </Box>
-
-            {Object.entries(groupedPages).map(([group, groupPages]) =>
-              renderMobileGroup(group, groupPages)
-            )}
-
-            {!!externalLinks.length &&
-              renderMobileGroup('Strony zewnętrzne', externalLinks)}
-          </Box>
-        </Drawer>
-      </>
     );
-  }
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        gap: 1,
-        alignItems: 'center',
-        flexWrap: 'nowrap',
-        overflowX: 'auto',
-        whiteSpace: 'nowrap',
-        scrollbarWidth: 'thin',
-        minWidth: 0,
-      }}
-    >
-      {Object.entries(groupedPages).map(([group, groupPages]) =>
-        renderGroup(group, groupPages)
-      )}
-
-      {!!externalLinks.length && renderGroup('Strony zewnętrzne', externalLinks)}
-
-      {renderActivePage()}
-    </Box>
-  );
 };
 
 export default MainNav;

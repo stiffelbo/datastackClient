@@ -21,6 +21,7 @@ const Dashboard = () => {
             entityName={entityName}
             basePath={basePath}
             listProps={{rowHeight: 120}}
+            refreshId={true}
         />
     );
 };

@@ -6,7 +6,6 @@ import { Box, Button, CircularProgress, Tooltip, Typography } from '@mui/materia
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 const ProductionNr = ({ id, value, onChange }) => {
-    console.log(id, value);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 

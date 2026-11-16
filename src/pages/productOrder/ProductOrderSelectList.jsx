@@ -105,7 +105,7 @@ const ProductOrderSelectList = ({
                                             noWrap
                                             title={order.design}
                                         >
-                                            {order.design || `Produkt #${order.product_id}`}
+                                            {`${order.id} ${order.order_number} ${order.design}` || `Produkt #${order.product_id}`}
                                         </Typography>
 
                                         <Stack

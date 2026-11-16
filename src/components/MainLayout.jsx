@@ -1,69 +1,47 @@
-import { useState } from 'react';
-import { Outlet, useNavigate, Link as RouterLink } from 'react-router-dom';
+
+import React from 'react';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { AppBar, Toolbar, Box } from '@mui/material';
+
 import { useAuth } from '../context/AuthContext';
-import { useRwd } from '../context/RwdContext';
 
-
-import { AppBar, Toolbar, Typography, Box, Button, Menu, MenuItem, IconButton, Container, Tabs, Tab } from '@mui/material';
-import AccountBoxIcon from '@mui/icons-material/AccountBox';
-import LogoutIcon from '@mui/icons-material/Logout';
-
-//comp
 import MainNav from './MainNav';
-// logo do paska
-import Logo from '../assets/logoDSsmall.svg';
-
 import UserDropdown from './user/UserDropdown';
 import BoardLink from '../pages/board/BoardLink';
 
+import Logo from '../assets/logoDSsmall.svg';
+
 const MainLayout = () => {
+    const { user } = useAuth();
+    const pages = user?.pages ?? [];
 
-  const { user } = useAuth();
+    return (
+        <>
+            <AppBar position="static" color="dark" sx={{ width: '100%', maxWidth: '100%' }}>
+                <Toolbar sx={{ display: 'flex', gap: 1, width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+                    <Box component={RouterLink} to="/" title="Strona domowa" sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <Box component="img" src={Logo} alt="DataStack" sx={{ height: 36 }} />
+                    </Box>
 
-  const pages = user?.pages;
+                    <Box sx={{ flexShrink: 0 }}>
+                        <BoardLink />
+                    </Box>
 
+                    <Box sx={{ flex: '1 1 0%', minWidth: 0, overflow: 'hidden' }}>
+                        <MainNav pages={pages} />
+                    </Box>
 
-  return (
-    <>
-      <AppBar position="static" color="dark" sx={{ margin: 0 }}>
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          {/* Logo i nawigacja */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <UserDropdown />
+                    </Box>
+                </Toolbar>
+            </AppBar>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
-              component={RouterLink}
-              to="//"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                textDecoration: 'none',
-              }}
-              title='Strona domowa'
-            >
-              <Box
-                component="img"
-                src={Logo}
-                alt="DataStack logo"
-                sx={{ height: 36 }}
-                
-              />
+            <Box sx={{ width: '100%', minWidth: 0 }}>
+                <Outlet />
             </Box>
-            <BoardLink />
-
-            <MainNav pages={pages} />
-          </Box>
-
-          {/* Użytkownik */}
-          <UserDropdown />
-        </Toolbar>
-      </AppBar>
-
-      {/* Główna treść aplikacji */}
-      <Box>
-        <Outlet />
-      </Box>
-    </>
-  );
+        </>
+    );
 };
 
 export default MainLayout;

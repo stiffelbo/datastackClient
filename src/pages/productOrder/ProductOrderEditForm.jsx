@@ -24,6 +24,7 @@ import { useForm } from "../../components/powerTable/form/useForm";
 import { normalizeSchema } from "../../components/powerTable/form/schemaUtils";
 import { validatorDefault } from "../../components/powerTable/form/validator";
 import { createRenderInput } from "../../components/common/RenderInput";
+import { copyToClipboard } from "../../utils/copyToClipboard";
 
 import FormActionsBar from "../../components/common/FormActionsBar";
 import ProductOrderHeader from "./ProductOrderHeader";
@@ -160,6 +161,8 @@ const ProductOrderEditForm = ({ id, row, rwd, entity, dashboard }) => {
         );
     }
 
+    const optima = `${row.id} ${row.order_number} ${row.design}`;
+
     return (
         <Box
             sx={{
@@ -282,6 +285,15 @@ const ProductOrderEditForm = ({ id, row, rwd, entity, dashboard }) => {
                 </Stack>
             </Section>
 
+            <Typography
+                variant="subtitle2"
+                onClick={() => copyToClipboard(optima)}
+                sx={{ cursor: 'pointer', overflowWrap: 'anywhere', '&:hover': { opacity: 0.7 } }}
+                title="Kliknij, aby skopiować ścieżkę"
+            >
+                {optima}
+            </Typography>
+
             {/* AKCJE */}
             <Paper
                 variant="outlined"
@@ -301,7 +313,6 @@ const ProductOrderEditForm = ({ id, row, rwd, entity, dashboard }) => {
                     loading={entity.loading}
                 />
             </Paper>
-
         </Box>
     );
 };

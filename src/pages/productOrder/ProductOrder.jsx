@@ -27,6 +27,7 @@ const Dashboard = () => {
             entity={dashboardEntity}
             entityName={entityName}
             basePath={basePath}
+            refreshId={true}
         />
     );
 };
