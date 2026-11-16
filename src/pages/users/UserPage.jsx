@@ -6,6 +6,7 @@ import PageUser from './PageUser';
 import UsersProcess from './UsersProcess';
 import BrigadeMapper from './BrigadeMapper';
 import UserDetails from './UserDetails';
+import UserActivity from './UserActivity';
 
 const UsersPage = ({
   entityName,
@@ -45,6 +46,12 @@ const UsersPage = ({
       label: 'Brygady',
       pageKey: 'user.brigades', // klucz z rejestru stron
       component: <BrigadeMapper id={id} data={row} rwd={rwd}/>,
+    },
+    {
+      key: 'aktywność',
+      label: 'Activity',
+      pageKey: 'user.activity', // klucz z rejestru stron
+      component: <UserActivity id={id} row={row} entity={entity} rwd={rwd} dashboard={dashboard} />,
     },
     // itd...
   ];

@@ -1,6 +1,8 @@
 import React from 'react';
 import BaseEntityPage from '../../components/dashboard/BaseEntityPage';
 
+import ToolDetails from './ToolDetails';
+import ToolProducts from './ToolProducts';
 
 const ToolPage = ({
   entityName,

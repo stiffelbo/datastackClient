@@ -197,12 +197,9 @@ const JiraIssueDetails = ({ id, row, rwd, entity, dashboard }) => {
                         {resolveFieldAccess({ name: "unit_price", access }) ? renderInput("unit_price") : null}
                         {resolveFieldAccess({ name: "currency", access }) ? renderInput("currency") : null}
                         {resolveFieldAccess({ name: "conversion_rate", access }) ? renderInput("conversion_rate") : null}
-                        {resolveFieldAccess({ name: "budget_net", access }) ? renderInput("budget_net") : null}
+            
                         {resolveFieldAccess({ name: "planned_margin_pct", access }) ? renderInput("planned_margin_pct") : null}
-                        {resolveFieldAccess({ name: "planned_revenue_net", access }) ? renderInput("planned_revenue_net") : null}
-                        {resolveFieldAccess({ name: "committed_costs_net", access }) ? renderInput("committed_costs_net") : null}
-                        {resolveFieldAccess({ name: "invoiced_revenue_net", access }) ? renderInput("invoiced_revenue_net") : null}
-                        {resolveFieldAccess({ name: "cash_received_net", access }) ? renderInput("cash_received_net") : null}
+                     
                     </CollapsibleSection>
                 </Col>
 
@@ -217,16 +214,15 @@ const JiraIssueDetails = ({ id, row, rwd, entity, dashboard }) => {
                         })}
                         {renderReadonly("created_at_jira")}
                         {renderReadonly("updated_at_jira")}
-
                         {renderReadonly("resolved_at_jira")}
-
                         {renderReadonly("jira_resolution")}
                     </CollapsibleSection>
                     <CollapsibleSection title="Daty Operacyjne" defaultOpen={true} show={isOrder}>
+                        {renderReadonly("created_at_jira")}
                         {renderInput("receipt_date")}
-                        {renderInput("production_request_date")}
                         {renderInput("start_date")}
                         {renderInput("end_date")}
+                        {renderInput("shipping_date")}
                     </CollapsibleSection>
                     <CollapsibleSection title="Osoby" defaultOpen={true}>
                         {renderInput("reporter_id")}
