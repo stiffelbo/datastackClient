@@ -209,6 +209,9 @@ const ProductOrderEditForm = ({ id, row, rwd, entity, dashboard }) => {
                         {renderInput("is_active", {}, fieldSx)}
                         {renderInput("is_gmi", {}, fieldSx)}
                     </Box>
+                    <Box sx={grid(1)} mt={1}>
+                        {renderInput('ref_link')}
+                    </Box>
                 </Section>
 
                 <Section title="Nakład i realizacja" icon={FactoryOutlinedIcon}>

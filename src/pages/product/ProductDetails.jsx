@@ -29,6 +29,11 @@ const ProductDetails = ({ id, row, entity, rwd, dashboard }) => {;
 
     const activityEntity = useEntity({ entityName: entityName, endpoint: endpoint, schemaQuery: { id: id }, query: { id: id }, itemId: id, reload: true });
 
+    const handleSubmit = async (id, data) => {
+        await entity.update(id, data);
+        activityEntity.refresh();
+    }
+
     return (
         <Stack
             spacing={3}
@@ -42,7 +47,7 @@ const ProductDetails = ({ id, row, entity, rwd, dashboard }) => {;
                 id={id}
                 data={row}
                 schema={entity.schema.editForm.schema}
-                onSubmit={entity.update}
+                onSubmit={handleSubmit}
                 loading={entity.loading}
                 entity={entity}
             />

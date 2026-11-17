@@ -10,6 +10,7 @@ import ProductOrderShift from './ProductOrderShift';
 import ProductOrderReturnShift from './ProductOrderReturnShift';
 import ProductOrderShifts from './ProductOrderShifts';
 import ProductOrderDocuments from './ProductOrderDocuments';
+import ProductionTasksManager from '../jiraIssueProductionTasks/IssueProductionTasks/ProductionTasksManager';
 
 const ProductOrderPage = ({
   entityName,
@@ -42,6 +43,12 @@ const ProductOrderPage = ({
       label: 'Reorder',
       pageKey: 'product_order.reorder',
       component: <AddProductOrder data={{product_id : row.product_id}} ordersEntity={entity} orderId={id} rwd={rwd}/>,
+    },
+    {
+      key: 'productionTasks',
+      label: 'Zadania',
+      pageKey: 'product_order.tasks',
+      component: <ProductionTasksManager product_order={row} issue={null}/>,
     },
     {
       key: 'shift',
