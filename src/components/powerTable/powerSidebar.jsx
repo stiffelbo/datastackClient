@@ -37,7 +37,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, action
   } = presets || {};
 
   const localDirty = useMemo(() => {
-    const current = normalizeOverrides(columnsSchema?.columns || []);
+    const current = normalizeOverrides(columnsSchema?.getPresetColumns() || []);
     const persisted = normalizeOverrides(persistedActive?.columns || []);
     return !equalOverrides(current, persisted);
   }, [columnsSchema, persistedActive]);
@@ -45,7 +45,7 @@ const PowerSidebar = ({ onOpenSettings, columnsSchema = {}, presets = {}, action
   const canSave = dirty || localDirty;
 
   const handleSave = () => {
-    const current = normalizeOverrides(columnsSchema?.columns || []);
+    const current = normalizeOverrides(columnsSchema?.getPresetColumns() || []);
     stage(current);
     save(current);
   };

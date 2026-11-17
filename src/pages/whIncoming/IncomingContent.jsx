@@ -23,7 +23,17 @@ export default function IncomingContent({ incoming, height = 500 }) {
             {!contentOnly && <Box sx={{ minWidth: 0 }}>
                 {tab === 'numismatics' && <PowerTable entityName="IncomingNumismatics" columnSchema={numismaticsEntity.schema?.columnSchema} data={numismaticsEntity.rows} loading={numismaticsEntity.loading} onRefresh={numismaticsEntity.refresh} onSelect={handleSelectNumismatics} height={height} />}
                 {tab === 'upcommings' && <PowerTable entityName="IncomingUpcommings" columnSchema={upcommingsEntity.schema?.columnSchema} data={filteredUpcommings} loading={upcommingsEntity.loading} onRefresh={upcommingsEntity.refresh} onSelect={handleSelectUpcomings} height={height} />}
-                {tab === 'accesories' && <PowerTable entityName="IncomingAccesories" columnSchema={accessoriesEntity.schema?.columnSchema} data={accessoriesEntity.rows} loading={accessoriesEntity.loading} onRefresh={accessoriesEntity.refresh} onSelect={handleSelectAccesories} height={height} />}
+                {tab === 'accesories' && <PowerTable 
+                    entityName="IncomingAccesories" 
+                    columnSchema={accessoriesEntity.schema?.columnSchema} 
+                    data={accessoriesEntity.rows} 
+                    loading={accessoriesEntity.loading} 
+                    onRefresh={accessoriesEntity.refresh} 
+                    onSelect={handleSelectAccesories} 
+                    height={height} 
+                    onPost={accessoriesEntity.create}
+                    addFormSchema={accessoriesEntity.schema?.addForm}
+                />}
             </Box>}
             <Box sx={{ minWidth: 0 }}>
                 <Typography variant="caption" color="text.secondary" sx={{ px: 1 }}>Wybrane pozycje — edytuj ilości bezpośrednio w tabeli</Typography>

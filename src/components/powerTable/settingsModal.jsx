@@ -48,7 +48,7 @@ const SettingsModal = ({ open, onClose, presets, columns }) => {
   } = presets || {};
 
   const localDirty = useMemo(() => {
-    const current = normalizeOverrides(columns?.columns || []);
+    const current = normalizeOverrides(columns?.getPresetColumns() || []);
     const persisted = normalizeOverrides(persistedActive?.columns || []);
     return !equalOverrides(current, persisted);
   }, [columns, persistedActive]);
@@ -56,7 +56,7 @@ const SettingsModal = ({ open, onClose, presets, columns }) => {
   const canSave = dirty || localDirty;
 
   const handleSave = () => {
-    const current = normalizeOverrides(columns?.columns || []);
+    const current = normalizeOverrides(columns?.getPresetColumns() || []);
     stage(current);
     save(current);
   };
@@ -65,7 +65,7 @@ const SettingsModal = ({ open, onClose, presets, columns }) => {
     switch (tab) {
       case TABS.PRESETS:
         return (
-          <PresetsList presets={presets} />
+          <PresetsList presets={presets} columns={columns}/>
         );
 
       case TABS.TABLE:

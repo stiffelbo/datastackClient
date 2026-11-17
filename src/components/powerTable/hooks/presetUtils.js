@@ -57,6 +57,7 @@ export const DEFAULT_TRACKED_KEYS = [
   'hidden',
   'align',
   'sortable',
+  'sort',
   'filterable',
   'filters',
   'aggregationFn',
@@ -112,6 +113,10 @@ const NORMALIZE = {
   width: (v) => toNum(v),
   order: (v) => toNum(v),
   groupIndex: (v) => toNum(v),
+  sort: (v) =>
+  ['asc', 'desc'].includes(v?.direction)
+    ? { direction: v.direction }
+    : null,
 
   hidden: (v) => toBool(v),
   sortable: (v) => toBool(v),

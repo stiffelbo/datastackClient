@@ -464,9 +464,17 @@ const useColumns = ({ autoColumns, devSchema = [], presets, entityName = 'defaul
     return Array.isArray(col?.filters) && col.filters.length > 0;
   };
 
+  const getPresetColumns = () =>
+    columns.map(col => ({
+      ...col,
+      sort: sortModel.find(s => s.field === col.field)
+        ? { direction: sortModel.find(s => s.field === col.field).direction }
+        : null,
+    }));
+
   return {
     columns,
-
+    getPresetColumns,
     // Column
     getColumnByField,
     setColumnWidth: (field, width) => updateField(field, { width }),

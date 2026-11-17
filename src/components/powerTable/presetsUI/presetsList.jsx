@@ -23,7 +23,9 @@ import {
   Add,
 } from '@mui/icons-material';
 
-const PresetsList = ({ presets }) => {
+import { normalizeOverrides } from '../hooks/presetUtils';
+
+const PresetsList = ({ presets, columns }) => {
   const {
     list = [],
     activeName,
@@ -54,7 +56,9 @@ const PresetsList = ({ presets }) => {
   const createPreset = () => {
     if (!canCreate) return;
 
-    saveAs?.(normalizedNewName, effective?.columns || []);
+    const current = normalizeOverrides(columns?.getPresetColumns() || []);
+
+    saveAs?.(normalizedNewName, current);
     setNewName('');
   };
 
