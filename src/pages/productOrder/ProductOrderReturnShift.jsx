@@ -72,6 +72,8 @@ const ProductOrderReturnShift = ({ id, row, entity, rwd, dashboard }) => {
 
     const locationId = form.getFieldState('to_location_id')?.value;
 
+    const returnRefference = row?.label ? row.label : row.id; //etykieta projektu w operacji zp
+
     const canSubmit =
         !!selectedShift &&
         qty !== '' &&
@@ -95,6 +97,8 @@ const ProductOrderReturnShift = ({ id, row, entity, rwd, dashboard }) => {
             return;
         }
 
+        
+
         const data = {
             ...form.formState,
             product_order_id: id,
@@ -107,7 +111,7 @@ const ProductOrderReturnShift = ({ id, row, entity, rwd, dashboard }) => {
             balance_side: 1,
             qty: qtyNumber,
             reference_no: mode === 'production'
-                ? String(row.product_id)
+                ? String(returnRefference)
                 : null,
         };
 
@@ -201,7 +205,7 @@ const ProductOrderReturnShift = ({ id, row, entity, rwd, dashboard }) => {
 
                         {mode === 'production' && (
                             <Alert severity="info" sx={{ py: 0.5 }}>
-                                Rozliczenie produkcji dla produktu #{row?.product_id ?? '—'}.
+                                Rozliczenie produkcji dla produktu {returnRefference}.
                                 Identyfikator produktu zostanie zapisany w reference_no.
                             </Alert>
                         )}

@@ -87,7 +87,7 @@ const ProductOrderPage = ({
       tabs={tabs}
       tab={tab}
       setTab={setTab}
-      headerFields={['productType', 'design', 'qty_todo']}
+      headerFields={['productType', 'design', 'qty_ordered', 'deadline']}
     />
   );
 };

@@ -23,7 +23,6 @@ const ProductOrderHeader = ({ id, data, onNumberChange }) => {
     const active = Number(data?.is_active) === 1;
     const prodNumber = data ? data.order_number : null;
 
-    console.log(id, prodNumber);
     return (
         <Paper
             variant="outlined"

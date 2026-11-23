@@ -119,6 +119,11 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
     const log = useJiraIssueUserLogs(auth);
 
+    const handleReset = () => {
+        processes.actions.resetProcesses();
+        brigade.actions.clearAll();
+    }
+
     const renderModeToggle = () => {
         if (!canUseMachineMode) return;
         return (<ToggleButtonGroup
@@ -229,8 +234,8 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
                             name="LogFormDoc"
                             iconOnly
                         />
+                        <Button color="error" size="small" onClick={handleReset} >Reset</Button>
                     </Grid>
-
                     <Grid item zeroMinWidth sx={{ flexGrow: 1 }}>
                         {initialTasks.length === 0 && (
                             <JiraTaskLookup

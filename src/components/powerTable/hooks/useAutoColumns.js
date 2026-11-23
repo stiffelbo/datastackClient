@@ -162,7 +162,7 @@ const buildColumn = ({ key, value, devCol = {}, enableEdit }) => {
     reference: devCol?.reference ?? null,
     tab: devCol?.tab ?? null,
     headerName: devCol?.headerName ?? prettifyHeader(key),
-
+    description: devCol?.description ?? prettifyHeader(key),
     /* 📗 Typy danych i renderowania */
     type,
     input,

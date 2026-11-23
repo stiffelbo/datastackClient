@@ -5,6 +5,7 @@ import JiraIssueDetails from './JiraIssueDetails';
 import LogForm from '../../components/logForm/LogForm';
 import JiraIssueTree from './JiraIssueTree';
 import JiraIssueReports from './JiraIssueReports';
+import ProductionTasksManager from '../jiraIssueProductionTasks/IssueProductionTasks/ProductionTasksManager';
 import Bilans from './Bilans/Bilans';
 
 const JiraIssuePage = ({
@@ -33,6 +34,12 @@ const JiraIssuePage = ({
       label: 'Raporty',
       pageKey: 'jiraissue.reports', // klucz z rejestru stron
       component: <JiraIssueReports id={id} row={row} rwd={rwd}/>,
+    },
+    {
+      key: 'marchrute',
+      label: 'Zadania',
+      pageKey: 'jiraissue.marchrute', // klucz z rejestru stron
+      component: <ProductionTasksManager issue={row} product_order={null} rwd={rwd}/>,
     },
     {
       key: 'issuetree',

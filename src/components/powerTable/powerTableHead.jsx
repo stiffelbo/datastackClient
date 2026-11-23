@@ -137,10 +137,8 @@ const PowerTableHead = ({
             const bgColor = col.editable ? "#e3f2fd" : 'white';
             cellSX['backgroundColor'] = bgColor;
 
-            let cellTitle = col.headerName
-              ? [col.headerName, col.fieldGroup].filter(Boolean).join(' - ')
-              : [col.field, col.fieldGroup].filter(Boolean).join(' - ');
-
+            let cellTitle = col.description;
+            
             if (col.editable) cellTitle += ' edytowalne';
 
             if (col.type === 'action') {

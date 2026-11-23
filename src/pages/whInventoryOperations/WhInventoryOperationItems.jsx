@@ -14,8 +14,9 @@ const WhInventoryOperationItems = ({id, row, entity, rwd, dashboard}) => {
             entityName={entityName}
             data={itemsEntity.rows}
             loading={itemsEntity.loading}
-            columnSchema={itemsEntity?.schema?.columnSchema}
-            height={rwd.height - 126}        
+            columnSchema={itemsEntity?.schema?.columns}
+            height={rwd.height - 182}     
+            onRefresh={itemsEntity.refresh}   
         />
     </Box>
 }
