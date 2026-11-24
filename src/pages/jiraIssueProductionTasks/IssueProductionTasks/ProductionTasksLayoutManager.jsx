@@ -44,7 +44,6 @@ const ProductionTasksLayoutManager = ({ production, rwd }) => {
             case 'processes':
                 return (
                     <ProductionProcessesList
-                        data={production.processes}
                         production={production}
                     />
                 );

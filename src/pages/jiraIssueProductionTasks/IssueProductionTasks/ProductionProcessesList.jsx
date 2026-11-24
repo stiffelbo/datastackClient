@@ -23,22 +23,39 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
+import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 
 import ProductionProcessItem from "./ProductionProcessItem";
 
-const ProductionProcessesList = ({ data = [], production }) => {
+const ProductionProcessesList = ({ production }) => {
     const [search, setSearch] = useState('');
+    const [performanceOnly, setPerformanceOnly] = useState(false);
     const [collapsedGroups, setCollapsedGroups] = useState({});
 
-    const selectedTaskId = production.ui.selectedTaskId;
+    const {
+        processes,
+        selectedTask,
+        loading,
+        actions,
+        ui,
+    } = production;
+
+    const selectedTaskId = ui.selectedTaskId;
     const searching = search.trim().length > 0;
 
     const normalize = (value) => String(value ?? '')
         .toLocaleLowerCase('pl-PL')
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/ł/g, 'l');
 
-    const filtered = data.filter(process => {
+    const searchValue = normalize(search.trim());
+
+    const filtered = processes.filter(process => {
+        if (performanceOnly && !process.params?.hasPerformance) {
+            return false;
+        }
+
         const text = [
             process.label,
             process.description,
@@ -47,7 +64,7 @@ const ProductionProcessesList = ({ data = [], production }) => {
             process.value,
         ].join(' ');
 
-        return normalize(text).includes(normalize(search.trim()));
+        return normalize(text).includes(searchValue);
     });
 
     const groups = Object.groupBy(
@@ -57,7 +74,8 @@ const ProductionProcessesList = ({ data = [], production }) => {
 
     const groupNames = Object.keys(groups);
 
-    const isGroupOpen = (group) => searching || !collapsedGroups[group];
+    const isGroupOpen = (group) =>
+        searching || !collapsedGroups[group];
 
     const toggleGroup = (group) => {
         setCollapsedGroups(prev => ({
@@ -79,13 +97,7 @@ const ProductionProcessesList = ({ data = [], production }) => {
     const allCollapsed = groupNames.length > 0
         && groupNames.every(group => collapsedGroups[group]);
 
-    const handleAdd = (process) => {
-        production.actions.addProcess(process, {
-            afterTaskId: selectedTaskId ?? null,
-        });
-    };
-
-    const { addStart, addAfter, addEnd, addFree } = production.actions;
+    const { addStart, addAfter, addEnd, addFree } = actions;
 
     const addActions = {
         addStart,
@@ -93,7 +105,7 @@ const ProductionProcessesList = ({ data = [], production }) => {
         addEnd,
         addFree,
     };
-    
+
     return (
         <Box
             sx={{
@@ -124,6 +136,24 @@ const ProductionProcessesList = ({ data = [], production }) => {
                             },
                         }}
                     />
+                    <Tooltip
+                        title={performanceOnly
+                            ? 'Pokaż wszystkie procesy'
+                            : 'Pokaż tylko procesy z estymacją'}
+                    >
+                        <IconButton
+                            size="small"
+                            color={performanceOnly ? 'primary' : 'default'}
+                            onClick={() => setPerformanceOnly(prev => !prev)}
+                            aria-pressed={performanceOnly}
+                            sx={{
+                                p: 0.65,
+                                bgcolor: performanceOnly ? 'action.selected' : 'transparent',
+                            }}
+                        >
+                            <QueryStatsOutlinedIcon sx={{ fontSize: 19 }} />
+                        </IconButton>
+                    </Tooltip>
 
                     <Tooltip title={allCollapsed ? 'Rozwiń wszystkie grupy' : 'Zwiń wszystkie grupy'}>
                         <span>
@@ -261,8 +291,8 @@ const ProductionProcessesList = ({ data = [], production }) => {
                                             key={process.value}
                                             data={process}
                                             actions={addActions}
-                                            selectedTask={production.selectedTask}
-                                            disabled={production.loading}
+                                            selectedTask={selectedTask}
+                                            disabled={loading}
                                         />
                                     ))}
                                 </List>
@@ -270,21 +300,6 @@ const ProductionProcessesList = ({ data = [], production }) => {
                         </Box>
                     );
                 })}
-            </Box>
-
-            {/* Stopka */}
-            <Divider />
-
-            <Box sx={{ px: 1.25, py: 0.75 }}>
-                <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ fontSize: 11 }}
-                >
-                    {selectedTaskId
-                        ? `Nowy proces zostanie dodany za zadaniem #${selectedTaskId}`
-                        : 'Nowy proces zostanie dodany na końcu marszruty'}
-                </Typography>
             </Box>
         </Box>
     );

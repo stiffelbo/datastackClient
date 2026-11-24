@@ -88,27 +88,7 @@ const ProductionRoutesList = ({ data = [], production }) => {
                     Historyczne marszruty
                 </Typography>
 
-                <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${routes.length} wariantów`}
-                    sx={{ height: 22, fontSize: 11 }}
-                />
-
-                <Tooltip title="Liczba zadań w aktualnej marszrucie">
-                    <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`Aktualne: ${production.tasks.length}`}
-                        sx={{ height: 22, fontSize: 11 }}
-                    />
-                </Tooltip>
-                <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`Tryb: ${historyMode ?? 'nieznany'}`}
-                    sx={{ height: 22, fontSize: 11 }}
-                />
+              
             </Stack>
 
             {/* Kolumny marszrut */}

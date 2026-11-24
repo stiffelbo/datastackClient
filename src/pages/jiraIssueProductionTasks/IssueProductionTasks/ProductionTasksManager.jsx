@@ -5,6 +5,7 @@ import { Box, Alert } from "@mui/material";
 
 import useEntity from "../../../hooks/useEntity";
 import useProductionTasksManager from "./hooks/useProductionTasksManager";
+import { schemaDto } from "./dto/schemaDto";
 
 import ProductionTasksManagerNavigation from "./ProductionTasksManagerNavigation";
 import ProductionTasksLayoutManager from "./ProductionTasksLayoutManager";
@@ -22,9 +23,13 @@ const ProductionTasksManager = ({ issue = {}, product_order = {}, rwd }) => {
     });
 
     const columns = entity?.schema?.columns;
-    
 
-    const production = useProductionTasksManager({ entity });
+    const processedSchema = schemaDto({ schema: entity?.schema });
+
+    const production = useProductionTasksManager({
+        entity,
+        processedSchema,
+    });
 
     if (!issue_id && !product_order_id) {
         return <Alert severity="warning">Brak kontekstu zlecenia.</Alert>;
