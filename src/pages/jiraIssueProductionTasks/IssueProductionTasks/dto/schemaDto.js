@@ -1,7 +1,6 @@
 const MODES = ['reorder', 'numismatic', 'category'];
 
 const normalizePerformance = (performance) => {
-    console.log(performance); //undefined
     return Object.fromEntries(
         MODES.map(mode => {
             const source = performance?.[mode];

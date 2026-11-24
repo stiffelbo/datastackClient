@@ -631,52 +631,51 @@ export default function useEntity({
 
     const updateMany = useCallback(async (ids = [], changes = {}) => {
         const url = resolveEndpoint('updateMany');
+
         if (!url) {
             toast.warning('Masowa aktualizacja wyłączona dla tej encji.');
             return 0;
         }
+
         if (!Array.isArray(ids) || ids.length === 0) return 0;
-        if (!changes || typeof changes !== 'object' || Object.keys(changes).length === 0) return 0;
+
+        if (!changes || typeof changes !== 'object' || Object.keys(changes).length === 0) {
+            return 0;
+        }
 
         setLoading(true);
         setError(null);
+
         try {
             const res = await http.post(url, { ids, changes });
-            const { ok, updated, successIds, failedIds, message } = res?.data ?? {};
+            const { ok, updated, successIds, failedIds, message } = res?.data ?? res ?? {};
 
-            // które id dociągamy z serwera (kanoniczny stan po triggerach, updated_by, updated_at itd.)
-            const toFetch = Array.isArray(successIds) && successIds.length ? successIds : ids;
-
-            if (typeof getOne === 'function') {
-                // dociągamy kanoniczne rekordy w małych batchach, żeby nie zabić serwera
-                const BATCH = 25;
-                for (let i = 0; i < toFetch.length; i += BATCH) {
-                    const slice = toFetch.slice(i, i + BATCH);
-                    await Promise.allSettled(slice.map(id => getOne(id)));
-                }
-            } else {
-                // fallback: bez getOne patchujemy lokalnie tylko successIds (albo wszystkie ids jeśli brak mapy)
-                const patchIds = (Array.isArray(successIds) && successIds.length) ? successIds : ids;
-                const okSet = new Set(patchIds.map(String));
-                setRows(prev => prev.map(r => (okSet.has(String(r.id)) ? { ...r, ...changes } : r)));
-            }
+            // Jednorazowa synchronizacja kolekcji po operacji bulk.
+            await fetchChanges();
 
             if (Array.isArray(failedIds) && failedIds.length) {
                 toast.info(`Nie zaktualizowano ${failedIds.length} rekordów.`);
             }
+
             if (message && ok === false) {
-                setError?.(message);
+                setError(message);
             }
 
-            return typeof updated === 'number' ? updated : toFetch.length;
+            if (typeof updated === 'number') return updated;
+            if (Array.isArray(successIds)) return successIds.length;
+
+            return 0;
+
         } catch (err) {
             console.error('updateMany error', err);
+            setError(err);
             toast.error('Błąd masowej aktualizacji');
             throw err;
+
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, http, getOne, setRows, setLoading, setError, toast]);
+    }, [resolveEndpoint, fetchChanges]);
 
     const copyMany = useCallback(async (ids = [], changes = {}) => {
         const url = resolveEndpoint('copyMany');
