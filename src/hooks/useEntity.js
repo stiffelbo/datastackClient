@@ -17,6 +17,26 @@ const EntityLoadAction = Object.freeze({
     SCHEMA: 'SCHEMA',
 });
 
+export const EntitySyncMode = Object.freeze({
+    NONE: 'none',
+    ONE: 'one',
+    ROWS: 'rows',
+    CHANGES: 'changes',
+    REFRESH: 'refresh',
+});
+
+const defaultApiConfig = Object.freeze({
+    create: EntitySyncMode.ONE,
+    update: EntitySyncMode.ONE,
+    updateField: EntitySyncMode.ONE,
+    updateFD: EntitySyncMode.ONE,
+    updateMany: EntitySyncMode.CHANGES,
+    copyMany: EntitySyncMode.NONE,
+    remove: EntitySyncMode.NONE,
+    removeMany: EntitySyncMode.NONE,
+    upload: EntitySyncMode.REFRESH,
+});
+
 export default function useEntity({
     endpoint,
     entityName = '',
@@ -29,7 +49,9 @@ export default function useEntity({
     initialId = null,
     reload = null,
     cacheHardKey = null,
+    apiConfig = {},
 }) {
+
     const initialIdRef = useRef(initialId);
     const { getEntityData, setEntityData } = use(EntityContext);
 
@@ -492,7 +514,47 @@ export default function useEntity({
         return dispatchLoad(EntityLoadAction.REFRESH);
     }, [dispatchLoad]);
 
-    const refreshFull = refresh;
+    // ============================================================
+    // API SYNCHRONIZATION
+    // ============================================================
+
+    const createSync = apiConfig?.create?.sync ?? defaultApiConfig.create;
+    const updateSync = apiConfig?.update?.sync ?? defaultApiConfig.update;
+    const updateFieldSync = apiConfig?.updateField?.sync ?? defaultApiConfig.updateField;
+    const updateFDSync = apiConfig?.updateFD?.sync ?? defaultApiConfig.updateFD;
+    const updateManySync = apiConfig?.updateMany?.sync ?? defaultApiConfig.updateMany;
+    const copyManySync = apiConfig?.copyMany?.sync ?? defaultApiConfig.copyMany;
+    const removeSync = apiConfig?.remove?.sync ?? defaultApiConfig.remove;
+    const removeManySync = apiConfig?.removeMany?.sync ?? defaultApiConfig.removeMany;
+    const uploadSync = apiConfig?.upload?.sync ?? defaultApiConfig.upload;
+
+    const syncAfterMutation = useCallback(async (mode, id = null) => {
+        switch (mode) {
+            case EntitySyncMode.NONE:
+                return null;
+
+            case EntitySyncMode.ONE:
+                if (id == null) return null;
+                return await getOne(id);
+
+            case EntitySyncMode.ROWS:
+                return await fetchRows();
+
+            case EntitySyncMode.CHANGES:
+                return await fetchChanges();
+
+            case EntitySyncMode.REFRESH:
+                return await refresh();
+
+            default:
+                throw new Error(`Nieobsługiwany tryb synchronizacji: ${mode}`);
+        }
+    }, [
+        getOne,
+        fetchRows,
+        fetchChanges,
+        refresh,
+    ]);
 
     useEffect(() => {
         if (schemaOnly) {
@@ -512,17 +574,26 @@ export default function useEntity({
 
     const create = useCallback(async (data) => {
         const url = resolveEndpoint('create');
+
         if (!url) {
             toast.warning('Tworzenie rekordów wyłączone dla tej encji.');
             return null;
         }
+
         setLoading(true);
+        setError(null);
+
         try {
             const res = await http.post(url, data);
             const id = res.id ?? null;
-            const r = await getOne(id);
-            if (id) toast.success(`${entityName || 'Rekord'} utworzony wpis o id: ${id}`);
+
+            if (id) {
+                await syncAfterMutation(createSync, id);
+                toast.success(`${entityName || 'Rekord'} utworzony wpis o id: ${id}`);
+            }
+
             return id;
+
         } catch (err) {
             console.error('create error', err);
             setError(err);
@@ -531,25 +602,34 @@ export default function useEntity({
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, refresh, entityName]);
+    }, [resolveEndpoint, syncAfterMutation, createSync, entityName]);
 
     const updateField = useCallback(async ({ id, field, value }) => {
         const url = resolveEndpoint('updateField');
+
         if (!url) {
             toast.warning('Zapisywanie pól wyłączone dla tej encji.');
             return false;
         }
+
         setLoading(true);
+        setError(null);
+
         try {
             const res = await http.post(url, { id, field, value });
             const ok = !!res.updated;
+
             if (ok) {
-                // update local rows quickly
-                const r = await getOne(res.id);
+                await syncAfterMutation(updateFieldSync, res.id ?? id);
                 toast.success('Zapisano');
-            } else {
-                setError(res)
+
+                return true;
             }
+
+            setError(res);
+
+            return false;
+
         } catch (err) {
             console.error('updateField error', err);
             setError(err);
@@ -557,17 +637,17 @@ export default function useEntity({
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, refresh]);
+    }, [resolveEndpoint, syncAfterMutation, updateFieldSync]);
 
     const update = useCallback(async (id, changes) => {
         const url = resolveEndpoint('update');
+
         if (!url) {
             toast.warning('Aktualizacja wyłączona dla tej encji.');
             return false;
         }
 
         setLoading(true);
-        // clear previous error
         setError(null);
 
         try {
@@ -575,28 +655,35 @@ export default function useEntity({
             const ok = !!res.updated;
 
             if (ok) {
-                const r = await getOne(res.id);
+                await syncAfterMutation(updateSync, res.id ?? id);
                 toast.success('Zapisano');
+
                 return true;
             }
 
-            // brak updated = false → zapisz error do stanu (backend może zwrócić info w res.data)
-            const serverMsg = res.data?.error ?? res.data?.message ?? 'Aktualizacja nie powiodła się';
+            const serverMsg = res.data?.error
+                ?? res.data?.message
+                ?? res.error
+                ?? res.message
+                ?? 'Aktualizacja nie powiodła się';
+
             setError(serverMsg);
+
             return false;
 
         } catch (err) {
             console.error('update error', err);
-            // ustawiamy błąd w stanie; nie robimy toast.error (zgodnie z wytycznymi)
             setError(err);
+
             return false;
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, setRows, setLoading, setError]);
+    }, [resolveEndpoint, syncAfterMutation, updateSync]);
 
     const updateFD = useCallback(async (id, changes) => {
         const url = resolveEndpoint('update');
+
         if (!url) {
             toast.warning('Aktualizacja wyłączona dla tej encji.');
             return false;
@@ -611,23 +698,34 @@ export default function useEntity({
             const ok = !!res.updated;
 
             if (ok) {
-                await getOne(res.id);
+                await syncAfterMutation(updateFDSync, res.id ?? id);
                 toast.success('Zapisano');
+
                 return true;
             }
 
-            const serverMsg = res?.error ?? res?.message ?? 'Aktualizacja nie powiodła się';
+            const serverMsg = res?.error
+                ?? res?.message
+                ?? 'Aktualizacja nie powiodła się';
+
             setError(serverMsg);
+
             return false;
 
         } catch (err) {
             console.error('updateFD error', err);
-            setError(err?.response?.data?.error || err?.message || 'Błąd aktualizacji');
+
+            setError(
+                err?.response?.data?.error
+                || err?.message
+                || 'Błąd aktualizacji'
+            );
+
             return false;
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, getOne, setLoading, setError]);
+    }, [resolveEndpoint, syncAfterMutation, updateFDSync]);
 
     const updateMany = useCallback(async (ids = [], changes = {}) => {
         const url = resolveEndpoint('updateMany');
@@ -648,10 +746,17 @@ export default function useEntity({
 
         try {
             const res = await http.post(url, { ids, changes });
-            const { ok, updated, successIds, failedIds, message } = res?.data ?? res ?? {};
 
-            // Jednorazowa synchronizacja kolekcji po operacji bulk.
-            await fetchChanges();
+            const {
+                ok,
+                updated,
+                successIds,
+                failedIds,
+                message,
+            } = res?.data ?? res ?? {};
+
+            // Jednorazowa synchronizacja całej operacji bulk
+            await syncAfterMutation(updateManySync);
 
             if (Array.isArray(failedIds) && failedIds.length) {
                 toast.info(`Nie zaktualizowano ${failedIds.length} rekordów.`);
@@ -671,43 +776,59 @@ export default function useEntity({
             setError(err);
             toast.error('Błąd masowej aktualizacji');
             throw err;
-
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, fetchChanges]);
+    }, [resolveEndpoint, syncAfterMutation, updateManySync]);
 
     const copyMany = useCallback(async (ids = [], changes = {}) => {
         const url = resolveEndpoint('copyMany');
+
         if (!url) {
             toast.warning('Kopiowanie wyłączone dla tej encji.');
             return 0;
         }
+
         if (!Array.isArray(ids) || ids.length === 0) return 0;
-        if (!changes || typeof changes !== 'object' || Object.keys(changes).length === 0) return 0;
 
         setLoading(true);
         setError(null);
+
         try {
             const res = await http.post(url, { ids, changes });
-            const { ok, copied, successIds, failedIds, message } = res?.data ?? {};
+
+            const {
+                ok,
+                copied,
+                successIds,
+                failedIds,
+                message,
+            } = res?.data ?? res ?? {};
+
+            await syncAfterMutation(copyManySync);
 
             if (Array.isArray(failedIds) && failedIds.length) {
                 toast.info(`Nie skopiowano ${failedIds.length} rekordów.`);
             }
+
             if (message && ok === false) {
-                setError?.(message);
+                setError(message);
             }
 
-            return typeof copied === 'number' ? copied : successIds.length;
+            if (typeof copied === 'number') return copied;
+            if (Array.isArray(successIds)) return successIds.length;
+
+            return 0;
+
         } catch (err) {
             console.error('copyMany error', err);
+            setError(err);
             toast.error('Błąd masowego kopiowania');
             throw err;
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, http, setLoading, setError, toast]);
+    }, [resolveEndpoint, syncAfterMutation, copyManySync]);
 
     const remove = useCallback(async (id, data = {}) => {
         const url = resolveEndpoint('delete');
@@ -738,7 +859,7 @@ export default function useEntity({
                 return false;
             }
 
-            // sukces – nic więcej nie robimy, optimistic już wyciął
+            await syncAfterMutation(removeSync);
             return true;
         } catch (err) {
             // rollback on error
@@ -749,7 +870,7 @@ export default function useEntity({
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, setRows, setLoading]);
+    }, [resolveEndpoint, setRows, syncAfterMutation, removeSync]);
 
     const removeMany = useCallback(async (ids = []) => {
         const url = resolveEndpoint('deleteMany');
@@ -829,8 +950,7 @@ export default function useEntity({
             const ids = Array.isArray(payload.ids) ? payload.ids : [];
             const errors = Array.isArray(payload.errors) ? payload.errors : [];
 
-            // dociągnij “kanoniczne” rekordy po ID (jeśli endpoint dostępny)
-            refresh();
+            await syncAfterMutation(uploadSync);
 
             if (errors.length) {
                 // delikatna informacja o wierszach z błędami
@@ -847,7 +967,7 @@ export default function useEntity({
         } finally {
             setLoading(false);
         }
-    }, [resolveEndpoint, http, getOne, setLoading, setError, toast, fetchRows]);
+    }, [resolveEndpoint, syncAfterMutation, uploadSync]);
 
     const uploadImg = useCallback(async (file, meta = {}) => {
         const url = resolveEndpoint('uploadImg');
@@ -934,7 +1054,6 @@ export default function useEntity({
         getOne: resolveEndpoint('getOne') ? getOne : null,
         // Synchronizacja
         refresh,
-        refreshFull,
         fetchSchema,
         fetchRows,
         fetchChanges,

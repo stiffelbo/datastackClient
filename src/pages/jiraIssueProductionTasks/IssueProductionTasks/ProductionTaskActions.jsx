@@ -11,6 +11,7 @@ import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 import BuildOutlinedIcon from "@mui/icons-material/BuildOutlined";
 import AttachFileOutlinedIcon from "@mui/icons-material/AttachFileOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 
 const ProductionTaskActions = ({
     task,
@@ -57,6 +58,13 @@ const ProductionTaskActions = ({
             icon: AccountTreeOutlinedIcon,
             action: () => openTaskPanel('relations-in'),
         },
+        {
+            key: 'delete',
+            label: 'Usuń zadanie produkcyjne',
+            icon: DeleteForeverIcon,
+            color: 'error',
+            action: () => actions.remove(task.id),
+        },
     ];
 
     return (
@@ -79,7 +87,8 @@ const ProductionTaskActions = ({
                         <span>
                             <IconButton
                                 size="small"
-                                disabled={disabled}
+                                color={control.color ?? 'default'}
+                                disabled={disabled || control.disabled}
                                 aria-label={control.label}
                                 onClick={(event) => {
                                     event.stopPropagation();

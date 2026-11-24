@@ -48,7 +48,7 @@ const ProductOrderPage = ({
       key: 'productionTasks',
       label: 'Zadania',
       pageKey: 'product_order.tasks',
-      component: <ProductionTasksManager product_order={row} issue={null}/>,
+      component: <ProductionTasksManager product_order={row} issue={null} rwd={rwd}/>,
     },
     {
       key: 'shift',

@@ -59,6 +59,7 @@ const ProductionTaskNode = ({ data, selected }) => {
         actions,
         ui,
         loading,
+        color = '#90a4ae',
         direction = 'TB',
     } = data;
 
@@ -81,10 +82,13 @@ const ProductionTaskNode = ({ data, selected }) => {
                 : 'text.secondary';
 
     const handleStyle = {
-        width: 7,
-        height: 7,
-        background: '#90a4ae',
-        border: '1px solid #fff',
+        width: 12,
+        height: 12,
+        background: loading ? '#bdbdbd' : color,
+        border: '2px solid #fff',
+        boxShadow: `0 0 0 1px ${color}`,
+        cursor: loading ? 'default' : 'crosshair',
+        zIndex: 3,
     };
 
     const sectionSx = {
@@ -105,22 +109,22 @@ const ProductionTaskNode = ({ data, selected }) => {
                 position: 'relative',
 
                 bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: selected
-                    ? 'primary.main'
-                    : isDone
-                        ? 'success.main'
-                        : 'divider',
 
+                border: '2px solid',
+                borderColor: color,
                 borderRadius: 1.5,
-                boxShadow: selected ? 3 : 1,
+
+                boxShadow: selected
+                    ? `0 0 0 3px ${color}40, 0 4px 12px #00000020`
+                    : 1,
+
                 overflow: 'visible',
             }}
         >
             <Handle
                 type="target"
                 position={isHorizontal ? Position.Left : Position.Top}
-                isConnectable={false}
+                isConnectable={!loading}
                 style={handleStyle}
             />
 
@@ -152,6 +156,7 @@ const ProductionTaskNode = ({ data, selected }) => {
                                 fontSize: 14,
                                 fontWeight: 700,
                                 lineHeight: 1.4,
+                                color,
                             }}
                         >
                             {processName}
@@ -310,7 +315,7 @@ const ProductionTaskNode = ({ data, selected }) => {
                         value={formatTime(task._estimated_total_time)}
                         color={
                             task._norm_effective > 0
-                            && task._estimated_total_time > task._norm_effective
+                                && task._estimated_total_time > task._norm_effective
                                 ? 'error.main'
                                 : 'text.primary'
                         }
@@ -401,7 +406,7 @@ const ProductionTaskNode = ({ data, selected }) => {
             <Handle
                 type="source"
                 position={isHorizontal ? Position.Right : Position.Bottom}
-                isConnectable={false}
+                isConnectable={!loading}
                 style={handleStyle}
             />
         </Box>

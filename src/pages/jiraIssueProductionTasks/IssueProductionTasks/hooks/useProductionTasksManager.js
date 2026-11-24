@@ -133,46 +133,21 @@ const useProductionTasksManager = ({ entity, processedSchema }) => {
             },
         })),
     };
-
     // ============================================================
     // TASK ACTIONS
     // ============================================================
 
     const tasksActions = createTasksActions({
         entity,
-        uiState,
+        context,
+        tasks,
+        ui,
     });
 
     const actions = {
-        addStart: (data) => tasksActions.addStart({
-            data,
-            tasks,
-            selectedTaskId: uiState.selectedTaskId,
-        }),
-
-        addAfter: (data) => tasksActions.addAfter({
-            data,
-            tasks,
-            selectedTaskId: uiState.selectedTaskId,
-        }),
-
-        addEnd: (data) => tasksActions.addEnd({
-            data,
-            tasks,
-            selectedTaskId: uiState.selectedTaskId,
-        }),
-
-        addFree: (data) => tasksActions.addFree({
-            data,
-            tasks,
-            selectedTaskId: uiState.selectedTaskId,
-        }),
+        ...tasksActions,
 
         importRoute: async (route, { position = 'end' } = {}) => {
-            // TODO: atomowy import marszruty po stronie PHP.
-            // Nowe ID, aktualny kontekst i przemapowanie zależności DAG.
-            // Bez kopiowania historycznych raportów i statusów.
-
             throw new Error('Import marszruty nie jest jeszcze zaimplementowany');
         },
 

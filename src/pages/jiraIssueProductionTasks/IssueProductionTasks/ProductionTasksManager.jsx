@@ -20,6 +20,14 @@ const ProductionTasksManager = ({ issue = {}, product_order = {}, rwd }) => {
         endpoint: '/jira_issue_production_tasks/',
         query: { issue_id, product_order_id },
         schemaQuery: { issue_id, product_order_id },
+        apiConfig: {
+            create: { sync: 'rows' },
+            update: { sync: 'rows' },
+            updateField: { sync: 'rows' },
+            updateMany: { sync: 'rows' },
+            remove: { sync: 'rows' },
+            removeMany: { sync: 'rows' },
+        },
     });
 
     const columns = entity?.schema?.columns;

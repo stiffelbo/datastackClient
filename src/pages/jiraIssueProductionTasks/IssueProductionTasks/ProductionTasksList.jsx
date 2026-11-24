@@ -8,7 +8,7 @@ import { kpiSchema } from './dto/tasksDto';
 const ProductionTasksList = ({ production, rwd = {} }) => {
     const { actions, ui, schema, loading } = production;
 
-    const listHeight = (rwd.height ?? 640) - 240;
+    const listHeight = rwd.height - 230;
 
     const tasks = [...(production.tasks ?? [])].sort((a, b) => {
         return (a.sequence_no ?? 0) - (b.sequence_no ?? 0);
@@ -42,7 +42,7 @@ const ProductionTasksList = ({ production, rwd = {} }) => {
     ];
 
     return (
-        <Box sx={{ width: '100%', minWidth: 0, maxWidth: '100%' }}>
+
             <PowerTable
                 entityName="ProductOrderProductionTasks"
                 data={tasks}
@@ -50,11 +50,11 @@ const ProductionTasksList = ({ production, rwd = {} }) => {
                 height={listHeight}
                 onRefresh={production.refresh}
                 onEdit={actions.update}
+                onDelete={actions.remove}
                 selected={ui.selectedTaskId}
                 onSelect={ui.selectTask}
                 rowHeight={80}
             />
-        </Box>
     );
 };
 

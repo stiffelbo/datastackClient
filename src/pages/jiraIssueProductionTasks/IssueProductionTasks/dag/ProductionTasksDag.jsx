@@ -24,9 +24,14 @@ import "@xyflow/react/dist/style.css";
 
 import dagDto from "./dagDto";
 import dagLayout from "./dagLayout";
+import { getDagColor } from "./dagColors";
 import ProductionTaskNode from "./ProductionTaskNode";
 
-const ProductionTasksDag = ({ production }) => {
+const ProductionTasksDag = ({
+    production,
+    edgesOnTop = true,
+    colorBy = 'process_id',
+}) => {
     const {
         tasks = [],
         loading,
@@ -47,8 +52,8 @@ const ProductionTasksDag = ({ production }) => {
         dag,
         nodeWidth: 600,
         nodeHeight: 120,
-        columnGap: 40,
-        rowGap: 45,
+        columnGap: 80,
+        rowGap: 90,
         direction: 'TB',
     });
 
@@ -58,12 +63,15 @@ const ProductionTasksDag = ({ production }) => {
     const nodes = layout.nodes.map(node => {
         const { task, position, width, height } = node;
 
+        const selected = String(ui.selectedTaskId) === String(node.id);
+        const color = getDagColor(task[colorBy]);
+
         return {
             id: String(node.id),
             type: 'productionTask',
             position,
-
-            selected: String(ui.selectedTaskId) === String(node.id),
+            selected,
+            zIndex: selected ? 100 : 1,
 
             data: {
                 task,
@@ -71,6 +79,7 @@ const ProductionTasksDag = ({ production }) => {
                 actions,
                 ui,
                 loading,
+                color,
                 direction: layout.direction,
                 isRoot: node.isRoot,
                 isLeaf: node.isLeaf,
@@ -85,7 +94,16 @@ const ProductionTasksDag = ({ production }) => {
     });
 
     // 4. Adapter relacji React Flow
+    // 4. Adapter relacji React Flow
     const edges = layout.edges.map(edge => {
+        const sourceTask = dag.nodesMap[edge.source]?.task;
+
+        const color = getDagColor(sourceTask?.[colorBy]);
+
+        const isHighlighted =
+            String(ui.selectedTaskId) === String(edge.source)
+            || String(ui.selectedTaskId) === String(edge.target);
+
         return {
             id: edge.id,
             source: String(edge.source),
@@ -93,14 +111,29 @@ const ProductionTasksDag = ({ production }) => {
 
             type: 'smoothstep',
 
+            zIndex: edgesOnTop
+                ? isHighlighted ? 20 : 10
+                : 0,
+
+            interactionWidth: 24,
+
+            pathOptions: {
+                borderRadius: 12,
+                offset: 25,
+            },
+
             markerEnd: {
                 type: MarkerType.ArrowClosed,
-                width: 16,
-                height: 16,
+                width: 18,
+                height: 18,
+                color,
             },
 
             style: {
-                strokeWidth: 1.5,
+                stroke: color,
+                strokeWidth: isHighlighted ? 4 : 2.5,
+                strokeOpacity: isHighlighted ? 1 : 0.8,
+                cursor: loading ? 'default' : 'pointer',
             },
         };
     });
@@ -122,6 +155,71 @@ const ProductionTasksDag = ({ production }) => {
 
     const handlePaneClick = () => {
         ui.selectTask(null);
+    };
+
+    const isValidConnection = ({ source, target }) => {
+        if (loading || !source || !target || source === target) {
+            return false;
+        }
+
+        const exists = edges.some(edge => {
+            return edge.source === source && edge.target === target;
+        });
+
+        if (exists) {
+            return false;
+        }
+
+        // Sprawdzenie, czy target prowadzi już do source.
+        const visited = new Set();
+        const queue = [target];
+
+        while (queue.length > 0) {
+            const id = queue.pop();
+
+            if (id === source) {
+                return false;
+            }
+
+            if (visited.has(id)) {
+                continue;
+            }
+
+            visited.add(id);
+
+            edges.forEach(edge => {
+                if (edge.source === id) {
+                    queue.push(edge.target);
+                }
+            });
+        }
+
+        return true;
+    };
+
+
+    const handleConnect = async (connection) => {
+        if (!isValidConnection(connection)) {
+            return;
+        }
+
+        await actions.connect({
+            sourceId: Number(connection.source),
+            targetId: Number(connection.target),
+        });
+    };
+
+    const handleEdgeDoubleClick = async (event, edge) => {
+        event.stopPropagation();
+
+        if (loading) {
+            return;
+        }
+
+        await actions.disconnect({
+            sourceId: Number(edge.source),
+            targetId: Number(edge.target),
+        });
     };
 
     // 6. Walidacja grafu
@@ -211,10 +309,21 @@ const ProductionTasksDag = ({ production }) => {
                 onNodeClick={handleNodeClick}
                 onPaneClick={handlePaneClick}
 
+                onConnect={handleConnect}
+                onEdgeDoubleClick={handleEdgeDoubleClick}
+                isValidConnection={isValidConnection}
+
                 nodesDraggable={false}
-                nodesConnectable={false}
+                nodesConnectable={!loading}
                 elementsSelectable={true}
                 edgesReconnectable={false}
+                elevateNodesOnSelect={false}
+                elevateEdgesOnSelect={false}
+
+                connectionLineStyle={{
+                    stroke: '#1976d2',
+                    strokeWidth: 3,
+                }}
 
                 deleteKeyCode={null}
 
@@ -243,7 +352,8 @@ const ProductionTasksDag = ({ production }) => {
                 <MiniMap
                     pannable
                     zoomable
-                    nodeStrokeWidth={2}
+                    nodeStrokeWidth={3}
+                    nodeColor={node => node.data?.color ?? '#bdbdbd'}
                 />
             </ReactFlow>
         </Box>
