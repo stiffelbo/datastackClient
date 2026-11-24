@@ -20,6 +20,7 @@ import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import ChecklistOutlinedIcon from "@mui/icons-material/ChecklistOutlined";
+import ViewListOutlinedIcon from "@mui/icons-material/ViewListOutlined";
 
 import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
 import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
@@ -74,6 +75,48 @@ const ProductionTasksManagerNavigation = ({ production }) => {
                 spacing={0.5}
                 sx={{ minHeight: 34 }}
             >
+                {/* TRYB PREZENTACJI */}
+
+                <ToggleButtonGroup
+                    exclusive
+                    size="small"
+                    value={ui.view}
+                    onChange={(_, value) => {
+                        if (value !== null) {
+                            ui.setView(value);
+                        }
+                    }}
+                    sx={{
+                        '& .MuiToggleButton-root': {
+                            px: 0.9,
+                            py: 0.5,
+                            gap: 0.5,
+                            fontSize: 11,
+                            lineHeight: 1.5,
+                            textTransform: 'none',
+                            borderColor: 'divider',
+                            '& .MuiSvgIcon-root': {
+                                fontSize: 17,
+                            },
+                            '&.Mui-selected': {
+                                color: 'primary.main',
+                                bgcolor: 'action.selected',
+                            },
+                        },
+                    }}
+                >
+                    <ToggleButton value="list" aria-label="Widok listy">
+                        <ViewListOutlinedIcon />
+                        Lista
+                    </ToggleButton>
+
+                    <ToggleButton value="dag" aria-label="Widok DAG">
+                        <AccountTreeOutlinedIcon />
+                        DAG
+                    </ToggleButton>
+                </ToggleButtonGroup>
+
+                <Divider orientation="vertical" flexItem sx={{ mx: 0.75 }} />
                 {/* OPERACJE NA MARSZRUCIE */}
 
                 <Tooltip title="Dodaj proces do marszruty">

@@ -14,6 +14,7 @@ import {
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 
 import ProductionTasksList from "./ProductionTasksList";
+import ProductionTasksDag from "./dag/ProductionTasksDag";
 import ProductionProcessesList from "./ProductionProcessesList";
 import ProductionRoutesList from "./ProductionRoutesList";
 
@@ -32,6 +33,8 @@ const ProductionTasksLayoutManager = ({ production, rwd }) => {
     const compact = useMediaQuery(theme.breakpoints.down('md'));
 
     const activePanel = production.ui.panel;
+    const activeView = production.ui.view;
+
     const layout = PRODUCTION_TASKS_LAYOUTS[activePanel]
         ?? PRODUCTION_TASKS_LAYOUTS.route;
 
@@ -138,23 +141,37 @@ const ProductionTasksLayoutManager = ({ production, rwd }) => {
         );
     };
 
-    // Widok główny — lista zadań
-    const renderTaskList = () => (
-        <Box
-            sx={{
-                flex: 1,
-                minWidth: 0,
-                minHeight: 0,
-                overflow: 'auto',
-            }}
-        >
-            <ProductionTasksList
-                data={production.tasks}
-                production={production}
-                rwd={rwd}
-            />
-        </Box>
-    );
+    // Widok główny — lista zadań lub DAG
+    const renderMainView = () => {
+        const isDag = activeView === 'dag';
+
+        return (
+            <Box
+                sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: isDag ? 'hidden' : 'auto',
+                    position: 'relative',
+                }}
+            >
+                {isDag ? (
+                    <ProductionTasksDag
+                        production={production}
+                        rwd={rwd}
+                    />
+                ) : (
+                    <ProductionTasksList
+                        data={production.tasks}
+                        production={production}
+                        rwd={rwd}
+                    />
+                )}
+            </Box>
+        );
+    };
 
     // Widok zastępujący listę zadań (np. historyczne marszruty)
     if (layout.mode === 'replace') {
@@ -174,8 +191,7 @@ const ProductionTasksLayoutManager = ({ production, rwd }) => {
             </Box>
         );
     }
-
-    // Standardowy layout: lewy panel | zadania | prawy panel
+    // Standardowy layout: lewy panel | widok główny | prawy panel
     return (
         <Box
             sx={{
@@ -189,7 +205,7 @@ const ProductionTasksLayoutManager = ({ production, rwd }) => {
         >
             {renderSidePanel(left, 'left')}
 
-            {renderTaskList()}
+            {renderMainView()}
 
             {renderSidePanel(right, 'right')}
         </Box>

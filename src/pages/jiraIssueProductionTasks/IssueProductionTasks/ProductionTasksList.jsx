@@ -1,36 +1,61 @@
-import React, {useState} from 'react';
-import { Alert, Box, IconButton, Tooltip, CircularProgress, Stack, Typography } from '@mui/material';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import React from 'react';
+import { Box } from '@mui/material';
 
 import PowerTable from '../../../components/powerTable/powerTable';
-import {kpiSchema} from './dto/tasksDto';
+import ProductionTaskActions from './ProductionTaskActions';
+import { kpiSchema } from './dto/tasksDto';
 
-const ProductionTasksList = ({ production, rwd = {}}) => {
-    const listHeight = rwd.height - 240;
-    const tasks = [...(production.tasks ?? [])].sort((a, b) => (a.sequence_no ?? 0) - (b.sequence_no ?? 0));
-    const kpiCols = kpiSchema();
-    const columns = [...production?.schema?.columns.map(c => {
-            if(c?.field === "sequence_no") {
-                return c;
-            }else{
-                return c;
-            }
-        }), ...kpiCols];
-        
+const ProductionTasksList = ({ production, rwd = {} }) => {
+    const { actions, ui, schema, loading } = production;
+
+    const listHeight = (rwd.height ?? 640) - 240;
+
+    const tasks = [...(production.tasks ?? [])].sort((a, b) => {
+        return (a.sequence_no ?? 0) - (b.sequence_no ?? 0);
+    });
+
+    const actionsColumn = {
+        field: '_actions',
+        headerName: 'Operacje',
+        type: 'string',
+        width: 150,
+        order: 2,
+        editable: false,
+        sortable: false,
+        filterable: false,
+        renderCell: ({ row }) => {
+            return (
+                <ProductionTaskActions
+                    task={row}
+                    actions={actions}
+                    ui={ui}
+                    disabled={loading}
+                />
+            );
+        },
+    };
+
+    const columns = [
+        actionsColumn,
+        ...(schema?.columns ?? []),
+        ...kpiSchema(),
+    ];
+
     return (
         <Box sx={{ width: '100%', minWidth: 0, maxWidth: '100%' }}>
-          <PowerTable 
-            entityName='ProductOrderProductionTasks'
-            data={tasks}
-            columnSchema={columns}
-            height={listHeight}
-            onRefresh={production.refresh}
-            onEdit={production.actions.update}
-            selected={production.ui.selectedTaskId}
-            onSelect={production.ui.selectTask}
-            rowHeight={80}
-          />
+            <PowerTable
+                entityName="ProductOrderProductionTasks"
+                data={tasks}
+                columnSchema={columns}
+                height={listHeight}
+                onRefresh={production.refresh}
+                onEdit={actions.update}
+                selected={ui.selectedTaskId}
+                onSelect={ui.selectTask}
+                rowHeight={80}
+            />
         </Box>
     );
 };
+
 export default ProductionTasksList;

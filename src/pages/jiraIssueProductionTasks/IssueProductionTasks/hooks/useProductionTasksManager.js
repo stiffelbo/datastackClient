@@ -4,7 +4,7 @@ import createTasksActions from './tasksActions';
 
 const useProductionTasksManager = ({ entity, processedSchema }) => {
     const [uiState, setUiState] = useState({
-        view: 'route',
+        view: 'list',
         selectedTaskId: null,
         selectedTaskIds: [],
         extendedTaskId: null,
@@ -76,10 +76,16 @@ const useProductionTasksManager = ({ entity, processedSchema }) => {
     const ui = {
         ...uiState,
 
-        setView: (view) => setUiState(prev => ({
-            ...prev,
-            view,
-        })),
+        setView: (view) => {
+            if (!['list', 'dag'].includes(view)) return;
+
+            setUiState(prev => {
+                return {
+                    ...prev,
+                    view,
+                };
+            });
+        },
 
         selectTask: (id) => setUiState(prev => ({
             ...prev,
