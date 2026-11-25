@@ -348,13 +348,6 @@ const ProductionTasksDag = ({
                 />
 
                 <Controls showInteractive={false} />
-
-                <MiniMap
-                    pannable
-                    zoomable
-                    nodeStrokeWidth={3}
-                    nodeColor={node => node.data?.color ?? '#bdbdbd'}
-                />
             </ReactFlow>
         </Box>
     );
