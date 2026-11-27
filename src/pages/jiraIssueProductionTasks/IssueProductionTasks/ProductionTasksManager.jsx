@@ -13,7 +13,6 @@ import ProductionTasksLayoutManager from "./ProductionTasksLayoutManager";
 const ProductionTasksManager = ({ issue = {}, product_order = {}, rwd }) => {
     const issue_id = issue?.id;
     const product_order_id = product_order?.id;
-    const context = {};
 
     const entity = useEntity({
         entityName: 'JiraIssueProductionTasks',
@@ -29,6 +28,8 @@ const ProductionTasksManager = ({ issue = {}, product_order = {}, rwd }) => {
             removeMany: { sync: 'rows' },
         },
     });
+
+    console.log(entity.schema);
 
     const columns = entity?.schema?.columns;
 

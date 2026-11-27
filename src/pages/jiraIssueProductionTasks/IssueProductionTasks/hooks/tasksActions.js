@@ -66,6 +66,57 @@ const createTasksActions = ({
     };
 
     // ============================================================
+    // IMPORT ROUTE
+    // ============================================================
+
+    const executeImport = async ({ sourceReference, sourceReferenceId }) => {
+        if (!context?.reference || !context?.referenceId) {
+            throw new Error('Brak kontekstu produkcyjnego.');
+        }
+
+        if (typeof create !== 'function') {
+            throw new Error('Endpoint tworzenia zadań jest niedostępny.');
+        }
+
+        const referenceId = Number(context.referenceId);
+        const sourceId = Number(sourceReferenceId);
+
+        if (!Number.isSafeInteger(referenceId) || referenceId <= 0) {
+            throw new Error('Nieprawidłowe ID kontekstu docelowego.');
+        }
+
+        if (!sourceReference || !Number.isSafeInteger(sourceId) || sourceId <= 0) {
+            throw new Error('Nieprawidłowa referencja marszruty źródłowej.');
+        }
+
+        if (sourceReference === context.reference && sourceId === referenceId) {
+            throw new Error('Nie można skopiować marszruty do tego samego kontekstu.');
+        }
+
+        if (tasks.length > 0) {
+            throw new Error('Kontekst docelowy posiada już marszrutę.');
+        }
+
+        const payload = {
+            action: 'importRoute',
+            reference: context.reference,
+            referenceId,
+            sourceReference,
+            sourceReferenceId: sourceId,
+        };
+
+        const response = await create(payload);
+
+        if (!response) {
+            throw new Error('Nie udało się zaimportować marszruty.');
+        }
+
+        await fetchRows();
+
+        return response;
+    };
+
+    // ============================================================
     // PUBLIC API
     // ============================================================
 
@@ -98,6 +149,10 @@ const createTasksActions = ({
                 action: 'disconnect',
                 sourceId,
             });
+        },
+
+        import: async (data) => {
+            return await executeImport(data);
         },
     };
 

@@ -27,6 +27,8 @@ import ProcessesResources from './pages/processesResources/ProcessesResources';
 import ProcessesUsers from './pages/processesUsers/ProcessesUsers';
 import Resources from './pages/resources/Resources';
 import Machines from './pages/machines/Machines';
+import PriceLists from './pages/pricelists/PriceLists';
+import Ennoblings from './pages/ennoblings/Ennoblings';
 import ProductDefinitions from './pages/productDefinitions/ProductDefinitions';
 import Product from './pages/product/Product';
 import ProductOrder from './pages/productOrder/ProductOrder';
@@ -176,6 +178,14 @@ const App = () => (
         <Route path="toolstypes/:id/:tab" element={<ToolsTypes />} />
         <Route path="toolstypes/:id" element={<ToolsTypes />} />
         <Route path="toolstypes" element={<ToolsTypes />} />
+
+        <Route path="pricelists/:id/:tab" element={<PriceLists />} />
+        <Route path="pricelists/:id" element={<PriceLists />} />
+        <Route path="pricelists" element={<PriceLists />} />
+
+        <Route path="ennoblings/:id/:tab" element={<Ennoblings />} />
+        <Route path="ennoblings/:id" element={<Ennoblings />} />
+        <Route path="ennoblings" element={<Ennoblings />} />
 
         <Route path="productdefinitions/:id/:tab" element={<ProductDefinitions />} />
         <Route path="productdefinitions/:id" element={<ProductDefinitions />} />

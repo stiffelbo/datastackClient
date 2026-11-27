@@ -256,6 +256,8 @@ export default function SelectedTasksList({
         }
     }, [requiresTasks, isEmpty, nonTaskRemarks]);
 
+    console.log(tasks);
+
     return (
         <Box
             sx={{

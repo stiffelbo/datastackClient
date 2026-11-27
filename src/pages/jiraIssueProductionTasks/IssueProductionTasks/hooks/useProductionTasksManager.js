@@ -147,10 +147,6 @@ const useProductionTasksManager = ({ entity, processedSchema }) => {
     const actions = {
         ...tasksActions,
 
-        importRoute: async (route, { position = 'end' } = {}) => {
-            throw new Error('Import marszruty nie jest jeszcze zaimplementowany');
-        },
-
         handleReorder: ({ sourceId, targetId }) => {
             if (String(sourceId) === String(targetId)) return;
 
@@ -161,6 +157,8 @@ const useProductionTasksManager = ({ entity, processedSchema }) => {
             await entity.updateField({ field, value, id });
             await entity.fetchRows();
         },
+
+        import : (id) => tasksActions.import({ sourceReference : context.reference, sourceReferenceId : id }),
 
         remove: entity.remove,
 

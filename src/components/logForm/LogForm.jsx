@@ -61,6 +61,8 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
     const brigade = useBrigades({ initialTime: time, employees: brigadeEmployeesDto(user.brigades) });
 
+    const singleUser = user.brigades.length === 1;
+
     const processesAfterDTO = processesDto(user.processes);
     const structures = structuresDto(user.structures);
     const canUseMachineMode = hasMachines(processesAfterDTO);
@@ -119,9 +121,13 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
 
     const log = useJiraIssueUserLogs(auth);
 
-    const handleReset = () => {
+    const handleSubmit = async () => {
+        await log.save(draft.logs);
         processes.actions.resetProcesses();
-        brigade.actions.clearAll();
+        tasks.actions.clearTasks();
+        if(!singleUser){
+            brigade.actions.clearAll();
+        }
     }
 
     const renderModeToggle = () => {
@@ -234,7 +240,6 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
                             name="LogFormDoc"
                             iconOnly
                         />
-                        <Button color="error" size="small" onClick={handleReset} >Reset</Button>
                     </Grid>
                     <Grid item zeroMinWidth sx={{ flexGrow: 1 }}>
                         {initialTasks.length === 0 && (
@@ -288,7 +293,7 @@ const LogForm = ({ initialTasks = [], onTaskAdd = () => { } }) => {
                     logError={log.error}
                     result={log.result}
                     loading={log.loading}
-                    onSave={() => log.save(draft.logs)}
+                    onSave={handleSubmit}
                     onClear={() => log.clear()}
                 />
             </Grid>
